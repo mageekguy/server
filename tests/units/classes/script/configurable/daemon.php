@@ -6,8 +6,8 @@ require __DIR__ . '/../../../runner.php';
 
 use
 	atoum,
-	server\script\configurable\daemon as testedClass,
-	mock\server\script\configurable\daemon as mockedTestedClass
+	server\script\configurable,
+	mock\server\script\configurable\daemon as testedClass
 ;
 
 /*
@@ -95,33 +95,37 @@ class daemon extends atoum
 
 	public function testClass()
 	{
-		$this->testedClass->extends('atoum\script\configurable');
+		$this->testedClass
+			->isAbstract()
+			->extends('atoum\script\configurable')
+		;
 	}
 
 	public function test__construct()
 	{
 		$this
-			->if($server = new testedClass(uniqid()))
+			->if($daemon = new testedClass(uniqid()))
 			->then
-				->variable($server->getGid())->isNull()
-				->variable($server->getUid())->isNull()
-				->variable($server->getHome())->isNull()
-				->object($server->getInfoLogger())->isEqualTo(new \server\logger())
-				->object($server->getErrorLogger())->isEqualTo(new \server\logger())
-				->object($server->getOutputLogger())->isEqualTo(new \server\logger())
-				->boolean($server->isDaemon())->isFalse()
+				->variable($daemon->getGid())->isNull()
+				->variable($daemon->getUid())->isNull()
+				->variable($daemon->getHome())->isNull()
+				->object($daemon->getInfoLogger())->isEqualTo(new \server\logger())
+				->object($daemon->getErrorLogger())->isEqualTo(new \server\logger())
+				->object($daemon->getOutputLogger())->isEqualTo(new \server\logger())
+				->boolean($daemon->isDaemon())->isFalse()
+				->object($daemon->getController())->isEqualTo(new configurable\daemon\controller())
 		;
 	}
 
 	public function testSetInfoLogger()
 	{
 		$this
-			->if($server = new testedClass(uniqid()))
+			->if($daemon = new testedClass(uniqid()))
 			->then
-				->object($server->setInfoLogger($logger = new \server\logger()))->isIdenticalTo($server)
-				->object($server->getInfoLogger())->isIdenticalTo($logger)
-				->object($server->setInfoLogger())->isIdenticalTo($server)
-				->object($server->getInfoLogger())
+				->object($daemon->setInfoLogger($logger = new \server\logger()))->isIdenticalTo($daemon)
+				->object($daemon->getInfoLogger())->isIdenticalTo($logger)
+				->object($daemon->setInfoLogger())->isIdenticalTo($daemon)
+				->object($daemon->getInfoLogger())
 					->isNotIdenticalTo($logger)
 					->isEqualTo(new \server\logger())
 		;
@@ -130,12 +134,12 @@ class daemon extends atoum
 	public function testSetErrorLogger()
 	{
 		$this
-			->if($server = new testedClass(uniqid()))
+			->if($daemon = new testedClass(uniqid()))
 			->then
-				->object($server->setErrorLogger($logger = new \server\logger()))->isIdenticalTo($server)
-				->object($server->getErrorLogger())->isIdenticalTo($logger)
-				->object($server->setErrorLogger())->isIdenticalTo($server)
-				->object($server->getErrorLogger())
+				->object($daemon->setErrorLogger($logger = new \server\logger()))->isIdenticalTo($daemon)
+				->object($daemon->getErrorLogger())->isIdenticalTo($logger)
+				->object($daemon->setErrorLogger())->isIdenticalTo($daemon)
+				->object($daemon->getErrorLogger())
 					->isNotIdenticalTo($logger)
 					->isEqualTo(new \server\logger())
 		;
@@ -144,43 +148,57 @@ class daemon extends atoum
 	public function testSetOutputLogger()
 	{
 		$this
-			->if($server = new testedClass(uniqid()))
+			->if($daemon = new testedClass(uniqid()))
 			->then
-				->object($server->setOutputLogger($logger = new \server\logger()))->isIdenticalTo($server)
-				->object($server->getOutputLogger())->isIdenticalTo($logger)
-				->object($server->setOutputLogger())->isIdenticalTo($server)
-				->object($server->getOutputLogger())
+				->object($daemon->setOutputLogger($logger = new \server\logger()))->isIdenticalTo($daemon)
+				->object($daemon->getOutputLogger())->isIdenticalTo($logger)
+				->object($daemon->setOutputLogger())->isIdenticalTo($daemon)
+				->object($daemon->getOutputLogger())
 					->isNotIdenticalTo($logger)
 					->isEqualTo(new \server\logger())
+		;
+	}
+
+	public function testSetController()
+	{
+		$this
+			->if($daemon = new testedClass(uniqid()))
+			->then
+				->object($daemon->setController($controller = new configurable\daemon\controller()))->isIdenticalTo($daemon)
+				->object($daemon->getController())->isIdenticalTo($controller)
+				->object($daemon->setController())->isIdenticalTo($daemon)
+				->object($daemon->getController())
+					->isNotIdenticalTo($controller)
+					->isEqualTo(new configurable\daemon\controller())
 		;
 	}
 
 	public function testSetUid()
 	{
 		$this
-			->given($server = new testedClass(uniqid()))
+			->given($daemon = new testedClass(uniqid()))
 
 			->if($this->function->posix_getpwuid = false)
 			->then
-				->exception(function() use ($server, & $uidName) { $server->setUid($uidName = uniqid()); })
+				->exception(function() use ($daemon, & $uidName) { $daemon->setUid($uidName = uniqid()); })
 					->isInstanceOf('server\script\configurable\daemon\exception')
 					->hasMessage('UID \'' . $uidName . '\' is unknown')
-				->variable($server->getUid())->isNull()
+				->variable($daemon->getUid())->isNull()
 
 			->if($this->function->posix_getpwuid = array('uid' => $uid = rand(1, PHP_INT_MAX), 'gid' => $gid = rand(1, PHP_INT_MAX)))
 			->then
-				->object($server->setUid($uidName))->isIdenticalTo($server)
-				->integer($server->getUid())->isEqualTo($uid)
+				->object($daemon->setUid($uidName))->isIdenticalTo($daemon)
+				->integer($daemon->getUid())->isEqualTo($uid)
 		;
 	}
 
 	public function testSetHome()
 	{
 		$this
-			->if($server = new testedClass(uniqid()))
+			->if($daemon = new testedClass(uniqid()))
 			->then
-				->object($server->setHome($home = uniqid()))->isIdenticalTo($server)
-				->string($server->getHome())->isEqualTo($home)
+				->object($daemon->setHome($home = uniqid()))->isIdenticalTo($daemon)
+				->string($daemon->getHome())->isEqualTo($home)
 		;
 	}
 
@@ -188,8 +206,8 @@ class daemon extends atoum
 	{
 		$this
 			->if(
-				$server = new testedClass(uniqid()),
-				$server->setErrorLogger($errorLogger = new \mock\server\logger()),
+				$daemon = new testedClass(uniqid()),
+				$daemon->setErrorLogger($errorLogger = new \mock\server\logger()),
 				$this->calling($errorLogger)->log->returnThis(),
 				$this->function->debug_backtrace = array(
 					array('file' => $file1 = uniqid(), 'line' => $line1 = rand(1, PHP_INT_MAX)),
@@ -198,7 +216,7 @@ class daemon extends atoum
 				)
 			)
 			->then
-				->boolean($server->errorHandler($code = rand(1, PHP_INT_MAX), $message = uniqid(), $file = uniqid(), $line = rand(0, PHP_INT_MAX), $context = uniqid()))->isTrue()
+				->boolean($daemon->errorHandler($code = rand(1, PHP_INT_MAX), $message = uniqid(), $file = uniqid(), $line = rand(0, PHP_INT_MAX), $context = uniqid()))->isTrue()
 				->mock($errorLogger)
 					->call('log')
 						->withArguments('Error ' . $code . ' in file \'' . $file . '\' on line ' . $line . ': ' . $message)->once()
@@ -213,12 +231,12 @@ class daemon extends atoum
 	{
 		$this
 			->if(
-				$server = new testedClass(uniqid()),
-				$server->setErrorLogger($errorLogger = new \mock\server\logger()),
+				$daemon = new testedClass(uniqid()),
+				$daemon->setErrorLogger($errorLogger = new \mock\server\logger()),
 				$this->calling($errorLogger)->log->returnThis()
 			)
 			->then
-				->boolean($server->exceptionHandler($exception = new \exception(uniqid())))->isTrue()
+				->boolean($daemon->exceptionHandler($exception = new \exception(uniqid())))->isTrue()
 				->mock($errorLogger)->call('log')
 					->withArguments($exception->getMessage())->once()
 					->withArguments($exception->getTraceAsString())->once()
@@ -229,14 +247,14 @@ class daemon extends atoum
 	{
 		$this
 			->if(
-				$server = new testedClass(uniqid()),
-				$server->setOutputLogger($logger = new \mock\server\logger()),
+				$daemon = new testedClass(uniqid()),
+				$daemon->setOutputLogger($logger = new \mock\server\logger()),
 				$this->calling($logger)->log->returnThis()
 			)
 			->then
-				->string($server->outputHandler($buffer = uniqid()))->isEmpty()
+				->string($daemon->outputHandler($buffer = uniqid()))->isEmpty()
 				->mock($logger)->call('log')->withArguments($buffer)->once()
-				->string($server->outputHandler(''))->isEmpty()
+				->string($daemon->outputHandler(''))->isEmpty()
 				->mock($logger)->call('log')->once()
 		;
 	}
@@ -245,22 +263,22 @@ class daemon extends atoum
 	{
 		$this
 			->given(
-				$server = new mockedTestedClass(uniqid()),
-				$server->setOutputWriter($writer = new \mock\atoum\writer()),
+				$daemon = new testedClass(uniqid()),
+				$daemon->setOutputWriter($writer = new \mock\atoum\writer()),
 				$this->calling($writer)->write->returnThis(),
-				$server->setOutputLogger($logger = new \mock\server\logger()),
+				$daemon->setOutputLogger($logger = new \mock\server\logger()),
 				$this->calling($logger)->log->returnThis()
 			)
 
-			->if($this->calling($server)->isDaemon = false)
+			->if($this->calling($daemon)->isDaemon = false)
 			->then
-				->object($server->writeMessage($message = uniqid()))->isIdenticalTo($server)
+				->object($daemon->writeMessage($message = uniqid()))->isIdenticalTo($daemon)
 				->mock($writer)->call('write')->withArguments($message)->once()
 				->mock($logger)->call('log')->withArguments($message)->never()
 
-			->if($this->calling($server)->isDaemon = true)
+			->if($this->calling($daemon)->isDaemon = true)
 			->then
-				->object($server->writeMessage($message = uniqid()))->isIdenticalTo($server)
+				->object($daemon->writeMessage($message = uniqid()))->isIdenticalTo($daemon)
 				->mock($writer)->call('write')->withArguments($message)->never()
 				->mock($logger)->call('log')->withArguments($message)->once()
 		;
@@ -270,22 +288,22 @@ class daemon extends atoum
 	{
 		$this
 			->given(
-				$server = new mockedTestedClass(uniqid()),
-				$server->setInfoWriter($writer = new \mock\atoum\writer()),
+				$daemon = new testedClass(uniqid()),
+				$daemon->setInfoWriter($writer = new \mock\atoum\writer()),
 				$this->calling($writer)->write->returnThis(),
-				$server->setOutputLogger($logger = new \mock\server\logger()),
+				$daemon->setOutputLogger($logger = new \mock\server\logger()),
 				$this->calling($logger)->log->returnThis()
 			)
 
-			->if($this->calling($server)->isDaemon = false)
+			->if($this->calling($daemon)->isDaemon = false)
 			->then
-				->object($server->writeInfo($info = uniqid()))->isIdenticalTo($server)
+				->object($daemon->writeInfo($info = uniqid()))->isIdenticalTo($daemon)
 				->mock($writer)->call('write')->withArguments($info)->once()
 				->mock($logger)->call('log')->withArguments($info)->never()
 
-			->if($this->calling($server)->isDaemon = true)
+			->if($this->calling($daemon)->isDaemon = true)
 			->then
-				->object($server->writeInfo($info = uniqid()))->isIdenticalTo($server)
+				->object($daemon->writeInfo($info = uniqid()))->isIdenticalTo($daemon)
 				->mock($writer)->call('write')->withArguments($info)->never()
 				->mock($logger)->call('log')->withArguments($info)->once()
 		;
@@ -295,22 +313,22 @@ class daemon extends atoum
 	{
 		$this
 			->given(
-				$server = new mockedTestedClass(uniqid()),
-				$server->setHelpWriter($writer = new \mock\atoum\writer()),
+				$daemon = new testedClass(uniqid()),
+				$daemon->setHelpWriter($writer = new \mock\atoum\writer()),
 				$this->calling($writer)->write->returnThis(),
-				$server->setOutputLogger($logger = new \mock\server\logger()),
+				$daemon->setOutputLogger($logger = new \mock\server\logger()),
 				$this->calling($logger)->log->returnThis()
 			)
 
-			->if($this->calling($server)->isDaemon = false)
+			->if($this->calling($daemon)->isDaemon = false)
 			->then
-				->object($server->writeHelp($help = uniqid()))->isIdenticalTo($server)
+				->object($daemon->writeHelp($help = uniqid()))->isIdenticalTo($daemon)
 				->mock($writer)->call('write')->withArguments($help)->once()
 				->mock($logger)->call('log')->withArguments($help)->never()
 
-			->if($this->calling($server)->isDaemon = true)
+			->if($this->calling($daemon)->isDaemon = true)
 			->then
-				->object($server->writeHelp($help = uniqid()))->isIdenticalTo($server)
+				->object($daemon->writeHelp($help = uniqid()))->isIdenticalTo($daemon)
 				->mock($writer)->call('write')->withArguments($help)->never()
 				->mock($logger)->call('log')->withArguments($help)->once()
 		;
@@ -320,22 +338,22 @@ class daemon extends atoum
 	{
 		$this
 			->given(
-				$server = new mockedTestedClass(uniqid()),
-				$server->setWarningWriter($writer = new \mock\atoum\writer()),
+				$daemon = new testedClass(uniqid()),
+				$daemon->setWarningWriter($writer = new \mock\atoum\writer()),
 				$this->calling($writer)->write->returnThis(),
-				$server->setErrorLogger($logger = new \mock\server\logger()),
+				$daemon->setErrorLogger($logger = new \mock\server\logger()),
 				$this->calling($logger)->log->returnThis()
 			)
 
-			->if($this->calling($server)->isDaemon = false)
+			->if($this->calling($daemon)->isDaemon = false)
 			->then
-				->object($server->writeWarning($warning = uniqid()))->isIdenticalTo($server)
+				->object($daemon->writeWarning($warning = uniqid()))->isIdenticalTo($daemon)
 				->mock($writer)->call('write')->withArguments($warning)->once()
 				->mock($logger)->call('log')->withArguments($warning)->never()
 
-			->if($this->calling($server)->isDaemon = true)
+			->if($this->calling($daemon)->isDaemon = true)
 			->then
-				->object($server->writeWarning($warning = uniqid()))->isIdenticalTo($server)
+				->object($daemon->writeWarning($warning = uniqid()))->isIdenticalTo($daemon)
 				->mock($writer)->call('write')->withArguments($warning)->never()
 				->mock($logger)->call('log')->withArguments($warning)->once()
 		;
@@ -345,22 +363,22 @@ class daemon extends atoum
 	{
 		$this
 			->given(
-				$server = new mockedTestedClass(uniqid()),
-				$server->setErrorWriter($writer = new \mock\atoum\writer()),
+				$daemon = new testedClass(uniqid()),
+				$daemon->setErrorWriter($writer = new \mock\atoum\writer()),
 				$this->calling($writer)->write->returnThis(),
-				$server->setErrorLogger($logger = new \mock\server\logger()),
+				$daemon->setErrorLogger($logger = new \mock\server\logger()),
 				$this->calling($logger)->log->returnThis()
 			)
 
-			->if($this->calling($server)->isDaemon = false)
+			->if($this->calling($daemon)->isDaemon = false)
 			->then
-				->object($server->writeError($error = uniqid()))->isIdenticalTo($server)
+				->object($daemon->writeError($error = uniqid()))->isIdenticalTo($daemon)
 				->mock($writer)->call('write')->withArguments($error)->once()
 				->mock($logger)->call('log')->withArguments($error)->never()
 
-			->if($this->calling($server)->isDaemon = true)
+			->if($this->calling($daemon)->isDaemon = true)
 			->then
-				->object($server->writeError($error = uniqid()))->isIdenticalTo($server)
+				->object($daemon->writeError($error = uniqid()))->isIdenticalTo($daemon)
 				->mock($writer)->call('write')->withArguments($error)->never()
 				->mock($logger)->call('log')->withArguments($error)->once()
 		;
@@ -369,24 +387,27 @@ class daemon extends atoum
 	public function testRun()
 	{
 		$this
-			->given($server = new mockedTestedClass(uniqid()))
+			->given(
+				$daemon = new testedClass(uniqid()),
+				$daemon->setController($controller = new \mock\server\script\configurable\daemon\controller())
+			)
 			->then
-				->exception(function() use ($server) { $server->run(); })
+				->exception(function() use ($daemon) { $daemon->run(); })
 					->isInstanceOf('server\script\configurable\daemon\exception')
 					->hasMessage('UID is undefined')
 
-			->if($this->calling($server)->getUid = $uid = rand(1, PHP_INT_MAX))
+			->if($this->calling($daemon)->getUid = $uid = rand(1, PHP_INT_MAX))
 			->then
-				->exception(function() use ($server) { $server->run(); })
+				->exception(function() use ($daemon) { $daemon->run(); })
 					->isInstanceOf('server\script\configurable\daemon\exception')
 					->hasMessage('Home is undefined')
 
 			->if(
-				$this->calling($server)->getHome = $home = uniqid(),
+				$this->calling($daemon)->getHome = $home = uniqid(),
 				$this->function->pcntl_fork = -1
 			)
 			->then
-				->exception(function() use ($server) { $server->run(); })
+				->exception(function() use ($daemon) { $daemon->run(); })
 					->isInstanceOf('server\script\configurable\daemon\exception')
 					->hasMessage('Unable to fork to start daemon')
 
@@ -395,9 +416,9 @@ class daemon extends atoum
 				$this->function->pcntl_signal->doesNothing()
 			)
 			->then
-				->object($server->run())->isIdenticalTo($server)
-				->boolean($server->isDaemon())->isFalse()
-				->integer($server->getPid())->isEqualTo($pid)
+				->object($daemon->run())->isIdenticalTo($daemon)
+				->boolean($daemon->isDaemon())->isFalse()
+				->integer($daemon->getPid())->isEqualTo($pid)
 				->function('pcntl_signal')
 					->wasCalledWithArguments(SIGCHLD, SIG_IGN)
 						->after($this->function('pcntl_fork')->wasCalled()->once())
@@ -409,31 +430,31 @@ class daemon extends atoum
 				$this->function->posix_setsid = -1
 			)
 			->then
-				->exception(function() use ($server) { $server->run(); })
+				->exception(function() use ($daemon) { $daemon->run(); })
 					->isInstanceOf('server\script\configurable\daemon\exception')
 					->hasMessage('Unable to become a session leader')
-				->boolean($server->isDaemon())->isFalse()
-				->integer($server->getPid())->isEqualTo($pid)
+				->boolean($daemon->isDaemon())->isFalse()
+				->integer($daemon->getPid())->isEqualTo($pid)
 
 			->if(
 				$this->function->posix_setsid = 0,
 				$this->function->pcntl_fork[2] = -1
 			)
 			->then
-				->exception(function() use ($server) { $server->run(); })
+				->exception(function() use ($daemon) { $daemon->run(); })
 					->isInstanceOf('server\script\configurable\daemon\exception')
 					->hasMessage('Unable to fork to start daemon')
-				->boolean($server->isDaemon())->isFalse()
-				->integer($server->getPid())->isEqualTo($pid)
+				->boolean($daemon->isDaemon())->isFalse()
+				->integer($daemon->getPid())->isEqualTo($pid)
 
 			->if(
 				$this->function->pcntl_fork[2] = $pid = rand(1, PHP_INT_MAX),
 				$this->function->pcntl_signal->doesNothing()
 			)
 			->then
-				->object($server->run())->isIdenticalTo($server)
-				->boolean($server->isDaemon())->isFalse()
-				->integer($server->getPid())->isEqualTo($pid)
+				->object($daemon->run())->isIdenticalTo($daemon)
+				->boolean($daemon->isDaemon())->isFalse()
+				->integer($daemon->getPid())->isEqualTo($pid)
 				->function('pcntl_signal')
 					->wasCalledWithArguments(SIGCHLD, SIG_IGN)
 						->after($this->function('pcntl_fork')->wasCalled()->twice())
@@ -452,15 +473,15 @@ class daemon extends atoum
 				$this->function->ob_end_flush->doesNothing()
 			)
 			->then
-				->exception(function() use ($server) { $server->run(); })
+				->exception(function() use ($daemon) { $daemon->run(); })
 					->isInstanceOf('server\script\configurable\daemon\exception')
-					->hasMessage('Unable to set home directory to \'' . $server->getHome() . '\'')
-				->boolean($server->isDaemon())->isTrue()
-				->integer($server->getPid())->isEqualTo($pid)
-				->function('set_error_handler')->wasCalledWithArguments(array($server, 'errorHandler'))->once()
-				->function('set_exception_handler')->wasCalledWithArguments(array($server, 'exceptionHandler'))->once()
+					->hasMessage('Unable to set home directory to \'' . $daemon->getHome() . '\'')
+				->boolean($daemon->isDaemon())->isTrue()
+				->integer($daemon->getPid())->isEqualTo($pid)
+				->function('set_error_handler')->wasCalledWithArguments(array($daemon, 'errorHandler'))->once()
+				->function('set_exception_handler')->wasCalledWithArguments(array($daemon, 'exceptionHandler'))->once()
 				->function('ob_start')
-					->wasCalledWithArguments(array($server, 'outputHandler'))
+					->wasCalledWithArguments(array($daemon, 'outputHandler'))
 						->before($this->function('ob_implicit_flush')->wasCalledWithArguments(true)->once())
 							->once()
 
@@ -469,37 +490,50 @@ class daemon extends atoum
 				$this->function->posix_setgid = false
 			)
 			->then
-				->exception(function() use ($server) { $server->run(); })
+				->exception(function() use ($daemon) { $daemon->run(); })
 					->isInstanceOf('server\script\configurable\daemon\exception')
-					->hasMessage('Unable to set GID to \'' . $server->getGid() . '\'')
-				->boolean($server->isDaemon())->isTrue()
-				->integer($server->getPid())->isEqualTo($pid)
+					->hasMessage('Unable to set GID to \'' . $daemon->getGid() . '\'')
+				->boolean($daemon->isDaemon())->isTrue()
+				->integer($daemon->getPid())->isEqualTo($pid)
 
 			->if(
 				$this->function->posix_setgid = true,
 				$this->function->posix_setuid = false
 			)
 			->then
-				->exception(function() use ($server) { $server->run(); })
+				->exception(function() use ($daemon) { $daemon->run(); })
 					->isInstanceOf('server\script\configurable\daemon\exception')
-					->hasMessage('Unable to set UID to \'' . $server->getUid() . '\'')
-				->boolean($server->isDaemon())->isTrue()
-				->integer($server->getPid())->isEqualTo($pid)
+					->hasMessage('Unable to set UID to \'' . $daemon->getUid() . '\'')
+				->boolean($daemon->isDaemon())->isTrue()
+				->integer($daemon->getPid())->isEqualTo($pid)
 
 			->if(
 				$this->function->posix_setuid = true,
 				$this->function->umask->doesNothing(),
-				$this->function->fclose->doesNothing()
+				$this->function->fclose->doesNothing(),
+				$this->calling($controller)->start->returnThis(),
+				$this->calling($controller)->daemonShouldRun[1] = true,
+				$this->calling($controller)->daemonShouldRun[2] = false
 			)
 			->then
-				->object($server->run())->isIdenticalTo($server)
-				->boolean($server->isDaemon())->isTrue()
-				->integer($server->getPid())->isEqualTo($pid)
+				->object($daemon->run())->isIdenticalTo($daemon)
+				->boolean($daemon->isDaemon())->isTrue()
+				->integer($daemon->getPid())->isEqualTo($pid)
 				->function('umask')->wasCalledWithArguments(137)->once()
 				->function('fclose')
 					->wasCalledWithArguments(STDIN)->once()
 					->wasCalledWithArguments(STDOUT)->once()
 					->wasCalledWithArguments(STDERR)->once()
+				->mock($controller)
+					->call('daemonShouldRun')->wasCalled()
+						->after(
+							$this->mock($controller)
+								->call('start')
+									->after($this->mock($controller)->call('offsetSet')->withArguments(SIGTERM, array($controller, 'stopDaemon'))->once())
+										->twice()
+						)
+							->before($this->mock($daemon)->call('doDaemonTask')->once())
+								->once()
 		;
 	}
 }

@@ -6,8 +6,9 @@ use
 	atoum\script
 ;
 
-class daemon extends script\configurable
+abstract class daemon extends script\configurable
 {
+	protected $controller = null;
 	protected $infoLogger = null;
 	protected $errorLogger = null;
 	protected $outputLogger = null;
@@ -25,7 +26,20 @@ class daemon extends script\configurable
 			->setInfoLogger()
 			->setErrorLogger()
 			->setOutputLogger()
+			->setController()
 		;
+	}
+
+	public function setController(daemon\controller $controller = null)
+	{
+		$this->controller = $controller ?: new daemon\controller();
+
+		return $this;
+	}
+
+	public function getController()
+	{
+		return $this->controller;
 	}
 
 	public function getPid()
@@ -328,7 +342,12 @@ class daemon extends script\configurable
 					fclose(STDERR);
 				}
 
-				$this->doDaemonTask();
+				$this->controller[SIGTERM] = array($this->controller, 'stopDaemon');
+
+				while ($this->controller->start()->daemonShouldRun() === true)
+				{
+					$this->doDaemonTask();
+				}
 
 				while (ob_get_level() > 0)
 				{
@@ -338,10 +357,12 @@ class daemon extends script\configurable
 		}
 	}
 
-	protected function doDaemonTask()
+	protected function shouldDoDaemonTask()
 	{
-		return $this;
+		return false;
 	}
+
+	protected abstract function doDaemonTask();
 
 	protected function getException($message)
 	{
