@@ -346,8 +346,10 @@ abstract class daemon extends script\configurable
 
 				while ($this->controller->start()->daemonShouldRun() === true)
 				{
-					$this->doDaemonTask();
+					$this->runDaemon();
 				}
+
+				$this->stopDaemon();
 
 				while (ob_get_level() > 0)
 				{
@@ -362,7 +364,9 @@ abstract class daemon extends script\configurable
 		return false;
 	}
 
-	protected abstract function doDaemonTask();
+	protected abstract function runDaemon();
+
+	protected abstract function stopDaemon();
 
 	protected function getException($message)
 	{

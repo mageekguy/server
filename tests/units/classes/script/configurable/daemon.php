@@ -532,8 +532,9 @@ class daemon extends atoum
 									->after($this->mock($controller)->call('offsetSet')->withArguments(SIGTERM, array($controller, 'stopDaemon'))->once())
 										->twice()
 						)
-							->before($this->mock($daemon)->call('doDaemonTask')->once())
+							->before($this->mock($daemon)->call('runDaemon')->once())
 								->once()
+				->mock($daemon)->call('stopDaemon')->once()
 		;
 	}
 }
