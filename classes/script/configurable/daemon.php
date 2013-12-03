@@ -3,6 +3,7 @@
 namespace server\script\configurable;
 
 use
+	atoum,
 	atoum\script
 ;
 
@@ -18,9 +19,9 @@ abstract class daemon extends script\configurable
 	protected $home = null;
 	protected $pid = null;
 
-	public function __construct($name)
+	public function __construct($name, atoum\adapter $adapter = null)
 	{
-		parent::__construct($name);
+		parent::__construct($name, $adapter);
 
 		$this
 			->setInfoLogger()
@@ -54,7 +55,7 @@ abstract class daemon extends script\configurable
 
 	public function setUid($name)
 	{
-		$userInfos = posix_getpwuid($name);
+		$userInfos = posix_getpwnam($name);
 
 		if ($userInfos === false)
 		{
@@ -204,7 +205,7 @@ abstract class daemon extends script\configurable
 		}
 		else
 		{
-			$this->outputLogger->log($info);
+			$this->infoLogger->log($info);
 		}
 
 		return $this;

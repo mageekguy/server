@@ -6,6 +6,7 @@ require __DIR__ . '/../../runner.php';
 
 use
 	atoum,
+	server\network,
 	server\socket\manager as testedClass,
 	mock\server\socket\manager as mockedTestedClass
 ;
@@ -41,7 +42,7 @@ class manager extends atoum
 				$this->function->socket_clear_error->doesNothing()
 			)
 			->then
-				->exception(function() use ($manager, & $ip, & $port) { $manager->bindTo($ip = uniqid(), $port = rand(1, PHP_INT_MAX)); })
+				->exception(function() use ($manager) { $manager->bindTo(new network\ip('127.0.0.1'), new network\port(8080)); })
 					->isInstanceOf('server\socket\manager\exception')
 					->hasCode($errorCode)
 					->hasMessage($errorMessage)
@@ -58,7 +59,7 @@ class manager extends atoum
 				$this->calling($manager)->close->returnThis()
 			)
 			->then
-				->exception(function() use ($manager, & $ip, & $port) { $manager->bindTo($ip = uniqid(), $port = rand(1, PHP_INT_MAX)); })
+				->exception(function() use ($manager) { $manager->bindTo(new network\ip('127.0.0.1'), new network\port(8080)); })
 					->isInstanceOf('server\socket\manager\exception')
 				->mock($manager)->call('close')->withArguments($socket)->once()
 				->function('socket_last_error')->wasCalledWithArguments($socket)->once()
@@ -72,7 +73,7 @@ class manager extends atoum
 				$this->function->socket_strerror = $errorMessage = uniqid()
 			)
 			->then
-				->exception(function() use ($manager, & $ip, & $port) { $manager->bindTo($ip = uniqid(), $port = rand(1, PHP_INT_MAX)); })
+				->exception(function() use ($manager) { $manager->bindTo(new network\ip('127.0.0.1'), new network\port(8080)); })
 					->isInstanceOf('server\socket\manager\exception')
 					->hasCode($errorCode)
 					->hasMessage($errorMessage)
@@ -88,7 +89,7 @@ class manager extends atoum
 				$this->function->socket_strerror = $errorMessage = uniqid()
 			)
 			->then
-				->exception(function() use ($manager, & $ip, & $port) { $manager->bindTo($ip = uniqid(), $port = rand(1, PHP_INT_MAX)); })
+				->exception(function() use ($manager) { $manager->bindTo(new network\ip('127.0.0.1'), new network\port(8080)); })
 					->isInstanceOf('server\socket\manager\exception')
 					->hasCode($errorCode)
 					->hasMessage($errorMessage)
@@ -99,10 +100,20 @@ class manager extends atoum
 
 			->if($this->function->socket_listen = true)
 			->then
-				->string($manager->bindTo(uniqid(), rand(1, PHP_INT_MAX)))->isIdenticalTo($socket)
+				->string($manager->bindTo($ip = new network\ip('127.0.0.1'), $port = new network\port(8080)))->isIdenticalTo($socket)
 				->mock($manager)->call('close')->withArguments($socket)->never()
 				->variable($manager->getLastErrorCode())->isNull()
 				->variable($manager->getLastErrorMessage())->isNull()
+				->function('socket_listen')
+					->wasCalledWithArguments($socket)
+						->after($this->function('socket_bind')
+							->wasCalledWithArguments($socket, $ip, $port)
+								->after($this->function('socket_set_option')
+									->wasCalledWithArguments($socket, SOL_SOCKET, SO_REUSEADDR, 1)
+										->once()
+								)
+						)
+							->once()
 		;
 	}
 
@@ -221,7 +232,7 @@ class manager extends atoum
 		;
 	}
 
-	public function testGetPeerName()
+	public function testGetPeer()
 	{
 		$this
 			->given($manager = new testedClass())
@@ -233,7 +244,7 @@ class manager extends atoum
 				$this->function->socket_clear_error->doesNothing()
 			)
 			->then
-				->exception(function() use ($manager, & $socket) { $manager->getPeerName($socket = uniqid()); })
+				->exception(function() use ($manager, & $socket) { $manager->getPeer($socket = uniqid()); })
 					->isInstanceOf('server\socket\manager\exception')
 					->hasCode($errorCode)
 					->hasMessage($errorMessage)
@@ -244,9 +255,9 @@ class manager extends atoum
 				->integer($manager->getLastErrorCode())->isEqualTo($errorCode)
 				->string($manager->getLastErrorMessage())->isEqualTo($errorMessage)
 
-			->if($this->function->socket_getpeername = function($socket, & $ip, & $port) use (& $socketIp, & $socketPort) { $ip = $socketIp = uniqid(); $port = $socketPort = uniqid(); return true; })
+			->if($this->function->socket_getpeername = function($socket, & $ip, & $port) use (& $socketIp, & $socketPort) { $ip = $socketIp = '127.0.0.1'; $port = $socketPort = 8080; return true; })
 			->then
-				->array($manager->getPeerName($socket))->isEqualTo(array($socketIp, $socketPort))
+				->object($manager->getPeer($socket))->isEqualTo(new network\peer(new network\ip($socketIp), new network\port($socketPort)))
 				->function('socket_getpeername')->wasCalledWithArguments($socket)->once()
 				->variable($manager->getLastErrorCode())->isNull()
 				->variable($manager->getLastErrorMessage())->isNull()
@@ -341,19 +352,12 @@ class manager extends atoum
 			->if(
 				$this->function->socket_set_option = true,
 				$this->function->socket_shutdown = false,
-				$this->function->socket_last_error = $errorCode = rand(1,PHP_INT_MAX),
-				$this->function->socket_strerror = $errorMessage = uniqid()
+				$this->function->socket_close = true
 			)
 			->then
-				->exception(function() use ($manager, & $socket) { $manager->close($socket = uniqid()); })
-					->isInstanceOf('server\socket\manager\exception')
-					->hasCode($errorCode)
-					->hasMessage($errorMessage)
-				->integer($manager->getLastErrorCode())->isEqualTo($errorCode)
-				->string($manager->getLastErrorMessage())->isEqualTo($errorMessage)
-				->function('socket_set_option')->wasCalledWithArguments($socket, SOL_SOCKET, SO_LINGER, array('l_onoff' => 1, 'l_linger' => 0))
-					->before($this->function('socket_shutdown')->wasCalledWithArguments($socket)->once())
-						->once()
+				->object($manager->close($socket = uniqid()))->isIdenticalTo($manager)
+				->variable($manager->getLastErrorCode())->isNull()
+				->variable($manager->getLastErrorMessage())->isNull()
 
 			->if(
 				$this->function->socket_shutdown = true,

@@ -178,14 +178,14 @@ class daemon extends atoum
 		$this
 			->given($daemon = new testedClass(uniqid()))
 
-			->if($this->function->posix_getpwuid = false)
+			->if($this->function->posix_getpwnam = false)
 			->then
 				->exception(function() use ($daemon, & $uidName) { $daemon->setUid($uidName = uniqid()); })
 					->isInstanceOf('server\script\configurable\daemon\exception')
 					->hasMessage('UID \'' . $uidName . '\' is unknown')
 				->variable($daemon->getUid())->isNull()
 
-			->if($this->function->posix_getpwuid = array('uid' => $uid = rand(1, PHP_INT_MAX), 'gid' => $gid = rand(1, PHP_INT_MAX)))
+			->if($this->function->posix_getpwnam = array('uid' => $uid = rand(1, PHP_INT_MAX), 'gid' => $gid = rand(1, PHP_INT_MAX)))
 			->then
 				->object($daemon->setUid($uidName))->isIdenticalTo($daemon)
 				->integer($daemon->getUid())->isEqualTo($uid)
@@ -291,7 +291,7 @@ class daemon extends atoum
 				$daemon = new testedClass(uniqid()),
 				$daemon->setInfoWriter($writer = new \mock\atoum\writer()),
 				$this->calling($writer)->write->returnThis(),
-				$daemon->setOutputLogger($logger = new \mock\server\logger()),
+				$daemon->setInfoLogger($logger = new \mock\server\logger()),
 				$this->calling($logger)->log->returnThis()
 			)
 

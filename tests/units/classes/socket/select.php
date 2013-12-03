@@ -100,7 +100,7 @@ class select extends atoum
 
 			->if(
 				$this->calling($socketEvents)->__isset = true,
-				$this->calling($socketManager)->select = 0
+				$this->calling($socketManager)->select = function(& $read, & $write) { $read = $write = array(); }
 			)
 			->then
 				->object($select->wait($timeout))->isIdenticalTo($select)
@@ -109,7 +109,7 @@ class select extends atoum
 				->mock($socketEvents)->call('triggerOnWrite')->withArguments($socket1)->never()
 
 			->if(
-				$this->calling($socketManager)->select = function(& $read) use ($socket1) { $read = array($socket1); $write = array($socket1); return 2; },
+				$this->calling($socketManager)->select = function(& $read) use ($socket1) { $read = array($socket1); $write = array($socket1); },
 				$this->calling($socketEvents)->triggerOnRead->returnThis(),
 				$this->calling($socketEvents)->triggerOnWrite->returnThis()
 			)

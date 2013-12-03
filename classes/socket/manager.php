@@ -2,6 +2,10 @@
 
 namespace server\socket;
 
+use
+	server\network
+;
+
 class manager
 {
 	protected $lastErrorCode = null;
@@ -17,7 +21,7 @@ class manager
 		return $this->lastErrorMessage;
 	}
 
-	public function getPeerName($socket)
+	public function getPeer($socket)
 	{
 		$this->resetLastError();
 
@@ -26,14 +30,14 @@ class manager
 			throw $this->getException($socket);
 		}
 
-		return array($ip, $port);
+		return new network\peer(new network\ip($ip), new network\port($port));
 	}
 
-	public function bindTo($ip, $port)
+	public function bindTo(network\ip $ip, network\port $port)
 	{
 		$this->resetLastError();
 
-		$socket = @socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+		$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 
 		if ($socket === false)
 		{
@@ -42,18 +46,16 @@ class manager
 
 		try
 		{
-			if (
-				@socket_set_option($socket, SOL_SOCKET, SO_REUSEADDR, 1) === false
-				||
-				@socket_bind($resource, $ip, $port) === false
-				||
-				@socket_listen($resource) === false
-			)
+			switch (true)
 			{
-				throw $this->getException($socket);
-			}
+				case socket_set_option($socket, SOL_SOCKET, SO_REUSEADDR, 1) === false:
+				case socket_bind($socket, (string) $ip, (string) $port) === false:
+				case socket_listen($socket) === false:
+					throw $this->getException($socket);
 
-			return $socket;
+				default:
+					return $socket;
+			}
 		}
 		catch (\exception $exception)
 		{
@@ -121,15 +123,16 @@ class manager
 	{
 		$this->resetLastError();
 
-		if (
-			@socket_set_block($socket) === false
-			||
-			@socket_set_option($socket, SOL_SOCKET, SO_LINGER, array('l_onoff' => 1, 'l_linger' => 0)) === false
-			||
-			@socket_shutdown($socket, 2) === false
-			||
-			@socket_close($socket) === false
-		)
+		switch (true)
+		{
+			case @socket_set_block($socket) === false:
+			case @socket_set_option($socket, SOL_SOCKET, SO_LINGER, array('l_onoff' => 1, 'l_linger' => 0)) === false:
+				throw $this->getException($socket);
+		}
+
+		@socket_shutdown($socket, 2);
+
+		if (@socket_close($socket) === false)
 		{
 			throw $this->getException($socket);
 		}
@@ -139,7 +142,15 @@ class manager
 
 	private function getException($socket = null)
 	{
-		$this->lastErrorCode = socket_last_error($socket);
+		if ($socket === null)
+		{
+			$this->lastErrorCode = socket_last_error();
+		}
+		else
+		{
+			$this->lastErrorCode = socket_last_error($socket);
+		}
+
 		$this->lastErrorMessage = socket_strerror($this->lastErrorCode);
 
 		socket_clear_error();

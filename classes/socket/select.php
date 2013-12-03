@@ -58,28 +58,47 @@ class select
 	{
 		$read = $write = $except = array();
 
-		foreach ($this->socketsEvents as $key => $socketEvents)
+		foreach (new \arrayIterator($this->socketsResource) as $key => $socketResource)
 		{
-			if (isset($socketEvents->onRead) === true)
-			{
-				$read[$key] = $this->socketsResource[$key];
-			}
+		}
 
-			if (isset($socketEvents->onWrite) === true)
+		foreach (new \arrayIterator($this->socketsEvents) as $key => $socketEvents)
+		{
+			$socketResource = $this->socketsResource[$key];
+
+			if (is_resource($socketResource) === false)
 			{
-				$write[$key] = $this->socketsResource[$key];
+				unset($this->socketsResource[$key]);
+				unset($this->socketsEvents[$key]);
+			}
+			else
+			{
+				if (isset($socketEvents->onRead) === true)
+				{
+					$read[$key] = $socketResource;
+				}
+
+				if (isset($socketEvents->onWrite) === true)
+				{
+					$write[$key] = $socketResource;
+				}
 			}
 		}
 
 		if (sizeof($read) > 0 || sizeof($write) > 0 || sizeof($except) > 0)
 		{
-			if ($this->socketManager->select($read, $write, $except, $timeout) > 0)
+			$this->socketManager->select($read, $write, $except, $timeout);
+
+			if ($read)
 			{
 				foreach ($read as $key => $socket)
 				{
 					unset($this->socketsEvents[$key]->triggerOnRead($socket)->onRead);
 				}
+			}
 
+			if ($write)
+			{
 				$write = array_filter($write, function($socket) { return (is_resource($socket) === true); });
 
 				foreach ($write as $key => $socket)
