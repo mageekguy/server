@@ -20,9 +20,16 @@ try
 }
 catch (\exception $exception)
 {
-	$server->writeError($exception->getCode() . ': ' . $exception->getMessage() . PHP_EOL . $exception->getTraceAsString());
+	if ($server->isDaemon() === true)
+	{
+		throw $exception;
+	}
+	else
+	{
+		$server->writeError($exception->getMessage());
 
-	exit($exception->getCode());
+		exit($exception->getCode());
+	}
 }
 
 exit(0);
