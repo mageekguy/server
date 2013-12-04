@@ -58,10 +58,6 @@ class select
 	{
 		$read = $write = $except = array();
 
-		foreach (new \arrayIterator($this->socketsResource) as $key => $socketResource)
-		{
-		}
-
 		foreach (new \arrayIterator($this->socketsEvents) as $key => $socketEvents)
 		{
 			$socketResource = $this->socketsResource[$key];

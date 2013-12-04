@@ -132,6 +132,8 @@ class manager
 
 		@socket_shutdown($socket, 2);
 
+		socket_clear_error();
+
 		if (@socket_close($socket) === false)
 		{
 			throw $this->getException($socket);

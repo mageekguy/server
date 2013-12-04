@@ -19,6 +19,11 @@ class endpoint extends atoum
 		$this->then = function() use ($test) { $test->getTestAdapterStorage()->resetCalls(); return $test; };
 	}
 
+	public function testClass()
+	{
+		$this->testedClass->extends('server\network\peer');
+	}
+
 	public function test__construct()
 	{
 		$this

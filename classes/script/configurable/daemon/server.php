@@ -11,10 +11,11 @@ use
 
 class server extends configurable\daemon
 {
-	protected $sockets = array();
 	protected $socketManager = null;
 	protected $socketSelect = null;
 	protected $endpoints = array();
+
+	private $sockets = array();
 
 	public function __construct($name, atoum\adapter $adapter = null)
 	{
@@ -81,23 +82,19 @@ class server extends configurable\daemon
 	{
 		$this->socketManager->close($socket);
 
-		$this->sockets = array_filter($this->sockets, function($serverSocket) use ($socket) { return ($serverSocket !== $socket); });
+		$this->sockets = array_filter($this->sockets, function($serverSocket) use ($socket) { return ($serverSocket !== $socket[0]); });
 
 		return $this;
 	}
 
 	public function bindSocketTo(network\ip $ip, network\port $port)
 	{
-		$this->sockets[] = $socket =  $this->socketManager->bindTo($ip, $port);
-
-		return $socket;
+		return $this->addSocket($this->socketManager->bindTo($ip, $port), new network\peer($ip, $port));
 	}
 
 	public function acceptSocket($serverSocket)
 	{
-		$this->sockets[] = $socket = $this->socketManager->accept($serverSocket);
-
-		return $socket;
+		return $this->addSocket($this->socketManager->accept($serverSocket));
 	}
 
 	protected function runDaemon()
@@ -106,31 +103,53 @@ class server extends configurable\daemon
 		{
 			try
 			{
-				$this->sockets[] = $endpoint->bindForServer($this);
+				$endpoint->bindForServer($this);
 			}
 			catch (\exception $exception)
 			{
 				$this->writeError($exception->getMessage());
 			}
 
-			$this->writeInfo('Accept connection on ' . $endpoint);
+			$this->writeInfo('Accept connection on ' . $endpoint . '…');
 		}
 
 		$this->endpoints = array();
 
-		$this->socketSelect->wait(null);
+		if (sizeof($this->sockets) > 0)
+		{
+			try
+			{
+				$this->socketSelect->wait(null);
+			}
+			catch (socket\manager\exception $exception)
+			{
+				if ($exception->getCode() != 4)
+				{
+					throw $exception;
+				}
+			}
+		}
+
+		return $this;
 	}
 
 	protected function stopDaemon()
 	{
+		$this->writeInfo('Stop server…');
+
 		foreach ($this->sockets as $socket)
 		{
-			$this->closeSocket($socket);
+			list($socket, $peer) = $socket;
+
+			$this
+				->closeSocket($socket)
+				->writeInfo('Connection on ' . $peer . ' closed!');
+			;
 		}
 
 		$this->sockets = array();
 
-		return $this;
+		return $this->writeInfo('Server stopped');
 	}
 
 	protected function setArgumentHandlers()
@@ -165,5 +184,12 @@ class server extends configurable\daemon
 		;
 
 		return $this;
+	}
+
+	protected function addSocket($socket, network\peer $peer = null)
+	{
+		$this->sockets[] = array($socket, $peer ?: $this->getSocketPeer($socket));
+
+		return $socket;
 	}
 }

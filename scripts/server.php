@@ -20,7 +20,7 @@ try
 }
 catch (\exception $exception)
 {
-	$server->writeError($exception->getMessage());
+	$server->writeError($exception->getCode() . ': ' . $exception->getMessage() . PHP_EOL . $exception->getTraceAsString());
 
 	exit($exception->getCode());
 }

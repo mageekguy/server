@@ -43,9 +43,9 @@ class controller implements \arrayAccess
 			{
 				throw new controller\exception('Unable to set handler for signal \'' . $signal . '\'');
 			}
-
-			unset($this->signals[$signal]);
 		}
+
+		$this->signals = array();
 
 		return $this;
 	}

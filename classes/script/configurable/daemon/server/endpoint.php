@@ -7,24 +7,9 @@ use
 	server\script\configurable\daemon
 ;
 
-class endpoint
+class endpoint extends network\peer
 {
-	protected $ip = null;
-	protected $port = null;
 	protected $connectHandler = null;
-
-	public function __construct(network\ip $ip, network\port $port)
-	{
-		$this
-			->setIp($ip)
-			->setPort($port)
-		;
-	}
-
-	public function __toString()
-	{
-		return $this->ip . ':' . $this->port;
-	}
 
 	public function setIp(network\ip $ip)
 	{
@@ -33,21 +18,11 @@ class endpoint
 		return $this;
 	}
 
-	public function getIp()
-	{
-		return $this->ip;
-	}
-
 	public function setPort(network\port $port)
 	{
 		$this->port = $port;
 
 		return $this;
-	}
-
-	public function getPort()
-	{
-		return $this->port;
 	}
 
 	public function onConnect(callable $handler)

@@ -345,6 +345,8 @@ abstract class daemon extends script\configurable
 
 				$this->controller[SIGTERM] = array($this->controller, 'stopDaemon');
 
+				declare(ticks=1);
+
 				while ($this->controller->start()->daemonShouldRun() === true)
 				{
 					$this->runDaemon();
@@ -358,11 +360,6 @@ abstract class daemon extends script\configurable
 				}
 			}
 		}
-	}
-
-	protected function shouldDoDaemonTask()
-	{
-		return false;
 	}
 
 	protected abstract function runDaemon();

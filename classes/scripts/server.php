@@ -47,15 +47,8 @@ class server extends daemon\server
 
 	public function acceptTracker($trackersSocket)
 	{
-		$this
-			->wait($trackersSocket)
-				->onRead(array($this, __FUNCTION__))
-		;
-
-		$this
-			->wait($trackerSocket = $this->acceptSocket($trackersSocket))
-				->onRead(array($this, 'readTracker'))
-		;
+		$this->wait($trackersSocket)->onRead(array($this, __FUNCTION__));
+		$this->wait($trackerSocket = $this->acceptSocket($trackersSocket))->onRead(array($this, 'readTracker'));
 
 		return $this->writeInfo('Accept peer ' . $this->getSocketPeer($trackerSocket));
 	}
@@ -64,18 +57,18 @@ class server extends daemon\server
 	{
 		$data = $this->readSocket($socket, 2048, PHP_BINARY_READ);
 
-		$this->writeInfo('Receive \'' . $data . '\' from ' . $this->getSocketPeer($socket));
+		$this->writeInfo('Receive \'' . $data . '\' from peer ' . $this->getSocketPeer($socket));
 
-		if ($data === '')
+		if ($data !== '')
+		{
+			$this->wait($socket)->onRead(array($this, __FUNCTION__));
+		}
+		else
 		{
 			$this
 				->writeInfo('Close connection with ' . $this->getSocketPeer($socket))
 				->closeSocket($socket)
 			;
-		}
-		else
-		{
-			$this->wait($socket)->onRead(array($this, __FUNCTION__));
 		}
 
 		return $this;

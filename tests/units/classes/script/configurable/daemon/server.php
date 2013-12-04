@@ -138,7 +138,10 @@ class server extends atoum
 				$server->setSocketManager($socketManager = new \mock\server\socket\manager())
 			)
 
-			->if($this->calling($socketManager)->accept = $clientSocket = uniqid())
+			->if(
+				$this->calling($socketManager)->accept = $clientSocket = uniqid(),
+				$this->calling($socketManager)->getPeer = new network\peer(new network\ip('127.0.0.1'), new network\port(8080))
+			)
 			->then
 				->string($server->acceptSocket($serverSocket = uniqid()))->isEqualTo($clientSocket)
 				->mock($socketManager)->call('accept')->withArguments($serverSocket)->once()
