@@ -11,7 +11,6 @@ $script
 	->setClientsIp(new ip('127.0.0.1')) // Put IP where clients should connect here
 	->setClientsPort(new port(8080)) // Put port where clients should connect here
 	->setUid('nobody') // Put user which should own the server processus here
-	->setHome('/tmp') // Put the home directory of the server processus here
 ;
 
 $trimDecorator = new decorators\trim();
