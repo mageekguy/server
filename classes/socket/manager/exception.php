@@ -2,4 +2,4 @@
 
 namespace server\socket\manager;
 
-class exception extends \runtimeException {}
+class exception extends \runtimeException implements \server\exception {}

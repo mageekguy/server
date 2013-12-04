@@ -2,4 +2,4 @@
 
 namespace server\writers\file;
 
-class exception extends \runtimeException {}
+class exception extends \runtimeException implements \server\exception {}

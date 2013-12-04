@@ -12,6 +12,9 @@ class exception extends atoum
 {
 	public function testClass()
 	{
-		$this->testedClass->extends('outOfBoundsException');
+		$this->testedClass
+			->extends('outOfBoundsException')
+			->implements('server\exception')
+		;
 	}
 }

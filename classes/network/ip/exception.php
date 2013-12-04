@@ -2,4 +2,4 @@
 
 namespace server\network\ip;
 
-class exception extends \outOfBoundsException {}
+class exception extends \outOfBoundsException implements \server\exception {}
