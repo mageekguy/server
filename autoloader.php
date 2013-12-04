@@ -1,6 +1,6 @@
 <?php
 
-namespace mehen;
+namespace server;
 
 use atoum;
 

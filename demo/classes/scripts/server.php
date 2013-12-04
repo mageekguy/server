@@ -1,6 +1,6 @@
 <?php
 
-namespace server\scripts;
+namespace server\demo\scripts;
 
 use
 	atoum,
@@ -10,50 +10,50 @@ use
 
 class server extends daemon\server
 {
-	protected $trackersEndpoint = null;
+	protected $clientsEndpoint = null;
 
 	public function __construct($name, atoum\adapter $adapter = null)
 	{
 		parent::__construct($name, $adapter);
 
-		$this->trackersEndpoint = (new daemon\server\endpoint(new network\ip('192.168.0.1'), new network\port(8080)))->onConnect(array($this, 'acceptTracker'));
+		$this->clientsEndpoint = (new daemon\server\endpoint(new network\ip('192.168.0.1'), new network\port(8080)))->onConnect(array($this, 'acceptClient'));
 
-		$this->addEndpoint($this->trackersEndpoint);
+		$this->addEndpoint($this->clientsEndpoint);
 	}
 
-	public function setTrackersIp(network\ip $ip)
+	public function setClientsIp(network\ip $ip)
 	{
-		$this->trackersEndpoint->setIp($ip);
+		$this->clientsEndpoint->setIp($ip);
 
 		return $this;
 	}
 
-	public function getTrackersIp()
+	public function getClientsIp()
 	{
-		return $this->trackersEndpoint->getIp();
+		return $this->clientsEndpoint->getIp();
 	}
 
-	public function setTrackersPort(network\port $port)
+	public function setClientsPort(network\port $port)
 	{
-		$this->trackersEndpoint->setPort($port);
+		$this->clientsEndpoint->setPort($port);
 
 		return $this;
 	}
 
-	public function getTrackersPort()
+	public function getClientsPort()
 	{
-		return $this->trackersEndpoint->getPort();
+		return $this->clientsEndpoint->getPort();
 	}
 
-	public function acceptTracker($trackersSocket)
+	public function acceptClient($clientsSocket)
 	{
-		$this->wait($trackersSocket)->onRead(array($this, __FUNCTION__));
-		$this->wait($trackerSocket = $this->acceptSocket($trackersSocket))->onRead(array($this, 'readTracker'));
+		$this->wait($clientsSocket)->onRead(array($this, __FUNCTION__));
+		$this->wait($clientSocket = $this->acceptSocket($clientsSocket))->onRead(array($this, 'readClient'));
 
-		return $this->writeInfo('Accept peer ' . $this->getSocketPeer($trackerSocket));
+		return $this->writeInfo('Accept peer ' . $this->getSocketPeer($clientSocket));
 	}
 
-	public function readTracker($socket)
+	public function readClient($socket)
 	{
 		$data = $this->readSocket($socket, 2048, PHP_BINARY_READ);
 
@@ -93,11 +93,11 @@ class server extends daemon\server
 							throw new exceptions\logic\invalidArgument(sprintf($script->getLocale()->_('IP \'%s\' is invalid'), reset($values)));
 						}
 
-						$script->setTrackersIp($ip);
+						$script->setClientsIp($ip);
 					},
-					array('-ti', '--trackers-ip'),
+					array('-ci', '--clients-ip'),
 					null,
-					$this->locale->_('Define trackers IP')
+					$this->locale->_('Define clients IP')
 				)
 			->addArgumentHandler(
 					function($script, $argument, $values) {
@@ -115,11 +115,11 @@ class server extends daemon\server
 							throw new exceptions\logic\invalidArgument(sprintf($script->getLocale()->_('Port \'%s\' is invalid'), reset($values)));
 						}
 
-						$script->setTrackersPort($port);
+						$script->setClientsPort($port);
 					},
-					array('-tp', '--trackers-port'),
+					array('-cp', '--clients-port'),
 					null,
-					$this->locale->_('Define trackers port')
+					$this->locale->_('Define clients port')
 				)
 		;
 

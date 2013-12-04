@@ -8,10 +8,10 @@ use
 ;
 
 $script
-	->setTrackersIp(new ip('192.168.26.32'))
-	->setTrackersPort(new port(8080))
-	->setUid('nobody')
-	->setHome('/tmp')
+	->setClientsIp(new ip('127.0.0.1')) // Put IP where clients should connect here
+	->setClientsPort(new port(8080)) // Put port where clients should connect here
+	->setUid('nobody') // Put user which should own the server processus here
+	->setHome('/tmp') // Put the home directory of the server processus here
 ;
 
 $trimDecorator = new decorators\trim();
@@ -26,7 +26,7 @@ $outputLogger
 	->addDecorator($prefixDecorator)
 	->addDecorator($dateDecorator)
 	->addDecorator($eolDecorator)
-;
+; // Output log message will be '2013-12-03 21:03:28: The output here'
 
 $script->setInfoLogger($infoLogger = new logger());
 $infoLogger
@@ -35,7 +35,7 @@ $infoLogger
 	->addDecorator($prefixDecorator)
 	->addDecorator($dateDecorator)
 	->addDecorator($eolDecorator)
-;
+; // Info log message will be '2013-12-03 21:03:28: The info log message here'
 
 $script->setErrorLogger($errorLogger = new logger());
 $errorLogger
@@ -44,4 +44,4 @@ $errorLogger
 	->addDecorator($prefixDecorator)
 	->addDecorator($dateDecorator)
 	->addDecorator($eolDecorator)
-;
+; // Error log message will be '2013-12-03 21:03:28: The error log message here'
