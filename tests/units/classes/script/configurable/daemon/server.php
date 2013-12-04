@@ -6,6 +6,7 @@ require __DIR__ . '/../../../../runner.php';
 
 use
 	atoum,
+	server\unix,
 	server\socket,
 	server\network,
 	server\script\configurable\daemon,
@@ -26,9 +27,25 @@ class server extends atoum
 			->then
 				->string($server->getName())->isEqualTo($name)
 				->object($server->getAdapter())->isIdenticalTo($adapter)
+				->object($server->getUnixUser())->isEqualTo(new unix\user())
+				->variable($server->getHome())->isNull()
 				->object($server->getSocketManager())->isEqualTo(new socket\manager())
 				->object($server->getSocketSelect())->isEqualTo(new socket\select())
 				->array($server->getEndpoints())->isEmpty();
+		;
+	}
+
+	public function testSetUnixUser()
+	{
+		$this
+			->if($server = new testedClass(uniqid()))
+			->then
+				->object($server->setUnixUser($user = new unix\user()))->isIdenticalTo($server)
+				->object($server->getUnixUser())->isIdenticalTo($user)
+				->object($server->setUnixUser())->isIdenticalTo($server)
+				->object($server->getUnixUser())
+					->isNotIdenticalTo($user)
+					->isEqualTo(new unix\user())
 		;
 	}
 
@@ -160,6 +177,27 @@ class server extends atoum
 			->then
 				->string($server->bindSocketTo($ip = new network\ip('127.0.0.1'), $port = new network\port(8080)))->isEqualTo($serverSocket)
 				->mock($socketManager)->call('bindTo')->withArguments($ip, $port)->once()
+		;
+	}
+
+	public function testRun()
+	{
+		$this
+			->given(
+				$server = new testedClass(uniqid()),
+				$server->setUnixUser($unixUser = new \mock\server\unix\user()),
+				$server->setSocketManager($socketManager = new \mock\server\socket\manager())
+			)
+			->then
+				->exception(function() use ($server) { $server->run(); })
+					->isInstanceOf('server\script\configurable\daemon\server\exception')
+					->hasMessage('UID is undefined')
+
+			->if($this->calling($unixUser)->getUid = $uid = rand(1, PHP_INT_MAX))
+			->then
+				->exception(function() use ($server) { $server->run(); })
+					->isInstanceOf('server\script\configurable\daemon\server\exception')
+					->hasMessage('Home is undefined')
 		;
 	}
 }

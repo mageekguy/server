@@ -4,19 +4,18 @@ namespace server\script\configurable;
 
 use
 	atoum,
-	atoum\script
+	atoum\script,
+	server\unix
 ;
 
 abstract class daemon extends script\configurable
 {
+	protected $user = null;
 	protected $controller = null;
 	protected $infoLogger = null;
 	protected $errorLogger = null;
 	protected $outputLogger = null;
 	protected $isDaemon = false;
-	protected $gid = null;
-	protected $uid = null;
-	protected $home = null;
 	protected $pid = null;
 
 	public function __construct($name, atoum\adapter $adapter = null)
@@ -27,8 +26,50 @@ abstract class daemon extends script\configurable
 			->setInfoLogger()
 			->setErrorLogger()
 			->setOutputLogger()
+			->setUnixUser()
 			->setController()
 		;
+	}
+
+	public function setUnixUser(unix\user $user = null)
+	{
+		$this->user = $user ?: new unix\user();
+
+		return $this;
+	}
+
+	public function getUnixUser()
+	{
+		return $this->user;
+	}
+
+	public function setUid($name)
+	{
+		try
+		{
+			$this->user->setLogin($name);
+		}
+		catch (\exception $exception)
+		{
+			throw $this->getException('UID \'' . $name . '\' is unknown');
+		}
+
+		return $this;
+	}
+
+	public function getUid()
+	{
+		return $this->user->getUid();
+	}
+
+	public function getGid()
+	{
+		return $this->user->getGid();
+	}
+
+	public function getHome()
+	{
+		return $this->user->getHomePath();
 	}
 
 	public function setController(daemon\controller $controller = null)
@@ -51,43 +92,6 @@ abstract class daemon extends script\configurable
 	public function isDaemon()
 	{
 		return ($this->isDaemon === true);
-	}
-
-	public function setUid($name)
-	{
-		$userInfos = posix_getpwnam($name);
-
-		if ($userInfos === false)
-		{
-			throw $this->getException('UID \'' . $name . '\' is unknown');
-		}
-
-		$this->uid = $userInfos['uid'];
-		$this->gid = $userInfos['gid'];
-
-		return $this;
-	}
-
-	public function getUid()
-	{
-		return $this->uid;
-	}
-
-	public function getGid()
-	{
-		return $this->gid;
-	}
-
-	public function setHome($home)
-	{
-		$this->home = $home;
-
-		return $this;
-	}
-
-	public function getHome()
-	{
-		return $this->home;
 	}
 
 	public function getInfoLogger()
@@ -366,6 +370,27 @@ abstract class daemon extends script\configurable
 	protected abstract function runDaemon();
 
 	protected abstract function stopDaemon();
+
+	protected function setArgumentHandlers()
+	{
+		parent::setArgumentHandlers()
+			->addArgumentHandler(
+					function($script, $argument, $values) {
+						if (sizeof($values) !== 1)
+						{
+							throw new exceptions\logic\invalidArgument(sprintf($script->getLocale()->_('Bad usage of %s, do php %s --help for more informations'), $argument, $script->getName()));
+						}
+
+						$script->setUid(reset($values));
+					},
+					array('-u', '--uid'),
+					null,
+					$this->locale->_('Define UID')
+				)
+		;
+
+		return $this;
+	}
 
 	protected function getException($message)
 	{

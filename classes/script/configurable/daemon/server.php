@@ -152,40 +152,6 @@ class server extends configurable\daemon
 		return $this->writeInfo('Server stopped');
 	}
 
-	protected function setArgumentHandlers()
-	{
-		parent::setArgumentHandlers()
-			->addArgumentHandler(
-					function($script, $argument, $values) {
-						if (sizeof($values) !== 1)
-						{
-							throw new exceptions\logic\invalidArgument(sprintf($script->getLocale()->_('Bad usage of %s, do php %s --help for more informations'), $argument, $script->getName()));
-						}
-
-						$script->setUid(reset($values));
-					},
-					array('-u', '--uid'),
-					null,
-					$this->locale->_('Define UID')
-				)
-			->addArgumentHandler(
-					function($script, $argument, $values) {
-						if (sizeof($values) !== 1)
-						{
-							throw new exceptions\logic\invalidArgument(sprintf($script->getLocale()->_('Bad usage of %s, do php %s --help for more informations'), $argument, $script->getName()));
-						}
-
-						$script->setHome(reset($values));
-					},
-					array('-H', '--home'),
-					null,
-					$this->locale->_('Define home')
-				)
-		;
-
-		return $this;
-	}
-
 	protected function addSocket($socket, network\peer $peer = null)
 	{
 		$this->sockets[] = array($socket, $peer ?: $this->getSocketPeer($socket));

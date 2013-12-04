@@ -176,29 +176,29 @@ class daemon extends atoum
 	public function testSetUid()
 	{
 		$this
-			->given($daemon = new testedClass(uniqid()))
+			->given(
+				$daemon = new testedClass(uniqid()),
+				$daemon->setUnixUser($unixUser = new \mock\server\unix\user())
+			)
 
-			->if($this->function->posix_getpwnam = false)
+			->if($this->calling($unixUser)->setLogin->throw = $exception = new \exception(uniqid()))
 			->then
 				->exception(function() use ($daemon, & $uidName) { $daemon->setUid($uidName = uniqid()); })
 					->isInstanceOf('server\script\configurable\daemon\exception')
 					->hasMessage('UID \'' . $uidName . '\' is unknown')
 				->variable($daemon->getUid())->isNull()
+				->mock($unixUser)->call('setLogin')->withArguments($uidName)->once()
 
-			->if($this->function->posix_getpwnam = array('uid' => $uid = rand(1, PHP_INT_MAX), 'gid' => $gid = rand(1, PHP_INT_MAX)))
+			->if(
+				$this->calling($unixUser)->setLogin->returnThis(),
+				$this->calling($unixUser)->getUid = $uid = rand(1, PHP_INT_MAX),
+				$this->calling($unixUser)->getHomePath = $home = uniqid()
+			)
 			->then
 				->object($daemon->setUid($uidName))->isIdenticalTo($daemon)
 				->integer($daemon->getUid())->isEqualTo($uid)
-		;
-	}
-
-	public function testSetHome()
-	{
-		$this
-			->if($daemon = new testedClass(uniqid()))
-			->then
-				->object($daemon->setHome($home = uniqid()))->isIdenticalTo($daemon)
 				->string($daemon->getHome())->isEqualTo($home)
+				->mock($unixUser)->call('setLogin')->withArguments($uidName)->once()
 		;
 	}
 
