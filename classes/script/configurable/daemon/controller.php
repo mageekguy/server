@@ -35,8 +35,10 @@ class controller implements \arrayAccess
 		return (isset($this->signals[$signal]) === true);
 	}
 
-	public function start()
+	public function dispatchSignals()
 	{
+		pcntl_signal_dispatch();
+
 		foreach ($this->signals as $signal => $handler)
 		{
 			if (pcntl_signal($signal, $handler) === false)
@@ -59,8 +61,6 @@ class controller implements \arrayAccess
 
 	public function daemonShouldRun()
 	{
-		pcntl_signal_dispatch();
-
 		return $this->daemonShouldRun;
 	}
 }

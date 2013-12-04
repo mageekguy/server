@@ -127,6 +127,9 @@ class server extends configurable\daemon
 				{
 					throw $exception;
 				}
+				else
+				{
+				}
 			}
 		}
 

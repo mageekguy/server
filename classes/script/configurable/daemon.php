@@ -345,11 +345,12 @@ abstract class daemon extends script\configurable
 
 				$this->controller[SIGTERM] = array($this->controller, 'stopDaemon');
 
-				declare(ticks=1);
-
-				while ($this->controller->start()->daemonShouldRun() === true)
+				declare(ticks=1)
 				{
-					$this->runDaemon();
+					while ($this->controller->dispatchSignals()->daemonShouldRun() === true)
+					{
+						$this->runDaemon();
+					}
 				}
 
 				$this->stopDaemon();

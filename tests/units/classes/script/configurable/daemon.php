@@ -511,7 +511,7 @@ class daemon extends atoum
 				$this->function->posix_setuid = true,
 				$this->function->umask->doesNothing(),
 				$this->function->fclose->doesNothing(),
-				$this->calling($controller)->start->returnThis(),
+				$this->calling($controller)->dispatchSignals->returnThis(),
 				$this->calling($controller)->daemonShouldRun[1] = true,
 				$this->calling($controller)->daemonShouldRun[2] = false
 			)
@@ -528,7 +528,7 @@ class daemon extends atoum
 					->call('daemonShouldRun')->wasCalled()
 						->after(
 							$this->mock($controller)
-								->call('start')
+								->call('dispatchSignals')
 									->after($this->mock($controller)->call('offsetSet')->withArguments(SIGTERM, array($controller, 'stopDaemon'))->once())
 										->twice()
 						)

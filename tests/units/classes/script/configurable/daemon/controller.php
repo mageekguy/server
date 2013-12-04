@@ -33,26 +33,32 @@ class controller extends atoum
 		}
 	}
 
-	public function testStart()
+	public function testDispatchSignals()
 	{
 		$this
 			->if(
 				$controller = new testedClass(),
+				$this->function->pcntl_signal_dispatch->doesNothing(),
 				$this->function->pcntl_signal = true
 			)
 			->then
-				->object($controller->start())->isIdenticalTo($controller)
+				->object($controller->dispatchSignals())->isIdenticalTo($controller)
 				->function('pcntl_signal')->wasCalled()->never()
+				->function('pcntl_signal_dispatch')->wasCalled()->once()
 
 			->if(
 				$controller[SIGTERM] = $sigtermHandler = function() {},
 				$controller[SIGHUP] = $sigupHandler = function() {}
 			)
 			->then
-				->object($controller->start())->isIdenticalTo($controller)
-				->function('pcntl_signal')
-					->wasCalledWithArguments(SIGTERM, $sigtermHandler)->once()
-					->wasCalledWithArguments(SIGHUP, $sigupHandler)->once()
+				->object($controller->dispatchSignals())->isIdenticalTo($controller)
+				->function('pcntl_signal_dispatch')
+					->wasCalled()
+						->before($this->function('pcntl_signal')
+							->wasCalledWithArguments(SIGTERM, $sigtermHandler)->once()
+							->wasCalledWithArguments(SIGHUP, $sigupHandler)->once()
+						)
+							->once()
 				->boolean(isset($controller[SIGHUP]))->isFalse()
 				->boolean(isset($controller[SIGTERM]))->isFalse()
 
@@ -62,7 +68,7 @@ class controller extends atoum
 				$this->function->pcntl_signal = false
 			)
 			->then
-				->exception(function() use ($controller) { $controller->start(); })
+				->exception(function() use ($controller) { $controller->dispatchSignals(); })
 					->isInstanceOf('server\script\configurable\daemon\controller\exception')
 					->hasMessage('Unable to set handler for signal \'' . SIGTERM . '\'')
 		;
@@ -115,18 +121,13 @@ class controller extends atoum
 	public function testDaemonShouldRun()
 	{
 		$this
-			->if(
-				$controller = new testedClass(),
-				$this->function->pcntl_signal_dispatch = true
-			)
+			->if($controller = new testedClass())
 			->then
 				->boolean($controller->daemonShouldRun())->isTrue()
-				->function('pcntl_signal_dispatch')->wasCalled()->once()
 
 			->if($controller->stopDaemon())
 			->then
 				->boolean($controller->daemonShouldRun())->isFalse()
-				->function('pcntl_signal_dispatch')->wasCalled()->once()
 		;
 	}
 }
