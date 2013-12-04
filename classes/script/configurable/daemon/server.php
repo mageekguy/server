@@ -127,9 +127,6 @@ class server extends configurable\daemon
 				{
 					throw $exception;
 				}
-				else
-				{
-				}
 			}
 		}
 
@@ -194,5 +191,10 @@ class server extends configurable\daemon
 		$this->sockets[] = array($socket, $peer ?: $this->getSocketPeer($socket));
 
 		return $socket;
+	}
+
+	protected function getException($message)
+	{
+		return new server\exception($message);
 	}
 }
