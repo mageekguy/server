@@ -154,18 +154,4 @@ class events extends atoum
 				->string($socketTimeout)->isEqualTo($socket)
 		;
 	}
-
-	public function testRestartTimer()
-	{
-		$this
-			->given($events = new testedClass())
-			->then
-				->object($events->restartTimer())->isIdenticalTo($events)
-
-			->if($events->onTimeout($timer = new \mock\server\socket\timer(rand(1, PHP_INT_MAX)), function() {}))
-			->then
-				->object($events->restartTimer())->isIdenticalTo($events)
-				->mock($timer)->call('start')->once()
-		;
-	}
 }

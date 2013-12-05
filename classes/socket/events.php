@@ -80,14 +80,4 @@ class events
 
 		return $remaining;
 	}
-
-	public function restartTimer()
-	{
-		if ($this->onTimeout !== null)
-		{
-			$this->onTimeout[0]->start();
-		}
-
-		return $this;
-	}
 }
