@@ -6,11 +6,19 @@ require __DIR__ . '/../../runner.php';
 
 use
 	atoum,
+	server\socket,
 	server\socket\events as testedClass
 ;
 
 class events extends atoum
 {
+	public function beforeTestMethod($method)
+	{
+		$test = $this;
+
+		$this->then = function() use ($test) { $test->getTestAdapterStorage()->resetCalls(); return $test; };
+	}
+
 	public function test__construct()
 	{
 		$this
@@ -18,6 +26,7 @@ class events extends atoum
 			->then
 				->boolean(isset($events->onRead))->isFalse()
 				->boolean(isset($events->onWrite))->isFalse()
+				->boolean(isset($events->onTimeout))->isFalse()
 				->boolean(isset($events->{uniqid()}))->isFalse()
 		;
 	}
@@ -100,6 +109,63 @@ class events extends atoum
 			->then
 				->object($events->triggerOnWrite($socket))->isIdenticalTo($events)
 				->string($socketUsed)->isEqualTo($socket)
+		;
+	}
+
+	public function testOnTimeout()
+	{
+		$this
+			->given($events = new testedClass())
+			->then
+				->object($events->onTimeout(new socket\timer(10), $callable = function() {}))->isIdenticalTo($events)
+				->boolean(isset($events->onTimeout))->isTrue()
+		;
+	}
+
+	public function testTriggerOnTimeout()
+	{
+		$this
+			->given($events = new testedClass())
+			->then
+				->variable($events->triggerOnTimeout($socket = uniqid()))->isNull()
+
+			->if(
+				$events->onTimeout($timer = new \mock\server\socket\timer(10), function($socket) use (& $socketTimeout) { $socketTimeout = $socket; })
+			)
+			->then
+				->integer($events->triggerOnTimeout($socket))->isEqualTo(10)
+				->variable($socketTimeout)->isNull()
+
+			->if($this->calling($timer)->getRemaining = 5)
+			->then
+				->integer($events->triggerOnTimeout($socket))->isEqualTo(5)
+				->variable($socketTimeout)->isNull()
+
+			->if($this->calling($timer)->getRemaining = 1)
+			->then
+				->integer($events->triggerOnTimeout($socket))->isEqualTo(1)
+				->variable($socketTimeout)->isNull()
+
+			->if($this->calling($timer)->getRemaining = 0)
+			->then
+				->integer($events->triggerOnTimeout($socket))->isZero()
+				->string($socketTimeout)->isEqualTo($socket)
+				->integer($events->triggerOnTimeout($socket))->isZero()
+				->string($socketTimeout)->isEqualTo($socket)
+		;
+	}
+
+	public function testRestartTimer()
+	{
+		$this
+			->given($events = new testedClass())
+			->then
+				->object($events->restartTimer())->isIdenticalTo($events)
+
+			->if($events->onTimeout($timer = new \mock\server\socket\timer(rand(1, PHP_INT_MAX)), function() {}))
+			->then
+				->object($events->restartTimer())->isIdenticalTo($events)
+				->mock($timer)->call('start')->once()
 		;
 	}
 }

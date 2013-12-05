@@ -121,22 +121,25 @@ class manager
 
 	public function close($socket)
 	{
-		$this->resetLastError();
-
-		switch (true)
+		if (is_resource($socket) === true)
 		{
-			case @socket_set_block($socket) === false:
-			case @socket_set_option($socket, SOL_SOCKET, SO_LINGER, array('l_onoff' => 1, 'l_linger' => 0)) === false:
+			$this->resetLastError();
+
+			switch (true)
+			{
+				case @socket_set_block($socket) === false:
+				case @socket_set_option($socket, SOL_SOCKET, SO_LINGER, array('l_onoff' => 1, 'l_linger' => 0)) === false:
+					throw $this->getException($socket);
+			}
+
+			@socket_shutdown($socket, 2);
+
+			socket_clear_error();
+
+			if (@socket_close($socket) === false)
+			{
 				throw $this->getException($socket);
-		}
-
-		@socket_shutdown($socket, 2);
-
-		socket_clear_error();
-
-		if (@socket_close($socket) === false)
-		{
-			throw $this->getException($socket);
+			}
 		}
 
 		return $this;

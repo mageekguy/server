@@ -99,7 +99,7 @@ class select extends atoum
 				->mock($socketEvents)->call('triggerOnWrite')->withArguments($socket1)->never()
 
 			->if(
-				$this->calling($socketEvents)->__isset = true,
+				$this->calling($socketEvents)->__isset = function($event) { return ($event == 'onRead' || $event == 'onWrite'); },
 				$this->calling($socketManager)->select = function(& $read, & $write) { $read = $write = array(); }
 			)
 			->then

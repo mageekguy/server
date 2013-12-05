@@ -3,6 +3,7 @@
 namespace server\demo\scripts\server;
 
 use
+	server\socket,
 	server\network,
 	server\daemon\payloads
 ;
@@ -47,7 +48,10 @@ class payload extends payloads\server
 	public function acceptClient($clientsSocket)
 	{
 		$this->wait($clientsSocket)->onRead(array($this, __FUNCTION__));
-		$this->wait($clientSocket = $this->acceptSocket($clientsSocket))->onRead(array($this, 'readClient'));
+		$this->wait($clientSocket = $this->acceptSocket($clientsSocket))
+			->onRead(array($this, 'readClient'))
+			->onTimeout(new socket\timer(60), array($this, 'clientTimeout'))
+		;
 
 		return $this->writeInfo('Accept peer ' . $this->getSocketPeer($clientSocket));
 	}
@@ -60,15 +64,34 @@ class payload extends payloads\server
 
 		if ($data !== '')
 		{
-			$this->wait($socket)->onRead(array($this, __FUNCTION__));
+			$this->wait($socket)
+				->onRead(array($this, __FUNCTION__))
+				->onTimeout(new socket\timer(60), array($this, 'clientTimeout'))
+			;
 		}
 		else
 		{
-			$this
-				->writeInfo('Close connection with ' . $this->getSocketPeer($socket))
-				->closeSocket($socket)
-			;
+			$this->closeClient($socket);
 		}
+
+		return $this;
+	}
+
+
+	public function clientTimeout($socket)
+	{
+		return $this
+			->writeInfo('Client ' . $this->getSocketPeer($socket) . ' timeout!')
+			->closeClient($socket)
+		;
+	}
+
+	public function closeClient($socket)
+	{
+		$this
+			->writeInfo('Close connection with ' . $this->getSocketPeer($socket))
+			->closeSocket($socket)
+		;
 
 		return $this;
 	}

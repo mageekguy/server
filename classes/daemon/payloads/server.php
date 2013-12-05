@@ -118,7 +118,7 @@ class server extends daemon\payload
 		{
 			try
 			{
-				$this->socketSelect->wait(null);
+				$this->socketSelect->wait();
 			}
 			catch (socket\manager\exception $exception)
 			{

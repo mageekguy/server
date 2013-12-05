@@ -316,6 +316,7 @@ class manager extends atoum
 			->given($manager = new testedClass())
 
 			->if(
+				$this->function->is_resource = true,
 				$this->function->socket_set_block = false,
 				$this->function->socket_last_error = $errorCode = rand(1,PHP_INT_MAX),
 				$this->function->socket_strerror = $errorMessage = uniqid(),
