@@ -1,6 +1,6 @@
 <?php
 
-namespace server\daemon\server;
+namespace server\daemon\payloads;
 
 use
 	server\socket,
@@ -8,7 +8,7 @@ use
 	server\daemon
 ;
 
-class payload extends daemon\payload
+class server extends daemon\payload
 {
 	protected $socketManager = null;
 	protected $socketSelect = null;
@@ -50,7 +50,7 @@ class payload extends daemon\payload
 		return $this->socketSelect;
 	}
 
-	public function addEndpoint(payload\endpoint $endpoint)
+	public function addEndpoint(server\endpoint $endpoint)
 	{
 		$this->endpoints[(string) $endpoint] = $endpoint;
 

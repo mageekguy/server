@@ -1,10 +1,10 @@
 <?php
 
-namespace server\daemon\server\payload;
+namespace server\daemon\payloads\server;
 
 use
 	server\network,
-	server\daemon\server
+	server\daemon\payloads
 ;
 
 class endpoint extends network\peer
@@ -37,7 +37,7 @@ class endpoint extends network\peer
 		return $this->connectHandler;
 	}
 
-	public function bindForPayload(server\payload $payload)
+	public function bindForPayload(payloads\server $payload)
 	{
 		$socket = $payload->bindSocketTo($this->ip, $this->port);
 

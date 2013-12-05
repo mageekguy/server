@@ -1,6 +1,6 @@
 <?php
 
-namespace server\tests\units\daemon\server;
+namespace server\tests\units\daemon\payloads;
 
 require __DIR__ . '/../../../runner.php';
 
@@ -8,11 +8,11 @@ use
 	atoum,
 	server\socket,
 	server\network,
-	server\daemon\server,
-	server\daemon\server\payload as testedClass
+	server\daemon\payloads,
+	server\daemon\payloads\server as testedClass
 ;
 
-class payload extends atoum
+class server extends atoum
 {
 	public function testSetSocketManager()
 	{
@@ -45,12 +45,12 @@ class payload extends atoum
 	public function testSetInfoLogger()
 	{
 		$this
-			->if($daemon = new testedClass(uniqid()))
+			->if($server = new testedClass(uniqid()))
 			->then
-				->object($daemon->setInfoLogger($logger = new \server\logger()))->isIdenticalTo($daemon)
-				->object($daemon->getInfoLogger())->isIdenticalTo($logger)
-				->object($daemon->setInfoLogger())->isIdenticalTo($daemon)
-				->object($daemon->getInfoLogger())
+				->object($server->setInfoLogger($logger = new \server\logger()))->isIdenticalTo($server)
+				->object($server->getInfoLogger())->isIdenticalTo($logger)
+				->object($server->setInfoLogger())->isIdenticalTo($server)
+				->object($server->getInfoLogger())
 					->isNotIdenticalTo($logger)
 					->isEqualTo(new \server\logger())
 		;
@@ -59,12 +59,12 @@ class payload extends atoum
 	public function testSetErrorLogger()
 	{
 		$this
-			->if($daemon = new testedClass(uniqid()))
+			->if($server = new testedClass(uniqid()))
 			->then
-				->object($daemon->setErrorLogger($logger = new \server\logger()))->isIdenticalTo($daemon)
-				->object($daemon->getErrorLogger())->isIdenticalTo($logger)
-				->object($daemon->setErrorLogger())->isIdenticalTo($daemon)
-				->object($daemon->getErrorLogger())
+				->object($server->setErrorLogger($logger = new \server\logger()))->isIdenticalTo($server)
+				->object($server->getErrorLogger())->isIdenticalTo($logger)
+				->object($server->setErrorLogger())->isIdenticalTo($server)
+				->object($server->getErrorLogger())
 					->isNotIdenticalTo($logger)
 					->isEqualTo(new \server\logger())
 		;
@@ -75,7 +75,7 @@ class payload extends atoum
 		$this
 			->if($server = new testedClass(uniqid()))
 			->then
-				->object($server->addEndpoint($endpoint = new server\payload\endpoint(new network\ip('127.0.0.1'), new network\port(8080))))->isIdenticalTo($server)
+				->object($server->addEndpoint($endpoint = new payloads\server\endpoint(new network\ip('127.0.0.1'), new network\port(8080))))->isIdenticalTo($server)
 				->array($server->getEndpoints())->isEqualTo(array($endpoint))
 		;
 	}

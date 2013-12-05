@@ -4,10 +4,10 @@ namespace server\demo\payloads;
 
 use
 	server\network,
-	server\daemon\server\payload
+	server\daemon\payloads
 ;
 
-class server extends payload
+class server extends payloads\server
 {
 	protected $clientsEndpoint = null;
 
@@ -15,7 +15,7 @@ class server extends payload
 	{
 		parent::__construct();
 
-		$this->clientsEndpoint = (new payload\endpoint(new network\ip('192.168.0.1'), new network\port(8080)))->onConnect(array($this, 'acceptClient'));
+		$this->clientsEndpoint = (new payloads\server\endpoint(new network\ip('192.168.0.1'), new network\port(8080)))->onConnect(array($this, 'acceptClient'));
 
 		$this->addEndpoint($this->clientsEndpoint);
 	}
