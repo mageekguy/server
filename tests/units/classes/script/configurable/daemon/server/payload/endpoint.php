@@ -1,13 +1,13 @@
 <?php
 
-namespace server\tests\units\script\configurable\daemon\server;
+namespace server\tests\units\script\configurable\daemon\server\payload;
 
-require __DIR__ . '/../../../../../runner.php';
+require __DIR__ . '/../../../../../../runner.php';
 
 use
 	atoum,
 	server\network,
-	server\script\configurable\daemon\server\endpoint as testedClass
+	server\script\configurable\daemon\server\payload\endpoint as testedClass
 ;
 
 class endpoint extends atoum
@@ -74,20 +74,20 @@ class endpoint extends atoum
 		;
 	}
 
-	public function testBindForServer()
+	public function testBindForPayload()
 	{
 		$this
 			->given(
 				$endpoint = new testedClass(new network\ip('127.0.0.1'), new network\port(8080)),
-				$server = new \mock\server\script\configurable\daemon\server(uniqid())
+				$payload = new \mock\server\script\configurable\daemon\server\payload()
 			)
 
 			->if(
-				$this->calling($server)->bindSocketTo = $socket = uniqid()
+				$this->calling($payload)->bindSocketTo = $socket = uniqid()
 			)
 			->then
-				->string($endpoint->bindForServer($server))->isEqualTo($socket)
-				->mock($server)
+				->string($endpoint->bindForPayload($payload))->isEqualTo($socket)
+				->mock($payload)
 					->call('bindSocketTo')
 						->withArguments($endpoint->getIp(), $endpoint->getPort())
 								->once()
@@ -95,11 +95,11 @@ class endpoint extends atoum
 
 			->if(
 				$endpoint->onConnect($handler = function() {}),
-				$this->calling($server)->wait = $socketEvents = new \mock\server\socket\events()
+				$this->calling($payload)->wait = $socketEvents = new \mock\server\socket\events()
 			)
 			->then
-				->string($endpoint->bindForServer($server))->isEqualTo($socket)
-				->mock($server)
+				->string($endpoint->bindForPayload($payload))->isEqualTo($socket)
+				->mock($payload)
 					->call('bindSocketTo')
 						->withArguments($endpoint->getIp(), $endpoint->getPort())
 								->once()

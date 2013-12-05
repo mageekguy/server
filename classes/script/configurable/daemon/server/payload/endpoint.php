@@ -1,10 +1,10 @@
 <?php
 
-namespace server\script\configurable\daemon\server;
+namespace server\script\configurable\daemon\server\payload;
 
 use
 	server\network,
-	server\script\configurable\daemon
+	server\script\configurable\daemon\server
 ;
 
 class endpoint extends network\peer
@@ -37,13 +37,13 @@ class endpoint extends network\peer
 		return $this->connectHandler;
 	}
 
-	public function bindForServer(daemon\server $server)
+	public function bindForPayload(server\payload $payload)
 	{
-		$socket = $server->bindSocketTo($this->ip, $this->port);
+		$socket = $payload->bindSocketTo($this->ip, $this->port);
 
 		if ($this->connectHandler !== null)
 		{
-			$server->wait($socket)->onRead($this->connectHandler);
+			$payload->wait($socket)->onRead($this->connectHandler);
 		}
 
 		return $socket;

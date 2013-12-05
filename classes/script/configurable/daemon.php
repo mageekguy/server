@@ -18,6 +18,8 @@ abstract class daemon extends script\configurable
 	protected $isDaemon = false;
 	protected $pid = null;
 
+	private $payload = null;
+
 	public function __construct($name, atoum\adapter $adapter = null)
 	{
 		parent::__construct($name, $adapter);
@@ -31,6 +33,23 @@ abstract class daemon extends script\configurable
 		;
 	}
 
+	public function __call($method, $arguments)
+	{
+		if ($this->payload === null)
+		{
+			throw $this->getException('Method ' . get_class($this) . '::' . $method . '() is unknown');
+		}
+
+		$return = call_user_func_array(array($this->payload, $method), $arguments);
+
+		if ($return === $this->payload)
+		{
+			$return = $this;
+		}
+
+		return $return;
+	}
+
 	public function setUnixUser(unix\user $user = null)
 	{
 		$this->user = $user ?: new unix\user();
@@ -41,6 +60,18 @@ abstract class daemon extends script\configurable
 	public function getUnixUser()
 	{
 		return $this->user;
+	}
+
+	public function getPayload()
+	{
+		return $this->payload;
+	}
+
+	public function setPayload(daemon\payload $payload)
+	{
+		$this->payload = $payload;
+
+		return $this;
 	}
 
 	public function setUid($name)
@@ -259,12 +290,17 @@ abstract class daemon extends script\configurable
 
 	protected function doRun()
 	{
-		if ($this->getUid() === null)
+		if ($this->payload === null)
+		{
+			throw $this->getException('Payload is undefined');
+		}
+
+		if ($this->user->getUid() === null)
 		{
 			throw $this->getException('UID is undefined');
 		}
 
-		if ($this->getHome() === null)
+		if ($this->user->getHomePath() === null)
 		{
 			throw $this->getException('Home is undefined');
 		}
@@ -284,6 +320,7 @@ abstract class daemon extends script\configurable
 		}
 		else
 		{
+			$this->isDaemon = true;
 			$this->pid = posix_getpid();
 
 			if (posix_setsid() < 0)
@@ -312,10 +349,13 @@ abstract class daemon extends script\configurable
 				ob_start(array($this, 'outputHandler'));
 				ob_implicit_flush(true);
 
-				$this->isDaemon = true;
 				$this->pid = posix_getpid();
 
-				if (chdir($this->getHome()) === false)
+				try
+				{
+					$this->user->goToHome();
+				}
+				catch (\exception $exception)
 				{
 					throw $this->getException('Unable to set home directory to \'' . $this->getHome() . '\'');
 				}
@@ -349,15 +389,18 @@ abstract class daemon extends script\configurable
 
 				$this->controller[SIGTERM] = array($this->controller, 'stopDaemon');
 
+				$this->payload->setInfoLogger($this->infoLogger);
+				$this->payload->setErrorLogger($this->errorLogger);
+
 				declare(ticks=1)
 				{
 					while ($this->controller->dispatchSignals()->daemonShouldRun() === true)
 					{
-						$this->runDaemon();
+						$this->payload->execute();
 					}
 				}
 
-				$this->stopDaemon();
+				$this->payload->destruct();
 
 				while (ob_get_level() > 0)
 				{
@@ -366,10 +409,6 @@ abstract class daemon extends script\configurable
 			}
 		}
 	}
-
-	protected abstract function runDaemon();
-
-	protected abstract function stopDaemon();
 
 	protected function setArgumentHandlers()
 	{

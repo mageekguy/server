@@ -75,6 +75,20 @@ class user
 		return $this;
 	}
 
+	public function goToHome()
+	{
+		try
+		{
+			$this->home->go();
+		}
+		catch (\exception $exception)
+		{
+			throw $this->getException($exception->getMessage());
+		}
+
+		return $this;
+	}
+
 	protected function getException($message)
 	{
 		return new user\exception($message);

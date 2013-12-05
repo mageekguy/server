@@ -102,4 +102,25 @@ class user extends atoum
 				->string($user->getHomePath())->isEqualTo($otherDir)
 		;
 	}
+
+	public function testGoToHome()
+	{
+		$this
+			->given(
+				$user = new testedClass(),
+				$user->setHome($home = new \mock\server\unix\user\home())
+			)
+
+			->if($this->calling($home)->go->returnThis())
+			->then
+				->object($user->goToHome())->isEqualTo($user)
+				->mock($home)->call('go')->once()
+
+			->if($this->calling($home)->go->throw = $exception = new \exception())
+			->then
+				->exception(function() use ($user) { $user->goToHome(); })
+					->isInstanceOf('server\unix\user\exception')
+					->hasMessage($exception->getMessage())
+		;
+	}
 }

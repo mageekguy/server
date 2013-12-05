@@ -6,6 +6,7 @@ require __DIR__ . '/../../../runner.php';
 
 use
 	atoum,
+	server\unix,
 	server\script\configurable,
 	mock\server\script\configurable\daemon as testedClass
 ;
@@ -109,11 +110,45 @@ class daemon extends atoum
 				->variable($daemon->getGid())->isNull()
 				->variable($daemon->getUid())->isNull()
 				->variable($daemon->getHome())->isNull()
+				->variable($daemon->getPayload())->isNull()
 				->object($daemon->getInfoLogger())->isEqualTo(new \server\logger())
 				->object($daemon->getErrorLogger())->isEqualTo(new \server\logger())
 				->object($daemon->getOutputLogger())->isEqualTo(new \server\logger())
 				->boolean($daemon->isDaemon())->isFalse()
 				->object($daemon->getController())->isEqualTo(new configurable\daemon\controller())
+		;
+	}
+
+	public function test__call()
+	{
+		$this
+			->if($daemon = new testedClass(uniqid()))
+			->then
+				->exception(function() use ($daemon, & $method) { $daemon->{$method = uniqid()}(); })
+					->isInstanceOf('server\script\configurable\daemon\exception')
+					->hasMessage('Method ' . get_class($daemon) . '::' . $method . '() is unknown')
+
+			->if(
+				$daemon->setPayload($payload = new \mock\server\script\configurable\daemon\payload()),
+				$this->calling($payload)->{$method} = $returnValue = uniqid()
+			)
+			->then
+				->string($daemon->{$method}($arg = uniqid()))->isEqualTo($returnValue)
+				->mock($payload)->call($method)->withArguments($arg)->once()
+		;
+	}
+
+	public function testSetUnixUser()
+	{
+		$this
+			->if($server = new testedClass(uniqid()))
+			->then
+				->object($server->setUnixUser($user = new unix\user()))->isIdenticalTo($server)
+				->object($server->getUnixUser())->isIdenticalTo($user)
+				->object($server->setUnixUser())->isIdenticalTo($server)
+				->object($server->getUnixUser())
+					->isNotIdenticalTo($user)
+					->isEqualTo(new unix\user())
 		;
 	}
 
@@ -199,6 +234,21 @@ class daemon extends atoum
 				->integer($daemon->getUid())->isEqualTo($uid)
 				->string($daemon->getHome())->isEqualTo($home)
 				->mock($unixUser)->call('setLogin')->withArguments($uidName)->once()
+		;
+	}
+
+	public function testSetPayload()
+	{
+		$this
+			->if(
+				$daemon = new testedClass(uniqid()),
+				$payload = new \mock\server\script\configurable\daemon\payload(),
+				$this->calling($payload)->setInfoLogger->returnThis(),
+				$this->calling($payload)->setErrorLogger->returnThis()
+			)
+			->then
+				->object($daemon->setPayload($payload))->isIdenticalTo($daemon)
+				->object($daemon->getPayload())->isIdenticalTo($payload)
 		;
 	}
 
@@ -389,21 +439,31 @@ class daemon extends atoum
 		$this
 			->given(
 				$daemon = new testedClass(uniqid()),
+				$daemon->setUnixUser($unixUser = new \mock\server\unix\user()),
 				$daemon->setController($controller = new \mock\server\script\configurable\daemon\controller())
+			)
+
+			->exception(function() use ($daemon) { $daemon->run(); })
+				->isInstanceOf('server\script\configurable\daemon\exception')
+				->hasMessage('Payload is undefined')
+
+			->if(
+				$daemon->setPayload($payload = new \mock\server\script\configurable\daemon\payload()),
+				$this->calling($unixUser)->getUid = null
 			)
 			->then
 				->exception(function() use ($daemon) { $daemon->run(); })
 					->isInstanceOf('server\script\configurable\daemon\exception')
 					->hasMessage('UID is undefined')
 
-			->if($this->calling($daemon)->getUid = $uid = rand(1, PHP_INT_MAX))
+			->if($this->calling($unixUser)->getUid = $uid = rand(1, PHP_INT_MAX))
 			->then
 				->exception(function() use ($daemon) { $daemon->run(); })
 					->isInstanceOf('server\script\configurable\daemon\exception')
 					->hasMessage('Home is undefined')
 
 			->if(
-				$this->calling($daemon)->getHome = $home = uniqid(),
+				$this->calling($unixUser)->getHomePath = $home = uniqid(),
 				$this->function->pcntl_fork = -1
 			)
 			->then
@@ -433,7 +493,7 @@ class daemon extends atoum
 				->exception(function() use ($daemon) { $daemon->run(); })
 					->isInstanceOf('server\script\configurable\daemon\exception')
 					->hasMessage('Unable to become a session leader')
-				->boolean($daemon->isDaemon())->isFalse()
+				->boolean($daemon->isDaemon())->isTrue()
 				->integer($daemon->getPid())->isEqualTo($pid)
 
 			->if(
@@ -444,7 +504,7 @@ class daemon extends atoum
 				->exception(function() use ($daemon) { $daemon->run(); })
 					->isInstanceOf('server\script\configurable\daemon\exception')
 					->hasMessage('Unable to fork to start daemon')
-				->boolean($daemon->isDaemon())->isFalse()
+				->boolean($daemon->isDaemon())->isTrue()
 				->integer($daemon->getPid())->isEqualTo($pid)
 
 			->if(
@@ -453,7 +513,7 @@ class daemon extends atoum
 			)
 			->then
 				->object($daemon->run())->isIdenticalTo($daemon)
-				->boolean($daemon->isDaemon())->isFalse()
+				->boolean($daemon->isDaemon())->isTrue()
 				->integer($daemon->getPid())->isEqualTo($pid)
 				->function('pcntl_signal')
 					->wasCalledWithArguments(SIGCHLD, SIG_IGN)
@@ -461,9 +521,9 @@ class daemon extends atoum
 							->once()
 
 			->if(
+				$this->calling($unixUser)->goToHome->throw = $exception = new \exception(uniqid()),
 				$this->function->pcntl_fork[2] = 0,
 				$this->function->posix_getpid[2] = $pid = rand(1, PHP_INT_MAX),
-				$this->function->chdir = false,
 				$this->function->set_error_handler->doesNothing(),
 				$this->function->set_exception_handler->doesNothing(),
 				$this->function->ob_start->doesNothing(),
@@ -486,7 +546,7 @@ class daemon extends atoum
 							->once()
 
 			->if(
-				$this->function->chdir = true,
+				$this->calling($unixUser)->goToHome->returnThis(),
 				$this->function->posix_setgid = false
 			)
 			->then
@@ -532,9 +592,9 @@ class daemon extends atoum
 									->after($this->mock($controller)->call('offsetSet')->withArguments(SIGTERM, array($controller, 'stopDaemon'))->once())
 										->twice()
 						)
-							->before($this->mock($daemon)->call('runDaemon')->once())
+							->before($this->mock($payload)->call('execute')->once())
 								->once()
-				->mock($daemon)->call('stopDaemon')->once()
+				->mock($payload)->call('destruct')->once()
 		;
 	}
 }

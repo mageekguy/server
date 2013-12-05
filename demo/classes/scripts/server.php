@@ -5,73 +5,17 @@ namespace server\demo\scripts;
 use
 	atoum,
 	server\network,
-	server\script\configurable\daemon
+	server\demo\payloads,
+	server\script\configurable
 ;
 
-class server extends daemon\server
+class server extends configurable\daemon
 {
-	protected $clientsEndpoint = null;
-
 	public function __construct($name, atoum\adapter $adapter = null)
 	{
 		parent::__construct($name, $adapter);
 
-		$this->clientsEndpoint = (new daemon\server\endpoint(new network\ip('192.168.0.1'), new network\port(8080)))->onConnect(array($this, 'acceptClient'));
-
-		$this->addEndpoint($this->clientsEndpoint);
-	}
-
-	public function setClientsIp(network\ip $ip)
-	{
-		$this->clientsEndpoint->setIp($ip);
-
-		return $this;
-	}
-
-	public function getClientsIp()
-	{
-		return $this->clientsEndpoint->getIp();
-	}
-
-	public function setClientsPort(network\port $port)
-	{
-		$this->clientsEndpoint->setPort($port);
-
-		return $this;
-	}
-
-	public function getClientsPort()
-	{
-		return $this->clientsEndpoint->getPort();
-	}
-
-	public function acceptClient($clientsSocket)
-	{
-		$this->wait($clientsSocket)->onRead(array($this, __FUNCTION__));
-		$this->wait($clientSocket = $this->acceptSocket($clientsSocket))->onRead(array($this, 'readClient'));
-
-		return $this->writeInfo('Accept peer ' . $this->getSocketPeer($clientSocket));
-	}
-
-	public function readClient($socket)
-	{
-		$data = $this->readSocket($socket, 2048, PHP_BINARY_READ);
-
-		$this->writeInfo('Receive \'' . $data . '\' from peer ' . $this->getSocketPeer($socket));
-
-		if ($data !== '')
-		{
-			$this->wait($socket)->onRead(array($this, __FUNCTION__));
-		}
-		else
-		{
-			$this
-				->writeInfo('Close connection with ' . $this->getSocketPeer($socket))
-				->closeSocket($socket)
-			;
-		}
-
-		return $this;
+		$this->setPayload(new payloads\server());
 	}
 
 	protected function setArgumentHandlers()
