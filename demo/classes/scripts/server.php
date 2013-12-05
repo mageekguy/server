@@ -4,8 +4,7 @@ namespace server\demo\scripts;
 
 use
 	atoum,
-	server\network,
-	server\demo\payloads
+	server\network
 ;
 
 class server extends \server\daemon
@@ -14,7 +13,7 @@ class server extends \server\daemon
 	{
 		parent::__construct($name, $adapter);
 
-		$this->setPayload(new payloads\server());
+		$this->setPayload(new server\payload());
 	}
 
 	protected function setArgumentHandlers()

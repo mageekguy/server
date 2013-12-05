@@ -1,13 +1,13 @@
 <?php
 
-namespace server\demo\payloads;
+namespace server\demo\scripts\server;
 
 use
 	server\network,
 	server\daemon\payloads
 ;
 
-class server extends payloads\server
+class payload extends payloads\server
 {
 	protected $clientsEndpoint = null;
 
