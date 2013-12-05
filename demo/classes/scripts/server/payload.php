@@ -60,7 +60,7 @@ class payload extends payloads\server
 	{
 		$data = $this->readSocket($socket, 2048, PHP_BINARY_READ);
 
-		$this->writeInfo('Receive \'' . $data . '\' from peer ' . $this->getSocketPeer($socket));
+		$this->writeInfo('Receive \'' . trim($data) . '\' from peer ' . $this->getSocketPeer($socket));
 
 		if ($data !== '')
 		{
