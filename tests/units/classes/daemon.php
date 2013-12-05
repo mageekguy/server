@@ -1,14 +1,14 @@
 <?php
 
-namespace server\tests\units\script\configurable;
+namespace server\tests\units;
 
-require __DIR__ . '/../../../runner.php';
+require __DIR__ . '/../runner.php';
 
 use
 	atoum,
+	server,
 	server\unix,
-	server\script\configurable,
-	mock\server\script\configurable\daemon as testedClass
+	mock\server\daemon as testedClass
 ;
 
 /*
@@ -115,7 +115,7 @@ class daemon extends atoum
 				->object($daemon->getErrorLogger())->isEqualTo(new \server\logger())
 				->object($daemon->getOutputLogger())->isEqualTo(new \server\logger())
 				->boolean($daemon->isDaemon())->isFalse()
-				->object($daemon->getController())->isEqualTo(new configurable\daemon\controller())
+				->object($daemon->getController())->isEqualTo(new server\daemon\controller())
 		;
 	}
 
@@ -125,11 +125,11 @@ class daemon extends atoum
 			->if($daemon = new testedClass(uniqid()))
 			->then
 				->exception(function() use ($daemon, & $method) { $daemon->{$method = uniqid()}(); })
-					->isInstanceOf('server\script\configurable\daemon\exception')
+					->isInstanceOf('server\daemon\exception')
 					->hasMessage('Method ' . get_class($daemon) . '::' . $method . '() is unknown')
 
 			->if(
-				$daemon->setPayload($payload = new \mock\server\script\configurable\daemon\payload()),
+				$daemon->setPayload($payload = new \mock\server\daemon\payload()),
 				$this->calling($payload)->{$method} = $returnValue = uniqid()
 			)
 			->then
@@ -199,12 +199,12 @@ class daemon extends atoum
 		$this
 			->if($daemon = new testedClass(uniqid()))
 			->then
-				->object($daemon->setController($controller = new configurable\daemon\controller()))->isIdenticalTo($daemon)
+				->object($daemon->setController($controller = new server\daemon\controller()))->isIdenticalTo($daemon)
 				->object($daemon->getController())->isIdenticalTo($controller)
 				->object($daemon->setController())->isIdenticalTo($daemon)
 				->object($daemon->getController())
 					->isNotIdenticalTo($controller)
-					->isEqualTo(new configurable\daemon\controller())
+					->isEqualTo(new server\daemon\controller())
 		;
 	}
 
@@ -219,7 +219,7 @@ class daemon extends atoum
 			->if($this->calling($unixUser)->setLogin->throw = $exception = new \exception(uniqid()))
 			->then
 				->exception(function() use ($daemon, & $uidName) { $daemon->setUid($uidName = uniqid()); })
-					->isInstanceOf('server\script\configurable\daemon\exception')
+					->isInstanceOf('server\daemon\exception')
 					->hasMessage('UID \'' . $uidName . '\' is unknown')
 				->variable($daemon->getUid())->isNull()
 				->mock($unixUser)->call('setLogin')->withArguments($uidName)->once()
@@ -242,7 +242,7 @@ class daemon extends atoum
 		$this
 			->if(
 				$daemon = new testedClass(uniqid()),
-				$payload = new \mock\server\script\configurable\daemon\payload(),
+				$payload = new \mock\server\daemon\payload(),
 				$this->calling($payload)->setInfoLogger->returnThis(),
 				$this->calling($payload)->setErrorLogger->returnThis()
 			)
@@ -440,26 +440,26 @@ class daemon extends atoum
 			->given(
 				$daemon = new testedClass(uniqid()),
 				$daemon->setUnixUser($unixUser = new \mock\server\unix\user()),
-				$daemon->setController($controller = new \mock\server\script\configurable\daemon\controller())
+				$daemon->setController($controller = new \mock\server\daemon\controller())
 			)
 
 			->exception(function() use ($daemon) { $daemon->run(); })
-				->isInstanceOf('server\script\configurable\daemon\exception')
+				->isInstanceOf('server\daemon\exception')
 				->hasMessage('Payload is undefined')
 
 			->if(
-				$daemon->setPayload($payload = new \mock\server\script\configurable\daemon\payload()),
+				$daemon->setPayload($payload = new \mock\server\daemon\payload()),
 				$this->calling($unixUser)->getUid = null
 			)
 			->then
 				->exception(function() use ($daemon) { $daemon->run(); })
-					->isInstanceOf('server\script\configurable\daemon\exception')
+					->isInstanceOf('server\daemon\exception')
 					->hasMessage('UID is undefined')
 
 			->if($this->calling($unixUser)->getUid = $uid = rand(1, PHP_INT_MAX))
 			->then
 				->exception(function() use ($daemon) { $daemon->run(); })
-					->isInstanceOf('server\script\configurable\daemon\exception')
+					->isInstanceOf('server\daemon\exception')
 					->hasMessage('Home is undefined')
 
 			->if(
@@ -468,7 +468,7 @@ class daemon extends atoum
 			)
 			->then
 				->exception(function() use ($daemon) { $daemon->run(); })
-					->isInstanceOf('server\script\configurable\daemon\exception')
+					->isInstanceOf('server\daemon\exception')
 					->hasMessage('Unable to fork to start daemon')
 
 			->if(
@@ -491,7 +491,7 @@ class daemon extends atoum
 			)
 			->then
 				->exception(function() use ($daemon) { $daemon->run(); })
-					->isInstanceOf('server\script\configurable\daemon\exception')
+					->isInstanceOf('server\daemon\exception')
 					->hasMessage('Unable to become a session leader')
 				->boolean($daemon->isDaemon())->isTrue()
 				->integer($daemon->getPid())->isEqualTo($pid)
@@ -502,7 +502,7 @@ class daemon extends atoum
 			)
 			->then
 				->exception(function() use ($daemon) { $daemon->run(); })
-					->isInstanceOf('server\script\configurable\daemon\exception')
+					->isInstanceOf('server\daemon\exception')
 					->hasMessage('Unable to fork to start daemon')
 				->boolean($daemon->isDaemon())->isTrue()
 				->integer($daemon->getPid())->isEqualTo($pid)
@@ -534,7 +534,7 @@ class daemon extends atoum
 			)
 			->then
 				->exception(function() use ($daemon) { $daemon->run(); })
-					->isInstanceOf('server\script\configurable\daemon\exception')
+					->isInstanceOf('server\daemon\exception')
 					->hasMessage('Unable to set home directory to \'' . $daemon->getHome() . '\'')
 				->boolean($daemon->isDaemon())->isTrue()
 				->integer($daemon->getPid())->isEqualTo($pid)
@@ -551,7 +551,7 @@ class daemon extends atoum
 			)
 			->then
 				->exception(function() use ($daemon) { $daemon->run(); })
-					->isInstanceOf('server\script\configurable\daemon\exception')
+					->isInstanceOf('server\daemon\exception')
 					->hasMessage('Unable to set GID to \'' . $daemon->getGid() . '\'')
 				->boolean($daemon->isDaemon())->isTrue()
 				->integer($daemon->getPid())->isEqualTo($pid)
@@ -562,7 +562,7 @@ class daemon extends atoum
 			)
 			->then
 				->exception(function() use ($daemon) { $daemon->run(); })
-					->isInstanceOf('server\script\configurable\daemon\exception')
+					->isInstanceOf('server\daemon\exception')
 					->hasMessage('Unable to set UID to \'' . $daemon->getUid() . '\'')
 				->boolean($daemon->isDaemon())->isTrue()
 				->integer($daemon->getPid())->isEqualTo($pid)

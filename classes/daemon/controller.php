@@ -1,6 +1,6 @@
 <?php
 
-namespace server\script\configurable\daemon;
+namespace server\daemon;
 
 class controller implements \arrayAccess
 {

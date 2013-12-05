@@ -1,13 +1,13 @@
 <?php
 
-namespace server\tests\units\script\configurable\daemon\server\payload;
+namespace server\tests\units\daemon\server\payload;
 
-require __DIR__ . '/../../../../../../runner.php';
+require __DIR__ . '/../../../../runner.php';
 
 use
 	atoum,
 	server\network,
-	server\script\configurable\daemon\server\payload\endpoint as testedClass
+	server\daemon\server\payload\endpoint as testedClass
 ;
 
 class endpoint extends atoum
@@ -79,7 +79,7 @@ class endpoint extends atoum
 		$this
 			->given(
 				$endpoint = new testedClass(new network\ip('127.0.0.1'), new network\port(8080)),
-				$payload = new \mock\server\script\configurable\daemon\server\payload()
+				$payload = new \mock\server\daemon\server\payload()
 			)
 
 			->if(

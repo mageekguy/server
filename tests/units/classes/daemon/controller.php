@@ -1,12 +1,12 @@
 <?php
 
-namespace server\tests\units\script\configurable\daemon;
+namespace server\tests\units\daemon;
 
-require __DIR__ . '/../../../../runner.php';
+require __DIR__ . '/../../runner.php';
 
 use
 	atoum,
-	server\script\configurable\daemon\controller as testedClass
+	server\daemon\controller as testedClass
 ;
 
 class controller extends atoum
@@ -69,7 +69,7 @@ class controller extends atoum
 			)
 			->then
 				->exception(function() use ($controller) { $controller->dispatchSignals(); })
-					->isInstanceOf('server\script\configurable\daemon\controller\exception')
+					->isInstanceOf('server\daemon\controller\exception')
 					->hasMessage('Unable to set handler for signal \'' . SIGTERM . '\'')
 		;
 	}

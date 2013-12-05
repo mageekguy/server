@@ -1,5 +1,5 @@
 <?php
 
-namespace server\script\configurable\daemon;
+namespace server\daemon;
 
 class exception extends \runtimeException implements \server\exception {}

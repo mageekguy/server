@@ -1,8 +1,8 @@
 <?php
 
-namespace server\tests\units\script\configurable\daemon\controller;
+namespace server\tests\units\daemon\controller;
 
-require __DIR__ . '/../../../../../runner.php';
+require __DIR__ . '/../../../runner.php';
 
 use
 	atoum

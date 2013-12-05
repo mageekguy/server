@@ -1,15 +1,15 @@
 <?php
 
-namespace server\tests\units\script\configurable\daemon\server;
+namespace server\tests\units\daemon\server;
 
-require __DIR__ . '/../../../../../runner.php';
+require __DIR__ . '/../../../runner.php';
 
 use
 	atoum,
 	server\socket,
 	server\network,
-	server\script\configurable\daemon\server,
-	server\script\configurable\daemon\server\payload as testedClass
+	server\daemon\server,
+	server\daemon\server\payload as testedClass
 ;
 
 class payload extends atoum

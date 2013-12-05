@@ -5,11 +5,10 @@ namespace server\demo\scripts;
 use
 	atoum,
 	server\network,
-	server\demo\payloads,
-	server\script\configurable
+	server\demo\payloads
 ;
 
-class server extends configurable\daemon
+class server extends \server\daemon
 {
 	public function __construct($name, atoum\adapter $adapter = null)
 	{

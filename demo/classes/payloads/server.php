@@ -4,7 +4,7 @@ namespace server\demo\payloads;
 
 use
 	server\network,
-	server\script\configurable\daemon\server\payload
+	server\daemon\server\payload
 ;
 
 class server extends payload

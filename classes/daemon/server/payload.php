@@ -1,12 +1,11 @@
 <?php
 
-namespace server\script\configurable\daemon\server;
+namespace server\daemon\server;
 
 use
 	server\socket,
 	server\network,
-	server\script\configurable\daemon,
-	server\script\configurable\daemon\server\payload
+	server\daemon
 ;
 
 class payload extends daemon\payload

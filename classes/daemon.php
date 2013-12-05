@@ -1,6 +1,6 @@
 <?php
 
-namespace server\script\configurable;
+namespace server;
 
 use
 	atoum,

@@ -1,10 +1,10 @@
 <?php
 
-namespace server\script\configurable\daemon\server\payload;
+namespace server\daemon\server\payload;
 
 use
 	server\network,
-	server\script\configurable\daemon\server
+	server\daemon\server
 ;
 
 class endpoint extends network\peer
