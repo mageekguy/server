@@ -23,7 +23,7 @@ class server extends \server\daemon
 					function($script, $argument, $values) {
 						if (sizeof($values) !== 1)
 						{
-							throw new exceptions\logic\invalidArgument(sprintf($script->getLocale()->_('Bad usage of %s, do php %s --help for more informations'), $argument, $script->getName()));
+							throw new \runtimeException(sprintf($script->getLocale()->_('Bad usage of %s, do php %s --help for more informations'), $argument, $script->getName()));
 						}
 
 						try
@@ -32,7 +32,7 @@ class server extends \server\daemon
 						}
 						catch (network\ip\exception $exception)
 						{
-							throw new exceptions\logic\invalidArgument(sprintf($script->getLocale()->_('IP \'%s\' is invalid'), reset($values)));
+							throw new \runtimeException(sprintf($script->getLocale()->_('IP \'%s\' is invalid'), reset($values)));
 						}
 
 						$script->setClientsIp($ip);
@@ -45,7 +45,7 @@ class server extends \server\daemon
 					function($script, $argument, $values) {
 						if (sizeof($values) !== 1)
 						{
-							throw new exceptions\logic\invalidArgument(sprintf($script->getLocale()->_('Bad usage of %s, do php %s --help for more informations'), $argument, $script->getName()));
+							throw new \runtimeException(sprintf($script->getLocale()->_('Bad usage of %s, do php %s --help for more informations'), $argument, $script->getName()));
 						}
 
 						try
@@ -54,7 +54,7 @@ class server extends \server\daemon
 						}
 						catch (network\ip\exception $exception)
 						{
-							throw new exceptions\logic\invalidArgument(sprintf($script->getLocale()->_('Port \'%s\' is invalid'), reset($values)));
+							throw new \runtimeException(sprintf($script->getLocale()->_('Port \'%s\' is invalid'), reset($values)));
 						}
 
 						$script->setClientsPort($port);
