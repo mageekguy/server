@@ -183,12 +183,16 @@ class socket extends atoum
 	public function testIsClosed()
 	{
 		$this
-			->given($socket = new testedClass($resource = uniqid()))
+			->given(
+				$socket = new testedClass($resource = uniqid()),
+				$socket->setSocketManager($socketManager = new \mock\server\socket\manager())
+			)
 			->then
-				->if($this->function->is_resource = true)
+				->if($this->calling($socketManager)->isSocket = true)
 				->then
 					->boolean($socket->isClosed())->isFalse()
-				->if($this->function->is_resource = false)
+
+				->if($this->calling($socketManager)->isSocket = false)
 				->then
 					->boolean($socket->isClosed())->isTrue()
 		;

@@ -223,4 +223,24 @@ class server extends atoum
 				->mock($socketManager)->call('bindSocketTo')->withArguments($ip, $port)->once()
 		;
 	}
+
+	public function testIsSocket()
+	{
+		$this
+			->given(
+				$server = new testedClass(uniqid()),
+				$server->setSocketManager($socketManager = new \mock\server\socket\manager())
+			)
+
+			->if($this->calling($socketManager)->isSocket = false)
+			->then
+				->boolean($server->isSocket($var = uniqid()))->isFalse()
+				->mock($socketManager)->call('isSocket')->withArguments($var)->once()
+
+			->if($this->calling($socketManager)->isSocket = true)
+			->then
+				->boolean($server->isSocket(uniqid()))->isTrue()
+				->mock($socketManager)->call('isSocket')->withArguments($var)->once()
+		;
+	}
 }

@@ -123,6 +123,11 @@ class server extends daemon\payload implements socket\manager\definition, socket
 		return $this->addSocket($this->socketManager->acceptSocket($serverSocket));
 	}
 
+	public function isSocket($var)
+	{
+		return $this->socketManager->isSocket($var);
+	}
+
 	public function activate()
 	{
 		return $this;

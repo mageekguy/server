@@ -17,4 +17,5 @@ interface definition
 	public function writeSocket($socket, $data);
 	public function pollSockets(array & $read, array & $write, array & $except, $timeout);
 	public function closeSocket($socket);
+	public function isSocket($var);
 }

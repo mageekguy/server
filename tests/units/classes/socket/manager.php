@@ -389,4 +389,37 @@ class manager extends atoum
 				->variable($manager->getLastSocketErrorMessage())->isNull()
 		;
 	}
+
+	public function testIsSocket()
+	{
+		$this
+			->given($socket = new testedClass($resource = uniqid()))
+			->then
+
+				->if(
+					$this->function->is_resource = true,
+					$this->function->get_resource_type = testedClass::resourceType
+				)
+				->then
+					->boolean($socket->isSocket($var = uniqid()))->isTrue()
+					->function('is_resource')->wasCalledWithArguments($var)->once()
+					->function('get_resource_type')->wasCalledWithArguments($var)->once()
+
+				->if(
+					$this->function->get_resource_type = uniqid()
+				)
+				->then
+					->boolean($socket->isSocket($var = uniqid()))->isFalse()
+					->function('is_resource')->wasCalledWithArguments($var)->once()
+					->function('get_resource_type')->wasCalledWithArguments($var)->once()
+
+				->if(
+					$this->function->is_resource = false
+				)
+				->then
+					->boolean($socket->isSocket($var = uniqid()))->isFalse()
+					->function('is_resource')->wasCalledWithArguments($var)->once()
+					->function('get_resource_type')->never()
+		;
+	}
 }

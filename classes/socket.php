@@ -76,7 +76,7 @@ class socket
 
 	public function isClosed()
 	{
-		return (is_resource($this->resource) === false);
+		return ($this->socketManager->isSocket($this->resource) === false);
 	}
 
 	protected function setEvents(socket\poller\definition $poller)

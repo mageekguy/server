@@ -8,6 +8,8 @@ use
 
 class manager implements manager\definition
 {
+	const resourceType = 'socket';
+
 	protected $lastErrorCode = null;
 	protected $lastErrorMessage = null;
 
@@ -143,6 +145,11 @@ class manager implements manager\definition
 		}
 
 		return $this;
+	}
+
+	public function isSocket($var)
+	{
+		return (is_resource($var) === true && get_resource_type($var) == self::resourceType);
 	}
 
 	private function getException($socket = null)

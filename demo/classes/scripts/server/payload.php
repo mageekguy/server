@@ -53,9 +53,9 @@ class payload extends payloads\server
 		$clientSocket = new server\socket($this->acceptSocket($clientsSocket), $this);
 
 		$timeoutHandler = function() use ($clientSocket) {
-				$clientSocket->close();
+				$this->writeInfo('Client ' . $clientSocket->getPeer() . ' timeout!');
 
-				$this->writeInfo('Client ' . $peer . ' timeout!');
+				$clientSocket->close();
 			}
 		;
 
@@ -72,6 +72,7 @@ class payload extends payloads\server
 				{
 					$clientSocket
 						->onRead($this, $readHandler)
+						->onWrite($this, function() use ($clientSocket, $data) { $clientSocket->write(str_rot13($data)); })
 						->onTimeout($this, new socket\timer(60), $timeoutHandler)
 					;
 				}
