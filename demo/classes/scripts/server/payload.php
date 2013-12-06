@@ -50,10 +50,10 @@ class payload extends payloads\server
 	{
 		$this->pollSocket($clientsSocket)->onRead(array($this, __FUNCTION__));
 
-		$clientSocket = new server\socket($this->acceptSocket($clientsSocket), $this);
+		$clientSocket = new server\socket($resource = $this->acceptSocket($clientsSocket), $this);
 
 		$timeoutHandler = function() use ($clientSocket) {
-				$this->writeInfo('Client ' . $clientSocket->getPeer() . ' timeout!');
+				$this->writeInfo('Client ' . $clientSocket . ' timeout!');
 
 				$clientSocket->close();
 			}
@@ -62,7 +62,7 @@ class payload extends payloads\server
 		$readHandler = function() use ($clientSocket, $timeoutHandler, & $readHandler) {
 				$data = $clientSocket->read(2048, PHP_BINARY_READ);
 
-				$this->writeInfo('Receive \'' . trim($data) . '\' from peer ' . $clientSocket->getPeer());
+				$this->writeInfo('Receive \'' . trim($data) . '\' from peer ' . $clientSocket);
 
 				if ($data === '')
 				{
@@ -84,6 +84,6 @@ class payload extends payloads\server
 			->onTimeout($this, new socket\timer(60), $timeoutHandler)
 		;
 
-		return $this->writeInfo('Accept peer ' . $clientSocket->getPeer());
+		return $this->writeInfo('Accept peer ' . $clientSocket);
 	}
 }
