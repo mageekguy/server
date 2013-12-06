@@ -16,10 +16,23 @@ class socket extends atoum
 	public function test__construct()
 	{
 		$this
-			->if($socket = new testedClass($resource = uniqid()))
+			->exception(function() { new testedClass(uniqid()); })
+				->isInstanceOf('server\socket\exception')
+				->hasMessage('Resource is invalid')
+
+			->if(
+				$socketManager = new \mock\server\socket\manager(),
+				$this->calling($socketManager)->isSocket = false
+			)
 			->then
-				->object($socket->getSocketManager())->isEqualTo(new server\socket\manager())
-			->if($socket = new testedClass($resource = uniqid(), $socketManager = new server\socket\manager()))
+				->exception(function() use ($socketManager) { new testedClass(uniqid(), $socketManager); })
+					->isInstanceOf('server\socket\exception')
+					->hasMessage('Resource is invalid')
+
+			->if(
+				$this->calling($socketManager)->isSocket = true,
+				$socket = new testedClass(uniqid(), $socketManager)
+			)
 			->then
 				->object($socket->getSocketManager())->isIdenticalTo($socketManager)
 		;
@@ -28,7 +41,7 @@ class socket extends atoum
 	public function testSetSocketManager()
 	{
 		$this
-			->if($socket = new testedClass($resource = uniqid()))
+			->if($socket = $this->getSocketInstance())
 			->then
 				->object($socket->setSocketManager($socketManager = new server\socket\manager()))->isIdenticalTo($socket)
 				->object($socket->getSocketManager())->isIdenticalTo($socketManager)
@@ -43,7 +56,7 @@ class socket extends atoum
 	{
 		$this
 			->given(
-				$socket = new testedClass($resource = uniqid()),
+				$socket = $this->getSocketInstance($resource = uniqid()),
 				$poller = new \mock\server\socket\poller()
 			)
 
@@ -74,7 +87,7 @@ class socket extends atoum
 	{
 		$this
 			->given(
-				$socket = new testedClass($resource = uniqid()),
+				$socket = $this->getSocketInstance($resource = uniqid()),
 				$poller = new \mock\server\socket\poller()
 			)
 
@@ -105,7 +118,7 @@ class socket extends atoum
 	{
 		$this
 			->given(
-				$socket = new testedClass($resource = uniqid()),
+				$socket = $this->getSocketInstance($resource = uniqid()),
 				$poller = new \mock\server\socket\poller()
 			)
 
@@ -124,8 +137,8 @@ class socket extends atoum
 	{
 		$this
 			->given(
-				$socket = new testedClass($resource = uniqid()),
-				$socket->setSocketManager($socketManager = new \mock\server\socket\manager())
+				$socket = $this->getSocketInstance($resource = uniqid()),
+				$socketManager = $socket->getSocketManager()
 			)
 
 			->if($this->calling($socketManager)->getSocketPeer = $peer = new network\peer(new network\ip('127.0.0.1'), new network\port(8080)))
@@ -139,7 +152,7 @@ class socket extends atoum
 	{
 		$this
 			->given(
-				$socket = new testedClass($resource = uniqid()),
+				$socket = $this->getSocketInstance($resource = uniqid()),
 				$socket->setSocketManager($socketManager = new \mock\server\socket\manager())
 			)
 
@@ -154,8 +167,8 @@ class socket extends atoum
 	{
 		$this
 			->given(
-				$socket = new testedClass($resource = uniqid()),
-				$socket->setSocketManager($socketManager = new \mock\server\socket\manager())
+				$socket = $this->getSocketInstance($resource = uniqid()),
+				$socketManager = $socket->getSocketManager()
 			)
 
 			->if($this->calling($socketManager)->writeSocket = $bytesWritten = rand(1, PHP_INT_MAX))
@@ -169,8 +182,8 @@ class socket extends atoum
 	{
 		$this
 			->given(
-				$socket = new testedClass($resource = uniqid()),
-				$socket->setSocketManager($socketManager = new \mock\server\socket\manager())
+				$socket = $this->getSocketInstance($resource = uniqid()),
+				$socketManager = $socket->getSocketManager()
 			)
 
 			->if($this->calling($socketManager)->closeSocket->returnThis())
@@ -184,8 +197,8 @@ class socket extends atoum
 	{
 		$this
 			->given(
-				$socket = new testedClass($resource = uniqid()),
-				$socket->setSocketManager($socketManager = new \mock\server\socket\manager())
+				$socket = $this->getSocketInstance($resource = uniqid()),
+				$socketManager = $socket->getSocketManager()
 			)
 			->then
 				->if($this->calling($socketManager)->isSocket = true)
@@ -196,5 +209,13 @@ class socket extends atoum
 				->then
 					->boolean($socket->isClosed())->isTrue()
 		;
+	}
+
+	protected function getSocketInstance($resource = null)
+	{
+		$socketManager = new \mock\server\socket\manager();
+		$this->calling($socketManager)->isSocket = true;
+
+		return new testedClass($resource ?: uniqid(), $socketManager);
 	}
 }

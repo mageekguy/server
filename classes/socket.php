@@ -12,9 +12,15 @@ class socket
 
 	public function __construct($resource, socket\manager\definition $manager = null)
 	{
+		$this->setSocketManager($manager);
+
+		if ($this->socketManager->isSocket($resource) === false)
+		{
+			throw $this->getException('Resource is invalid');
+		}
+
 		$this->resource = $resource;
 
-		$this->setSocketManager($manager);
 	}
 
 	public function setSocketManager(socket\manager\definition $manager = null)
@@ -87,5 +93,10 @@ class socket
 		}
 
 		return $this;
+	}
+
+	protected function getException($message)
+	{
+		return new socket\exception($message);
 	}
 }
