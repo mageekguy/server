@@ -28,23 +28,23 @@ class socket
 		return $this->socketManager;
 	}
 
-	public function onRead(socket\select $select, callable $callable)
+	public function onRead(socket\poller\definition $poller, callable $callable)
 	{
-		$this->setEvents($select)->events->onRead($callable);
+		$this->setEvents($poller)->events->onRead($callable);
 
 		return $this;
 	}
 
-	public function onWrite(socket\select $select, callable $callable)
+	public function onWrite(socket\poller\definition $poller, callable $callable)
 	{
-		$this->setEvents($select)->events->onWrite($callable);
+		$this->setEvents($poller)->events->onWrite($callable);
 
 		return $this;
 	}
 
-	public function onTimeout(socket\select $select, socket\timer $timer, callable $callable)
+	public function onTimeout(socket\poller\definition $poller, socket\timer $timer, callable $callable)
 	{
-		$this->setEvents($select)->events->onTimeout($timer, $callable);
+		$this->setEvents($poller)->events->onTimeout($timer, $callable);
 
 		return $this;
 	}
@@ -71,11 +71,11 @@ class socket
 		return $this;
 	}
 
-	protected function setEvents(socket\select $select)
+	protected function setEvents(socket\poller\definition $poller)
 	{
 		if ($this->events === null || (isset($this->events->onRead) === false && isset($this->events->onWrite) === false))
 		{
-			$this->events = $select->socket($this->resource);
+			$this->events = $poller->pollSocket($this->resource);
 		}
 
 		return $this;

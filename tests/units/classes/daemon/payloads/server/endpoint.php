@@ -95,7 +95,7 @@ class endpoint extends atoum
 
 			->if(
 				$endpoint->onConnect($handler = function() {}),
-				$this->calling($payload)->wait = $socketEvents = new \mock\server\socket\events()
+				$this->calling($payload)->pollSocket = $socketEvents = new \mock\server\socket\events()
 			)
 			->then
 				->string($endpoint->bindForPayload($payload))->isEqualTo($socket)
@@ -103,7 +103,7 @@ class endpoint extends atoum
 					->call('bindSocketTo')
 						->withArguments($endpoint->getIp(), $endpoint->getPort())
 								->once()
-					->call('wait')->withArguments($socket)->once()
+					->call('pollSocket')->withArguments($socket)->once()
 				->mock($socketEvents)->call('onRead')->withArguments($handler)->once()
 		;
 	}

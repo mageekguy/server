@@ -8,10 +8,10 @@ use
 	atoum,
 	server\socket,
 	mock\server as mock,
-	server\socket\select as testedClass
+	server\socket\poller as testedClass
 ;
 
-class select extends atoum
+class poller extends atoum
 {
 	public function beforeTestMethod($method)
 	{
@@ -20,26 +20,31 @@ class select extends atoum
 		$this->then = function() use ($test) { $test->getTestAdapterStorage()->resetCalls(); return $test; };
 	}
 
+	public function testClass()
+	{
+		$this->testedClass->implements('server\socket\poller\definition');
+	}
+
 	public function test__construct()
 	{
 		$this
-			->given($select = new testedClass())
+			->given($poller = new testedClass())
 			->then
-				->array($select->getSockets())->isEmpty()
-				->object($select->getSocketManager())->isEqualTo(new socket\manager())
-				->object($select->getSocketEventsFactory())->isEqualTo(new socket\events\factory())
+				->array($poller->getSockets())->isEmpty()
+				->object($poller->getSocketManager())->isEqualTo(new socket\manager())
+				->object($poller->getSocketEventsFactory())->isEqualTo(new socket\events\factory())
 		;
 	}
 
 	public function testSetSocketManager()
 	{
 		$this
-			->given($select = new testedClass())
+			->given($poller = new testedClass())
 			->then
-				->object($select->setSocketManager($socketManager = new socket\manager()))->isIdenticalTo($select)
-				->object($select->getSocketManager())->isIdenticalTo($socketManager)
-				->object($select->setSocketManager())->isIdenticalTo($select)
-				->object($select->getSocketManager())
+				->object($poller->setSocketManager($socketManager = new socket\manager()))->isIdenticalTo($poller)
+				->object($poller->getSocketManager())->isIdenticalTo($socketManager)
+				->object($poller->setSocketManager())->isIdenticalTo($poller)
+				->object($poller->getSocketManager())
 					->isNotIdenticalTo($socketManager)
 					->isEqualTo(new socket\manager())
 		;
@@ -48,52 +53,52 @@ class select extends atoum
 	public function testSetSocketEventsFactory()
 	{
 		$this
-			->given($select = new testedClass())
+			->given($poller = new testedClass())
 			->then
-				->object($select->setSocketEventsFactory($socketEventsFactory = new socket\events\factory()))->isIdenticalTo($select)
-				->object($select->getSocketEventsFactory())->isIdenticalTo($socketEventsFactory)
-				->object($select->setSocketEventsFactory())->isIdenticalTo($select)
-				->object($select->getSocketEventsFactory())
+				->object($poller->setSocketEventsFactory($socketEventsFactory = new socket\events\factory()))->isIdenticalTo($poller)
+				->object($poller->getSocketEventsFactory())->isIdenticalTo($socketEventsFactory)
+				->object($poller->setSocketEventsFactory())->isIdenticalTo($poller)
+				->object($poller->getSocketEventsFactory())
 					->isNotIdenticalTo($socketEventsFactory)
 					->isEqualTo(new socket\events\factory())
 		;
 	}
 
-	public function testSocket()
+	public function testPollSocket()
 	{
 		$this
 			->given(
-				$select = new testedClass(),
-				$select->setSocketEventsFactory($socketEventsFactory = new mock\socket\events\factory()),
+				$poller = new testedClass(),
+				$poller->setSocketEventsFactory($socketEventsFactory = new mock\socket\events\factory()),
 				$this->calling($socketEventsFactory)->build = $socketEvents = new socket\events()
 			)
 			->then
-				->object($select->socket($socket1 = uniqid()))->isIdenticalTo($socketEvents)
-				->array($select->getSockets())->isEqualTo(array($socket1))
+				->object($poller->pollSocket($socket1 = uniqid()))->isIdenticalTo($socketEvents)
+				->array($poller->getSockets())->isEqualTo(array($socket1))
 		;
 	}
 
-	public function testWait()
+	public function testPollSockets()
 	{
 		$this
 			->given(
-				$select = new testedClass(),
-				$select
+				$poller = new testedClass(),
+				$poller
 					->setSocketManager($socketManager = new mock\socket\manager())
 					->setSocketEventsFactory($socketEventsFactory = new mock\socket\events\factory()),
 				$this->function->is_resource = true
 			)
 			->then
-				->object($select->wait($timeout = rand(1, PHP_INT_MAX)))->isIdenticalTo($select)
+				->object($poller->waitSockets($timeout = rand(1, PHP_INT_MAX)))->isIdenticalTo($poller)
 
 			->given(
 				$this->calling($socketEventsFactory)->build = $socketEvents = new \mock\server\socket\events(),
 				$this->calling($socketEvents)->__isset = false
 			)
 
-			->if($select->socket($socket1 = uniqid()))
+			->if($poller->pollSocket($socket1 = uniqid()))
 			->then
-				->object($select->wait($timeout))->isIdenticalTo($select)
+				->object($poller->waitSockets($timeout))->isIdenticalTo($poller)
 				->mock($socketManager)->call('select')->withArguments(array($socket1), array(), array(), $timeout)->never()
 				->mock($socketEvents)->call('triggerOnRead')->withArguments($socket1)->never()
 				->mock($socketEvents)->call('triggerOnWrite')->withArguments($socket1)->never()
@@ -103,7 +108,7 @@ class select extends atoum
 				$this->calling($socketManager)->pollSockets = function(& $read, & $write) { $read = $write = array(); }
 			)
 			->then
-				->object($select->wait($timeout))->isIdenticalTo($select)
+				->object($poller->waitSockets($timeout))->isIdenticalTo($poller)
 				->mock($socketManager)->call('pollSockets')->withArguments(array($socket1), array($socket1), array(), $timeout)->once()
 				->mock($socketEvents)->call('triggerOnRead')->withArguments($socket1)->never()
 				->mock($socketEvents)->call('triggerOnWrite')->withArguments($socket1)->never()
@@ -114,7 +119,7 @@ class select extends atoum
 				$this->calling($socketEvents)->triggerOnWrite->returnThis()
 			)
 			->then
-				->object($select->wait($timeout))->isIdenticalTo($select)
+				->object($poller->waitSockets($timeout))->isIdenticalTo($poller)
 				->mock($socketManager)->call('pollSockets')->withArguments(array($socket1), array($socket1), array(), $timeout)->once()
 				->mock($socketEvents)
 					->call('triggerOnRead')
@@ -127,7 +132,7 @@ class select extends atoum
 
 			->if($this->calling($socketManager)->pollSockets->throw = $exception = new \exception())
 			->then
-				->exception(function() use ($select) { $select->wait(rand(1, PHP_INT_MAX)); })
+				->exception(function() use ($poller) { $poller->waitSockets(rand(1, PHP_INT_MAX)); })
 					->isIdenticalTo($exception)
 		;
 	}

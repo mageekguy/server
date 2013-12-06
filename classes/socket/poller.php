@@ -2,7 +2,7 @@
 
 namespace server\socket;
 
-class select
+class poller implements poller\definition
 {
 	protected $socketManager = null;
 	protected $socketsResource = array();
@@ -46,7 +46,7 @@ class select
 		return $this->socketsResource;
 	}
 
-	public function socket($socket)
+	public function pollSocket($socket)
 	{
 		$this->socketsResource[] = $socket;
 		$this->socketsEvents[] = $socketEvents = $this->socketEventsFactory->build();
@@ -54,7 +54,7 @@ class select
 		return $socketEvents;
 	}
 
-	public function wait($timeout = null)
+	public function waitSockets($timeout = null)
 	{
 		$read = $write = $except = array();
 

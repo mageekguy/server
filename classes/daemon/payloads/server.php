@@ -8,10 +8,10 @@ use
 	server\daemon
 ;
 
-class server extends daemon\payload implements socket\manager\definition
+class server extends daemon\payload implements socket\manager\definition, socket\poller\definition
 {
 	protected $socketManager = null;
-	protected $socketSelect = null;
+	protected $socketPoller = null;
 	protected $endpoints = array();
 
 	private $sockets = array();
@@ -22,7 +22,7 @@ class server extends daemon\payload implements socket\manager\definition
 			->setInfoLogger()
 			->setErrorLogger()
 			->setSocketManager()
-			->setSocketSelect()
+			->setSocketPoller()
 		;
 	}
 
@@ -38,16 +38,16 @@ class server extends daemon\payload implements socket\manager\definition
 		return $this->socketManager;
 	}
 
-	public function setSocketSelect(socket\select $select = null)
+	public function setSocketPoller(socket\poller\definition $poller = null)
 	{
-		$this->socketSelect = $select ?: new socket\select();
+		$this->socketPoller = $poller ?: new socket\poller();
 
 		return $this;
 	}
 
-	public function getSocketSelect()
+	public function getSocketPoller()
 	{
-		return $this->socketSelect;
+		return $this->socketPoller;
 	}
 
 	public function addEndpoint(server\endpoint $endpoint)
@@ -62,9 +62,14 @@ class server extends daemon\payload implements socket\manager\definition
 		return array_values($this->endpoints);
 	}
 
-	public function wait($socket)
+	public function pollSocket($socket)
 	{
-		return $this->socketSelect->socket($socket);
+		return $this->socketPoller->pollSocket($socket);
+	}
+
+	public function waitSockets()
+	{
+		return $this->socketPoller->waitSockets();
 	}
 
 	public function getLastSocketErrorCode()
@@ -140,7 +145,7 @@ class server extends daemon\payload implements socket\manager\definition
 		{
 			try
 			{
-				$this->socketSelect->wait();
+				$this->socketPoller->waitSockets();
 			}
 			catch (socket\manager\exception $exception)
 			{

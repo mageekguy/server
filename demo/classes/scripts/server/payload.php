@@ -48,18 +48,14 @@ class payload extends payloads\server
 
 	public function acceptClient($clientsSocket)
 	{
-		$this->wait($clientsSocket)->onRead(array($this, __FUNCTION__));
+		$this->pollSocket($clientsSocket)->onRead(array($this, __FUNCTION__));
 
 		$clientSocket = new server\socket($this->acceptSocket($clientsSocket), $this);
 
 		$timeoutHandler = function() use ($clientSocket) {
-				$peer = $clientSocket->getPeer();
-
-				$this->writeInfo('Client ' . $peer . ' timeout!');
-
 				$clientSocket->close();
 
-				$this->writeInfo('Client ' . $peer . ' kicked!');
+				$this->writeInfo('Client ' . $peer . ' timeout!');
 			}
 		;
 
@@ -75,16 +71,16 @@ class payload extends payloads\server
 				else
 				{
 					$clientSocket
-						->onRead($this->getSocketSelect(), $readHandler)
-						->onTimeout($this->getSocketSelect(), new socket\timer(60), $timeoutHandler)
+						->onRead($this, $readHandler)
+						->onTimeout($this, new socket\timer(60), $timeoutHandler)
 					;
 				}
 			}
 		;
 
 		$clientSocket
-			->onRead($this->getSocketSelect(), $readHandler)
-			->onTimeout($this->getSocketSelect(), new socket\timer(60), $timeoutHandler)
+			->onRead($this, $readHandler)
+			->onTimeout($this, new socket\timer(60), $timeoutHandler)
 		;
 
 		return $this->writeInfo('Accept peer ' . $clientSocket->getPeer());

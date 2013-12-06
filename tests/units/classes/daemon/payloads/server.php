@@ -16,7 +16,10 @@ class server extends atoum
 {
 	public function testClass()
 	{
-		$this->testedClass->implements('server\socket\manager\definition');
+		$this->testedClass
+			->implements('server\socket\manager\definition')
+			->implements('server\socket\poller\definition')
+		;
 	}
 
 	public function testSetSocketManager()
@@ -33,17 +36,17 @@ class server extends atoum
 		;
 	}
 
-	public function testSetSocketSelect()
+	public function testSetSocketPoller()
 	{
 		$this
 			->if($server = new testedClass(uniqid()))
 			->then
-				->object($server->setSocketSelect($select = new socket\select()))->isIdenticalTo($server)
-				->object($server->getSocketSelect())->isIdenticalTo($select)
-				->object($server->setSocketSelect())->isIdenticalTo($server)
-				->object($server->getSocketSelect())
-					->isNotIdenticalTo($select)
-					->isEqualTo(new socket\select())
+				->object($server->setSocketPoller($poller = new socket\poller()))->isIdenticalTo($server)
+				->object($server->getSocketPoller())->isIdenticalTo($poller)
+				->object($server->setSocketPoller())->isIdenticalTo($server)
+				->object($server->getSocketPoller())
+					->isNotIdenticalTo($poller)
+					->isEqualTo(new socket\poller())
 		;
 	}
 
@@ -85,18 +88,18 @@ class server extends atoum
 		;
 	}
 
-	public function testWait()
+	public function testPollSocket()
 	{
 		$this
 			->given(
 				$server = new testedClass(uniqid()),
-				$server->setSocketSelect($select = new \mock\server\socket\select())
+				$server->setSocketPoller($poller = new \mock\server\socket\poller())
 			)
 
-			->if($this->calling($select)->socket = $socketEvents = new socket\events())
+			->if($this->calling($poller)->pollSocket = $socketEvents = new socket\events())
 			->then
-				->object($server->wait($socket = uniqid()))->isIdenticalTo($socketEvents)
-				->mock($select)->call('socket')->withArguments($socket)->once()
+				->object($server->pollSocket($socket = uniqid()))->isIdenticalTo($socketEvents)
+				->mock($poller)->call('pollSocket')->withArguments($socket)->once()
 		;
 	}
 
