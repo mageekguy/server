@@ -25,6 +25,7 @@ To run it:
 5. Start a telnet on the IP and the port and type something.
 
 If the server works fine, each message sent to the server via telnet are logged in the info log file.  
+Moreover, the server should reply with a [rot13](http://en.wikipedia.org/wiki/ROT13) version of your message.  
 If it's not the case, errors are logged in the error log file.  
 To stop the server, just get the PID of the server with the `ps aux | grep php` command and kill it with `kill <pid>`.
 For more informations to develop your own server, just look `demo/classes/scripts/server.php`.  
