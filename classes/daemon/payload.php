@@ -35,6 +35,7 @@ abstract class payload
 		return $this->errorLogger;
 	}
 
-	public abstract function execute();
-	public abstract function destruct();
+	public abstract function activate();
+	public abstract function release();
+	public abstract function deactivate();
 }

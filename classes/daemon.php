@@ -391,16 +391,17 @@ abstract class daemon extends script\configurable
 
 				$this->payload->setInfoLogger($this->infoLogger);
 				$this->payload->setErrorLogger($this->errorLogger);
+				$this->payload->activate();
 
 				declare(ticks=1)
 				{
 					while ($this->controller->dispatchSignals()->daemonShouldRun() === true)
 					{
-						$this->payload->execute();
+						$this->payload->release();
 					}
 				}
 
-				$this->payload->destruct();
+				$this->payload->deactivate();
 
 				while (ob_get_level() > 0)
 				{

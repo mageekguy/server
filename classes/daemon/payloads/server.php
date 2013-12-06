@@ -123,7 +123,12 @@ class server extends daemon\payload implements socket\manager\definition, socket
 		return $this->addSocket($this->socketManager->acceptSocket($serverSocket));
 	}
 
-	public function execute()
+	public function activate()
+	{
+		return $this;
+	}
+
+	public function release()
 	{
 		foreach ($this->endpoints as $endpoint)
 		{
@@ -159,7 +164,7 @@ class server extends daemon\payload implements socket\manager\definition, socket
 		return $this;
 	}
 
-	public function destruct()
+	public function deactivate()
 	{
 		$this->writeInfo('Stop server…');
 
