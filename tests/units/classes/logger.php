@@ -79,6 +79,9 @@ class logger extends atoum
 				->mock($decorator2)->call('decorateLog')->withArguments($decoratedLog1)->once()
 				->mock($writer1)->call('log')->withArguments($decoratedLog2)->once()
 				->mock($writer2)->call('log')->withArguments($decoratedLog2)->once()
+				->object($logger->log(($message1 = uniqid()) . "\n" . ($message2 = uniqid())))->isIdenticalTo($logger)
+				->mock($writer1)->call('log')->withArguments($decoratedLog2 . $decoratedLog2)->once()
+				->mock($writer2)->call('log')->withArguments($decoratedLog2 . $decoratedLog2)->once()
 		;
 	}
 }

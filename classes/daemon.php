@@ -167,32 +167,31 @@ abstract class daemon extends script\configurable
 
 		if ($errorReporting !== 0)
 		{
-			$this->errorLogger
-				->log('Error ' . $error . ' in file \'' . $file . '\' on line ' . $line . ': ' . $message)
-				->log('Error backtrace:')
-			;
-
 			$deep = 0;
+
+			$message = 'Error ' . $error . ' in file \'' . $file . '\' on line ' . $line . ': ' . $message . PHP_EOL . 'Error backtrace:';
 
 			foreach (array_reverse(debug_backtrace()) as $trace)
 			{
-				$logMessage = '';
+				$traceMessage = '';
 
 				if (isset($trace['file']) === true)
 				{
-					$logMessage .= 'File \'' . $trace['file'] . '\'';
+					$traceMessage .= 'File \'' . $trace['file'] . '\'';
 				}
 
 				if (isset($trace['line']) === true)
 				{
-					$logMessage .= ' on line ' . $trace['line'];
+					$traceMessage .= ' on line ' . $trace['line'];
 				}
 
-				if ($logMessage !== '')
+				if ($traceMessage !== '')
 				{
-					$this->errorLogger->log('#' . ++$deep . ' ' . $logMessage);
+					$message .= PHP_EOL . '#' . ++$deep . ' ' . $traceMessage;
 				}
 			}
+
+			$this->errorLogger->log($message);
 		}
 
 		return true;

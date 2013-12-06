@@ -269,11 +269,13 @@ class daemon extends atoum
 				->boolean($daemon->errorHandler($code = rand(1, PHP_INT_MAX), $message = uniqid(), $file = uniqid(), $line = rand(0, PHP_INT_MAX), $context = uniqid()))->isTrue()
 				->mock($errorLogger)
 					->call('log')
-						->withArguments('Error ' . $code . ' in file \'' . $file . '\' on line ' . $line . ': ' . $message)->once()
-						->withArguments('Error backtrace:')->once()
-						->withArguments('#1 File \'' . $file3 . '\' on line ' . $line3)->once()
-						->withArguments('#2 File \'' . $file2 . '\' on line ' . $line2)->once()
-						->withArguments('#3 File \'' . $file1 . '\' on line ' . $line1)->once()
+						->withArguments(
+							'Error ' . $code . ' in file \'' . $file . '\' on line ' . $line . ': ' . $message
+							. PHP_EOL . 'Error backtrace:'
+							. PHP_EOL . '#1 File \'' . $file3 . '\' on line ' . $line3
+							. PHP_EOL . '#2 File \'' . $file2 . '\' on line ' . $line2
+							. PHP_EOL . '#3 File \'' . $file1 . '\' on line ' . $line1
+						)->once()
 		;
 	}
 
