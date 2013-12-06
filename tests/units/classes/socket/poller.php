@@ -30,7 +30,6 @@ class poller extends atoum
 		$this
 			->given($poller = new testedClass())
 			->then
-				->array($poller->getSockets())->isEmpty()
 				->object($poller->getSocketManager())->isEqualTo(new socket\manager())
 				->object($poller->getSocketEventsFactory())->isEqualTo(new socket\events\factory())
 		;
@@ -74,7 +73,6 @@ class poller extends atoum
 			)
 			->then
 				->object($poller->pollSocket($socket1 = uniqid()))->isIdenticalTo($socketEvents)
-				->array($poller->getSockets())->isEqualTo(array($socket1))
 		;
 	}
 

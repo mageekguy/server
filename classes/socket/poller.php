@@ -41,11 +41,6 @@ class poller implements poller\definition
 		return $this;
 	}
 
-	public function getSockets()
-	{
-		return $this->socketsResource;
-	}
-
 	public function pollSocket($socket)
 	{
 		$this->socketsResource[] = $socket;
