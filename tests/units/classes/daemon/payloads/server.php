@@ -260,7 +260,9 @@ class server extends atoum
 				$server->setSocketManager($socketManager = new \mock\server\socket\manager())
 			)
 			->then
-				->object($server->release())->isIdenticalTo($server)
+				->exception(function() use ($server) { $server->release(); })
+					->isInstanceOf('server\daemon\payloads\server\exception')
+					->hasMessage('Unable to bind endpoints')
 				->mock($socketPoller)->wasNotCalled()
 				->mock($socketManager)->wasNotCalled()
 

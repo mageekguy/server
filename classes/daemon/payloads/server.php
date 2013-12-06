@@ -137,37 +137,43 @@ class server extends daemon\payload implements socket\manager\definition, socket
 	{
 		foreach ($this->endpoints as $endpoint)
 		{
+			$socket = null;
 			try
 			{
-				$endpoint->bindForPayload($this);
+				$socket = $endpoint->bindForPayload($this);
 			}
 			catch (\exception $exception)
 			{
 				$this->writeError($exception->getMessage());
 			}
 
-			$this->writeInfo('Accept connection on ' . $endpoint . '…');
+			if ($socket !== null)
+			{
+				$this->writeInfo('Accept connection on ' . $endpoint . '…');
+			}
 		}
 
 		$this->endpoints = array();
 
-		if (sizeof($this->sockets) > 0)
+		if (sizeof($this->sockets) <= 0)
 		{
-			try
-			{
-				$this->socketPoller->waitSockets();
-			}
-			catch (socket\poller\exception $exception)
-			{
-				if ($exception->getCode() != 4)
-				{
-					throw $this->getExceptionFrom($exception);
-				}
-			}
-			catch (\exception $exception)
+			throw $this->getException('Unable to bind endpoints');
+		}
+
+		try
+		{
+			$this->socketPoller->waitSockets();
+		}
+		catch (socket\poller\exception $exception)
+		{
+			if ($exception->getCode() != 4)
 			{
 				throw $this->getExceptionFrom($exception);
 			}
+		}
+		catch (\exception $exception)
+		{
+			throw $this->getExceptionFrom($exception);
 		}
 
 		return $this;
@@ -213,8 +219,13 @@ class server extends daemon\payload implements socket\manager\definition, socket
 		return $socket;
 	}
 
+	protected function getException($message, $code = 0)
+	{
+		return new server\exception($message, $code);
+	}
+
 	protected function getExceptionFrom(\exception $exception)
 	{
-		return new server\exception($exception->getMessage(), $exception->getCode());
+		return $this->getException($exception->getMessage(), $exception->getCode());
 	}
 }
