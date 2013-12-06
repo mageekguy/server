@@ -119,13 +119,11 @@ class select extends atoum
 				->mock($socketEvents)
 					->call('triggerOnRead')
 						->withArguments($socket1)
-							->before($this->mock($socketEvents)->call('__unset')->withArguments('onRead')->once())
-								->once()
+							->once()
 				->mock($socketEvents)
 					->call('triggerOnWrite')
 						->withArguments($socket1)
-							->before($this->mock($socketEvents)->call('__unset')->withArguments('onWrite')->once())
-								->once()
+							->once()
 
 			->if($this->calling($socketManager)->select->throw = $exception = new \exception())
 			->then

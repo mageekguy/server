@@ -34,7 +34,11 @@ class events
 	{
 		if ($this->onRead !== null)
 		{
-			call_user_func_array($this->onRead, array($socket));
+			$onRead = $this->onRead;
+
+			$this->onRead = null;
+
+			call_user_func_array($onRead, array($socket));
 		}
 
 		return $this;
@@ -51,7 +55,11 @@ class events
 	{
 		if ($this->onWrite !== null)
 		{
-			call_user_func_array($this->onWrite, array($socket));
+			$onWrite = $this->onWrite;
+
+			$this->onWrite = null;
+
+			call_user_func_array($onWrite, array($socket));
 		}
 
 		return $this;

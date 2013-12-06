@@ -80,11 +80,13 @@ class events extends atoum
 			->given($events = new testedClass())
 			->then
 				->object($events->triggerOnRead($socket = uniqid()))->isIdenticalTo($events)
+				->boolean(isset($events->onRead))->isFalse()
 
 			->if($events->onRead(function($socket) use (& $socketUsed) { $socketUsed = $socket; }))
 			->then
 				->object($events->triggerOnRead($socket))->isIdenticalTo($events)
 				->string($socketUsed)->isEqualTo($socket)
+				->boolean(isset($events->onRead))->isFalse()
 		;
 	}
 
@@ -104,11 +106,13 @@ class events extends atoum
 			->given($events = new testedClass())
 			->then
 				->object($events->triggerOnWrite($socket = uniqid()))->isIdenticalTo($events)
+				->boolean(isset($events->onWrite))->isFalse()
 
 			->if($events->onWrite(function($socket) use (& $socketUsed) { $socketUsed = $socket; }))
 			->then
 				->object($events->triggerOnWrite($socket))->isIdenticalTo($events)
 				->string($socketUsed)->isEqualTo($socket)
+				->boolean(isset($events->onWrite))->isFalse()
 		;
 	}
 

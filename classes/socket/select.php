@@ -83,7 +83,7 @@ class select
 			{
 				foreach ($read as $key => $socket)
 				{
-					unset($this->socketsEvents[$key]->triggerOnRead($socket)->onRead);
+					$this->socketsEvents[$key]->triggerOnRead($socket);
 
 					if (isset($this->socketsEvents[$key]->onWrite) === false)
 					{
@@ -99,7 +99,7 @@ class select
 
 				foreach ($write as $key => $socket)
 				{
-					unset($this->socketsEvents[$key]->triggerOnWrite($socket)->onWrite);
+					$this->socketsEvents[$key]->triggerOnWrite($socket);
 
 					if (isset($this->socketsEvents[$key]->onRead) === false)
 					{
