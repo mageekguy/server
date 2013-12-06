@@ -8,7 +8,7 @@ use
 
 class manager implements manager\definition
 {
-	const resourceType = 'socket';
+	const resourceType = 'Socket';
 
 	protected $lastErrorCode = null;
 	protected $lastErrorMessage = null;
