@@ -6,7 +6,7 @@ Server is a generic (asynchronous) socket server written in PHP.
 To use it, you should use an UNIX operating system and the following PHP extensions should be available:
 
 * [PCNTL](http://www.php.net/manual/en/pcntl.installation.php);
-* [POSIX](http://www.php.net/manual/en/posix.installation.php).
+* [POSIX](http://www.php.net/manual/en/posix.installation.php);
 * [socket](http://bd1.php.net/manual/en/sockets.installation.php).
 
 Moreover, you should use a PHP version ≥ 5.4.  
