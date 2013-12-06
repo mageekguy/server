@@ -256,8 +256,11 @@ class server extends atoum
 		$this
 			->given(
 				$server = new testedClass(uniqid()),
-				$server->setSocketPoller($socketPoller = new \mock\server\socket\poller()),
-				$server->setSocketManager($socketManager = new \mock\server\socket\manager())
+				$server
+					->setSocketPoller($socketPoller = new \mock\server\socket\poller())
+					->setSocketManager($socketManager = new \mock\server\socket\manager())
+					->setInfoLogger($infoLogger = new \mock\server\logger())
+					->setErrorLogger($errorLogger = new \mock\server\logger())
 			)
 			->then
 				->exception(function() use ($server) { $server->release(); })
@@ -295,6 +298,10 @@ class server extends atoum
 				->mock($socketManager)->call('bindSocketTo')
 					->withArguments($endpoint1->getIp(), $endpoint1->getPort())->once()
 					->withArguments($endpoint2->getIp(), $endpoint2->getPort())->once()
+				->mock($infoLogger)
+					->call('log')
+						->withArguments('Accept connection on ' . $endpoint1 . '…')->once()
+						->withArguments('Accept connection on ' . $endpoint2 . '…')->once()
 
 			->if(
 				$server
@@ -351,6 +358,18 @@ class server extends atoum
 				->mock($socketManager)->call('bindSocketTo')
 					->withArguments($endpoint1->getIp(), $endpoint1->getPort())->once()
 					->withArguments($endpoint2->getIp(), $endpoint2->getPort())->once()
+
+			->if(
+				$server
+					->addEndpoint($endpoint1 = (new \mock\server\daemon\payloads\server\endpoint(new network\ip('127.0.0.1'), new network\port(8081)))->onConnect($connectHandler1 = function() {}))
+					->addEndpoint($endpoint2 = (new \mock\server\daemon\payloads\server\endpoint(new network\ip('127.0.0.2'), new network\port(8082)))->onConnect($connectHandler2 = function() {})),
+				$this->calling($socketManager)->bindSocketTo[1] = $serverSocket1 = uniqid(),
+				$this->calling($socketManager)->bindSocketTo[2]->throw = $exception = new \exception(uniqid())
+			)
+			->then
+				->object($server->release())->isIdenticalTo($server)
+				->mock($errorLogger)->call('log')->withArguments($exception->getMessage())->once()
+
 		;
 	}
 
