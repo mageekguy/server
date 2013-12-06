@@ -58,22 +58,51 @@ class socket
 
 	public function getPeer()
 	{
-		return $this->socketManager->getSocketPeer($this->resource);
+		try
+		{
+			return $this->socketManager->getSocketPeer($this->resource);
+		}
+		catch (\exception $exception)
+		{
+			throw $this->getExceptionFrom($exception);
+		}
 	}
 
 	public function read($length, $mode)
 	{
-		return $this->socketManager->readSocket($this->resource, $length, $mode);
+		try
+		{
+			return $this->socketManager->readSocket($this->resource, $length, $mode);
+		}
+		catch (\exception $exception)
+		{
+			throw $this->getExceptionFrom($exception);
+		}
 	}
 
 	public function write($data)
 	{
-		return $this->socketManager->writeSocket($this->resource, $data);
+		try
+		{
+			return $this->socketManager->writeSocket($this->resource, $data);
+		}
+		catch (\exception $exception)
+		{
+			throw $this->getExceptionFrom($exception);
+		}
 	}
 
 	public function close()
 	{
-		$this->socketManager->closeSocket($this->resource);
+		try
+		{
+			$this->socketManager->closeSocket($this->resource);
+		}
+		catch (\exception $exception)
+		{
+			throw $this->getExceptionFrom($exception);
+
+		}
 
 		$this->events = null;
 
@@ -98,5 +127,10 @@ class socket
 	protected function getException($message)
 	{
 		return new socket\exception($message);
+	}
+
+	protected function getExceptionFrom(\exception $exception)
+	{
+		return new socket\exception($exception->getMessage(), $exception->getCode());
 	}
 }

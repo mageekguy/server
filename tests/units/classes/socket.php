@@ -145,6 +145,13 @@ class socket extends atoum
 			->then
 				->object($socket->getPeer())->isIdenticalTo($peer)
 				->mock($socketManager)->call('getSocketPeer')->withArguments($resource)->once()
+
+			->if($this->calling($socketManager)->getSocketPeer->throw = $exception = new \exception(uniqid(), rand(1, PHP_INT_MAX)))
+			->then
+				->exception(function() use ($socket) { $socket->getPeer(); })
+					->isInstanceOf('server\socket\exception')
+					->hasCode($exception->getCode())
+					->hasMessage($exception->getMessage())
 		;
 	}
 
@@ -160,6 +167,13 @@ class socket extends atoum
 			->then
 				->string($socket->read($length = rand(1, PHP_INT_MAX), $mode = uniqid()))->isEqualTo($data)
 				->mock($socketManager)->call('readSocket')->withArguments($resource, $length, $mode)->once()
+
+			->if($this->calling($socketManager)->readSocket->throw = $exception = new \exception(uniqid(), rand(1, PHP_INT_MAX)))
+			->then
+				->exception(function() use ($socket) { $socket->read(rand(1, PHP_INT_MAX), uniqid()); })
+					->isInstanceOf('server\socket\exception')
+					->hasCode($exception->getCode())
+					->hasMessage($exception->getMessage())
 		;
 	}
 
@@ -175,6 +189,13 @@ class socket extends atoum
 			->then
 				->integer($socket->write($data = uniqid()))->isEqualTo($bytesWritten)
 				->mock($socketManager)->call('writeSocket')->withArguments($resource, $data)->once()
+
+			->if($this->calling($socketManager)->writeSocket->throw = $exception = new \exception(uniqid(), rand(1, PHP_INT_MAX)))
+			->then
+				->exception(function() use ($socket) { $socket->write(uniqid()); })
+					->isInstanceOf('server\socket\exception')
+					->hasCode($exception->getCode())
+					->hasMessage($exception->getMessage())
 		;
 	}
 
@@ -190,6 +211,13 @@ class socket extends atoum
 			->then
 				->object($socket->close())->isIdenticalTo($socket)
 				->mock($socketManager)->call('closeSocket')->withArguments($resource)->once()
+
+			->if($this->calling($socketManager)->closeSocket->throw = $exception = new \exception(uniqid(), rand(1, PHP_INT_MAX)))
+			->then
+				->exception(function() use ($socket) { $socket->close(); })
+					->isInstanceOf('server\socket\exception')
+					->hasCode($exception->getCode())
+					->hasMessage($exception->getMessage())
 		;
 	}
 
