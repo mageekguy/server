@@ -6,6 +6,7 @@ class socket
 {
 	protected $socketManager = null;
 	protected $events = null;
+	protected $peer = null;
 
 	private $resource = null;
 
@@ -68,7 +69,14 @@ class socket
 	{
 		$this->socketManager->closeSocket($this->resource);
 
+		$this->events = null;
+
 		return $this;
+	}
+
+	public function isClosed()
+	{
+		return (is_resource($this->resource) === false);
 	}
 
 	protected function setEvents(socket\poller\definition $poller)

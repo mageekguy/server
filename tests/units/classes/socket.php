@@ -179,4 +179,18 @@ class socket extends atoum
 				->mock($socketManager)->call('closeSocket')->withArguments($resource)->once()
 		;
 	}
+
+	public function testIsClosed()
+	{
+		$this
+			->given($socket = new testedClass($resource = uniqid()))
+			->then
+				->if($this->function->is_resource = true)
+				->then
+					->boolean($socket->isClosed())->isFalse()
+				->if($this->function->is_resource = false)
+				->then
+					->boolean($socket->isClosed())->isTrue()
+		;
+	}
 }
