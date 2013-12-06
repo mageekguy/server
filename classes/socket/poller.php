@@ -72,7 +72,14 @@ class poller implements poller\definition
 
 		if (sizeof($read) > 0 || sizeof($write) > 0 || sizeof($except) > 0)
 		{
-			$this->socketManager->pollSockets($read, $write, $except, $timeout ?: $minSocketTimeout);
+			try
+			{
+				$this->socketManager->pollSockets($read, $write, $except, $timeout ?: $minSocketTimeout);
+			}
+			catch (\exception $exception)
+			{
+				throw $this->getExceptionFrom($exception);
+			}
 
 			if ($read)
 			{
@@ -145,5 +152,15 @@ class poller implements poller\definition
 		}
 
 		return $minSocketTimeout;
+	}
+
+	protected function getException($message, $code = 0)
+	{
+		return new poller\exception($message, $code);
+	}
+
+	protected function getExceptionFrom(\exception $exception)
+	{
+		return new poller\exception($exception->getMessage(), $exception->getCode());
 	}
 }

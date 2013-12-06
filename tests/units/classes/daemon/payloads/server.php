@@ -14,6 +14,13 @@ use
 
 class server extends atoum
 {
+	public function beforeTestMethod($method)
+	{
+		$test = $this;
+
+		$this->then = function() use ($test) { $test->getTestAdapterStorage()->resetCalls(); return $test; };
+	}
+
 	public function testClass()
 	{
 		$this->testedClass
@@ -239,8 +246,153 @@ class server extends atoum
 
 			->if($this->calling($socketManager)->isSocket = true)
 			->then
-				->boolean($server->isSocket(uniqid()))->isTrue()
+				->boolean($server->isSocket($var = uniqid()))->isTrue()
 				->mock($socketManager)->call('isSocket')->withArguments($var)->once()
+		;
+	}
+
+	public function testRelease()
+	{
+		$this
+			->given(
+				$server = new testedClass(uniqid()),
+				$server->setSocketPoller($socketPoller = new \mock\server\socket\poller()),
+				$server->setSocketManager($socketManager = new \mock\server\socket\manager())
+			)
+			->then
+				->object($server->release())->isIdenticalTo($server)
+				->mock($socketPoller)->wasNotCalled()
+				->mock($socketManager)->wasNotCalled()
+
+			->if(
+				$server
+					->addEndpoint($endpoint1 = (new \mock\server\daemon\payloads\server\endpoint(new network\ip('127.0.0.1'), new network\port(8081)))->onConnect($connectHandler1 = function() {}))
+					->addEndpoint($endpoint2 = (new \mock\server\daemon\payloads\server\endpoint(new network\ip('127.0.0.2'), new network\port(8082)))->onConnect($connectHandler2 = function() {})),
+				$this->calling($socketManager)->bindSocketTo[1] = $serverSocket1 = uniqid(),
+				$this->calling($socketManager)->bindSocketTo[2] = $serverSocket2 = uniqid(),
+				$this->calling($socketPoller)->pollSocket[1] = $events1 = new \mock\server\socket\events(),
+				$this->calling($socketPoller)->pollSocket[2] = $events2 = new \mock\server\socket\events(),
+				$this->calling($socketPoller)->waitSockets->doesNothing()
+			)
+			->then
+				->object($server->release())->isIdenticalTo($server)
+				->mock($endpoint1)->call('bindForPayload')->withArguments($server)->once()
+				->mock($endpoint2)->call('bindForPayload')->withArguments($server)->once()
+				->array($server->getEndpoints())->isEmpty()
+				->mock($socketPoller)
+					->call('pollSocket')
+						->withArguments($serverSocket1)
+							->before($this->mock($events1)->call('onRead')->withArguments($connectHandler1)->once())
+								->once()
+					->call('pollSocket')
+						->withArguments($serverSocket2)
+							->before($this->mock($events2)->call('onRead')->withArguments($connectHandler2)->once())
+								->once()
+					->call('waitSockets')->once()
+				->mock($events2)->call('onRead')->withArguments($connectHandler2)->once()
+				->mock($socketManager)->call('bindSocketTo')
+					->withArguments($endpoint1->getIp(), $endpoint1->getPort())->once()
+					->withArguments($endpoint2->getIp(), $endpoint2->getPort())->once()
+
+			->if(
+				$server
+					->addEndpoint((new \mock\server\daemon\payloads\server\endpoint(new network\ip('127.0.0.1'), new network\port(8081)))->onConnect(function() {}))
+					->addEndpoint((new \mock\server\daemon\payloads\server\endpoint(new network\ip('227.0.0.2'), new network\port(8082)))->onConnect(function() {})),
+				$this->calling($socketPoller)->waitSockets->throw = $exception = new \exception(uniqid(), rand(1, PHP_INT_MAX))
+			)
+			->then
+				->exception(function() use ($server) { $server->release(); })
+					->isInstanceOf('server\daemon\payloads\server\exception')
+					->hasCode($exception->getCode())
+					->hasMessage($exception->getMessage())
+
+			->if(
+				$server
+					->addEndpoint((new \mock\server\daemon\payloads\server\endpoint(new network\ip('127.0.0.1'), new network\port(8081)))->onConnect(function() {}))
+					->addEndpoint((new \mock\server\daemon\payloads\server\endpoint(new network\ip('227.0.0.2'), new network\port(8082)))->onConnect(function() {})),
+				$this->calling($socketPoller)->waitSockets->throw = $exception = new socket\poller\exception(uniqid(), rand(1, 3))
+			)
+			->then
+				->exception(function() use ($server) { $server->release(); })
+					->isInstanceOf('server\daemon\payloads\server\exception')
+					->hasCode($exception->getCode())
+					->hasMessage($exception->getMessage())
+
+			->if(
+				$server
+					->addEndpoint((new \mock\server\daemon\payloads\server\endpoint(new network\ip('127.0.0.1'), new network\port(8081)))->onConnect(function() {}))
+					->addEndpoint((new \mock\server\daemon\payloads\server\endpoint(new network\ip('227.0.0.2'), new network\port(8082)))->onConnect(function() {})),
+				$this->calling($socketPoller)->waitSockets->throw = $exception = new socket\poller\exception(uniqid(), rand(5, PHP_INT_MAX))
+			)
+			->then
+				->exception(function() use ($server) { $server->release(); })
+					->isInstanceOf('server\daemon\payloads\server\exception')
+					->hasCode($exception->getCode())
+					->hasMessage($exception->getMessage())
+
+			->if(
+				$server
+					->addEndpoint($endpoint1 = (new \mock\server\daemon\payloads\server\endpoint(new network\ip('127.0.0.1'), new network\port(8081)))->onConnect(function() {}))
+					->addEndpoint($endpoint2 = (new \mock\server\daemon\payloads\server\endpoint(new network\ip('227.0.0.2'), new network\port(8082)))->onConnect(function() {})),
+				$this->calling($socketPoller)->waitSockets->throw = $exception = new socket\poller\exception(uniqid(), 4 /* When a UNIX signal is received by socket_select(), PHP generate a socket error "Interrupted System Call" with code 4! */)
+			)
+			->then
+				->object($server->release())->isIdenticalTo($server)
+				->mock($endpoint1)->call('bindForPayload')->withArguments($server)->once()
+				->mock($endpoint2)->call('bindForPayload')->withArguments($server)->once()
+				->array($server->getEndpoints())->isEmpty()
+				->mock($socketPoller)
+					->call('pollSocket')
+						->withArguments($serverSocket1)->once()
+						->withArguments($serverSocket2)->once()
+					->call('waitSockets')->once()
+				->mock($socketManager)->call('bindSocketTo')
+					->withArguments($endpoint1->getIp(), $endpoint1->getPort())->once()
+					->withArguments($endpoint2->getIp(), $endpoint2->getPort())->once()
+		;
+	}
+
+	public function testDeactivate()
+	{
+		$this
+			->given(
+				$server = new testedClass(uniqid()),
+				$server
+					->setSocketPoller($socketPoller = new \mock\server\socket\poller())
+					->setSocketManager($socketManager = new \mock\server\socket\manager())
+					->setInfoLogger($infoLogger = new \mock\server\logger())
+			)
+			->then
+				->object($server->deactivate())->isIdenticalTo($server)
+				->mock($socketPoller)->wasNotCalled()
+				->mock($socketManager)->wasNotCalled()
+				->mock($infoLogger)
+					->call('log')
+						->withArguments('Stop server…')->once()
+						->withArguments('Server stopped')->once()
+
+			->if(
+				$server
+					->addEndpoint($endpoint1 = (new \mock\server\daemon\payloads\server\endpoint($ip1 = new network\ip('127.0.0.1'), $port1 = new network\port(8081)))->onConnect(function() {}))
+					->addEndpoint($endpoint2 = (new \mock\server\daemon\payloads\server\endpoint($ip2 = new network\ip('227.0.0.2'), $port2 = new network\port(8082)))->onConnect(function() {})),
+				$this->calling($socketManager)->bindSocketTo[1] = $serverSocket1 = uniqid(),
+				$this->calling($socketManager)->bindSocketTo[2] = $serverSocket2 = uniqid(),
+				$this->calling($socketPoller)->waitSockets->doesNothing(),
+				$server->release()
+			)
+			->then
+				->object($server->deactivate())->isIdenticalTo($server)
+				->mock($socketPoller)->wasNotCalled()
+				->mock($socketManager)
+					->call('closeSocket')
+						->withArguments($serverSocket1)->once()
+						->withArguments($serverSocket2)->once()
+				->mock($infoLogger)
+					->call('log')
+						->withArguments('Stop server…')->once()
+						->withArguments('Connection on ' . (new network\peer($ip1, $port1)) . ' closed!')->once()
+						->withArguments('Connection on ' . (new network\peer($ip2, $port2)) . ' closed!')->once()
+						->withArguments('Server stopped')->once()
 		;
 	}
 }

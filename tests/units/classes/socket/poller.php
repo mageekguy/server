@@ -128,10 +128,12 @@ class poller extends atoum
 						->withArguments($socket1)
 							->once()
 
-			->if($this->calling($socketManager)->pollSockets->throw = $exception = new \exception())
+			->if($this->calling($socketManager)->pollSockets->throw = $exception = new \exception(uniqid(), rand(1, PHP_INT_MAX)))
 			->then
 				->exception(function() use ($poller) { $poller->waitSockets(rand(1, PHP_INT_MAX)); })
-					->isIdenticalTo($exception)
+					->isInstanceOf('server\socket\poller\exception')
+					->hasCode($exception->getCode())
+					->hasMessage($exception->getMessage())
 		;
 	}
 }

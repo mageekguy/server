@@ -157,12 +157,16 @@ class server extends daemon\payload implements socket\manager\definition, socket
 			{
 				$this->socketPoller->waitSockets();
 			}
-			catch (socket\manager\exception $exception)
+			catch (socket\poller\exception $exception)
 			{
 				if ($exception->getCode() != 4)
 				{
-					throw $exception;
+					throw $this->getExceptionFrom($exception);
 				}
+			}
+			catch (\exception $exception)
+			{
+				throw $this->getExceptionFrom($exception);
 			}
 		}
 
@@ -207,5 +211,10 @@ class server extends daemon\payload implements socket\manager\definition, socket
 		$this->sockets[] = array($socket, $peer ?: $this->getSocketPeer($socket));
 
 		return $socket;
+	}
+
+	protected function getExceptionFrom(\exception $exception)
+	{
+		return new server\exception($exception->getMessage(), $exception->getCode());
 	}
 }
