@@ -20,7 +20,18 @@ class socket
 		}
 
 		$this->resource = $resource;
+	}
 
+	public function __toString()
+	{
+		try
+		{
+			return (string) $this->getPeer();
+		}
+		catch (\exception $exception)
+		{
+			return '';
+		}
 	}
 
 	public function setSocketManager(socket\manager\definition $manager = null)

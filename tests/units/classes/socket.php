@@ -38,6 +38,24 @@ class socket extends atoum
 		;
 	}
 
+	public function test__toString()
+	{
+		$this
+			->given(
+				$socket = $this->getSocketInstance($resource = uniqid()),
+				$socket->setSocketManager($socketManager = new \mock\server\socket\manager())
+			)
+
+			->if($this->calling($socketManager)->getSocketPeer = $peer = uniqid())
+			->then
+				->castToString($socket)->isEqualTo($peer)
+
+			->if($this->calling($socketManager)->getSocketPeer->throw = $exception = new \exception())
+			->then
+				->castToString($socket)->isEmpty()
+		;
+	}
+
 	public function testSetSocketManager()
 	{
 		$this
