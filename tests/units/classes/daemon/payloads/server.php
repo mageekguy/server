@@ -14,6 +14,11 @@ use
 
 class server extends atoum
 {
+	public function testClass()
+	{
+		$this->testedClass->implements('server\socket\manager\definition');
+	}
+
 	public function testSetSocketManager()
 	{
 		$this
@@ -103,10 +108,25 @@ class server extends atoum
 				$server->setSocketManager($socketManager = new \mock\server\socket\manager())
 			)
 
-			->if($this->calling($socketManager)->read = $data = uniqid())
+			->if($this->calling($socketManager)->readSocket = $data = uniqid())
 			->then
 				->string($server->readSocket($socket = uniqid(), $length = rand(1, PHP_INT_MAX), $mode = uniqid()))->isEqualTo($data)
-				->mock($socketManager)->call('read')->withArguments($socket, $length, $mode)->once()
+				->mock($socketManager)->call('readSocket')->withArguments($socket, $length, $mode)->once()
+		;
+	}
+
+	public function testWriteSocket()
+	{
+		$this
+			->given(
+				$server = new testedClass(uniqid()),
+				$server->setSocketManager($socketManager = new \mock\server\socket\manager())
+			)
+
+			->if($this->calling($socketManager)->writeSocket = $bytesWritten = rand(1, PHP_INT_MAX))
+			->then
+				->integer($server->writeSocket($socket = uniqid(), $data = uniqid()))->isEqualTo($bytesWritten)
+				->mock($socketManager)->call('writeSocket')->withArguments($socket, $data)->once()
 		;
 	}
 
@@ -118,10 +138,10 @@ class server extends atoum
 				$server->setSocketManager($socketManager = new \mock\server\socket\manager())
 			)
 
-			->if($this->calling($socketManager)->close->returnThis())
+			->if($this->calling($socketManager)->closeSocket->returnThis())
 			->then
 				->object($server->closeSocket($socket = uniqid()))->isEqualTo($server)
-				->mock($socketManager)->call('close')->withArguments($socket)->once()
+				->mock($socketManager)->call('closeSocket')->withArguments($socket)->once()
 		;
 	}
 
@@ -133,10 +153,38 @@ class server extends atoum
 				$server->setSocketManager($socketManager = new \mock\server\socket\manager())
 			)
 
-			->if($this->calling($socketManager)->getPeer = $peer = new network\peer(new network\ip('127.0.0.1'), new network\port(8080)))
+			->if($this->calling($socketManager)->getSocketPeer = $peer = new network\peer(new network\ip('127.0.0.1'), new network\port(8080)))
 			->then
 				->object($server->getSocketPeer($socket = uniqid()))->isIdenticalTo($peer)
-				->mock($socketManager)->call('getPeer')->withArguments($socket)->once()
+				->mock($socketManager)->call('getSocketPeer')->withArguments($socket)->once()
+		;
+	}
+
+	public function testGetLastSocketErrorCode()
+	{
+		$this
+			->given(
+				$server = new testedClass(uniqid()),
+				$server->setSocketManager($socketManager = new \mock\server\socket\manager())
+			)
+
+			->if($this->calling($socketManager)->getLastSocketErrorCode = $errorCode = rand(1, PHP_INT_MAX))
+			->then
+				->integer($server->getLastSocketErrorCode())->isEqualTo($errorCode)
+		;
+	}
+
+	public function testGetLastSocketErrorMessage()
+	{
+		$this
+			->given(
+				$server = new testedClass(uniqid()),
+				$server->setSocketManager($socketManager = new \mock\server\socket\manager())
+			)
+
+			->if($this->calling($socketManager)->getLastSocketErrorMessage = $errorMessage = uniqid())
+			->then
+				->string($server->getLastSocketErrorMessage())->isEqualTo($errorMessage)
 		;
 	}
 
@@ -149,12 +197,12 @@ class server extends atoum
 			)
 
 			->if(
-				$this->calling($socketManager)->accept = $clientSocket = uniqid(),
-				$this->calling($socketManager)->getPeer = new network\peer(new network\ip('127.0.0.1'), new network\port(8080))
+				$this->calling($socketManager)->acceptSocket = $clientSocket = uniqid(),
+				$this->calling($socketManager)->getSocketPeer = new network\peer(new network\ip('127.0.0.1'), new network\port(8080))
 			)
 			->then
 				->string($server->acceptSocket($serverSocket = uniqid()))->isEqualTo($clientSocket)
-				->mock($socketManager)->call('accept')->withArguments($serverSocket)->once()
+				->mock($socketManager)->call('acceptSocket')->withArguments($serverSocket)->once()
 		;
 	}
 
@@ -166,10 +214,10 @@ class server extends atoum
 				$server->setSocketManager($socketManager = new \mock\server\socket\manager())
 			)
 
-			->if($this->calling($socketManager)->bindTo = $serverSocket = uniqid())
+			->if($this->calling($socketManager)->bindSocketTo = $serverSocket = uniqid())
 			->then
 				->string($server->bindSocketTo($ip = new network\ip('127.0.0.1'), $port = new network\port(8080)))->isEqualTo($serverSocket)
-				->mock($socketManager)->call('bindTo')->withArguments($ip, $port)->once()
+				->mock($socketManager)->call('bindSocketTo')->withArguments($ip, $port)->once()
 		;
 	}
 }

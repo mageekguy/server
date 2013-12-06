@@ -4,9 +4,9 @@ namespace server\socket;
 
 class select
 {
+	protected $socketManager = null;
 	protected $socketsResource = array();
 	protected $socketsEvents = array();
-	protected $socketManager = null;
 	protected $socketEventsFactory = null;
 
 	public function __construct()
@@ -34,7 +34,7 @@ class select
 		return $this->socketManager;
 	}
 
-	public function setSocketManager(manager $socketManager = null)
+	public function setSocketManager(manager\definition $socketManager = null)
 	{
 		$this->socketManager = $socketManager ?: new manager();
 
@@ -77,7 +77,7 @@ class select
 
 		if (sizeof($read) > 0 || sizeof($write) > 0 || sizeof($except) > 0)
 		{
-			$this->socketManager->select($read, $write, $except, $timeout ?: $minSocketTimeout);
+			$this->socketManager->pollSockets($read, $write, $except, $timeout ?: $minSocketTimeout);
 
 			if ($read)
 			{

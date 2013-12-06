@@ -6,22 +6,22 @@ use
 	server\network
 ;
 
-class manager
+class manager implements manager\definition
 {
 	protected $lastErrorCode = null;
 	protected $lastErrorMessage = null;
 
-	public function getLastErrorCode()
+	public function getLastSocketErrorCode()
 	{
 		return $this->lastErrorCode;
 	}
 
-	public function getLastErrorMessage()
+	public function getLastSocketErrorMessage()
 	{
 		return $this->lastErrorMessage;
 	}
 
-	public function getPeer($socket)
+	public function getSocketPeer($socket)
 	{
 		$this->resetLastError();
 
@@ -33,7 +33,7 @@ class manager
 		return new network\peer(new network\ip($ip), new network\port($port));
 	}
 
-	public function bindTo(network\ip $ip, network\port $port)
+	public function bindSocketTo(network\ip $ip, network\port $port)
 	{
 		$this->resetLastError();
 
@@ -59,13 +59,13 @@ class manager
 		}
 		catch (\exception $exception)
 		{
-			$this->close($socket);
+			$this->closeSocket($socket);
 
 			throw $exception;
 		}
 	}
 
-	public function accept($serverSocket)
+	public function acceptSocket($serverSocket)
 	{
 		$this->resetLastError();
 
@@ -79,7 +79,7 @@ class manager
 		return $socket;
 	}
 
-	public function read($socket, $length, $mode)
+	public function readSocket($socket, $length, $mode)
 	{
 		$this->resetLastError();
 
@@ -93,7 +93,7 @@ class manager
 		return $data;
 	}
 
-	public function write($socket, $data)
+	public function writeSocket($socket, $data)
 	{
 		$this->resetLastError();
 
@@ -107,7 +107,7 @@ class manager
 		return $bytesWritten;
 	}
 
-	public function select(array & $read, array & $write, array & $except, $timeout)
+	public function pollSockets(array & $read, array & $write, array & $except, $timeout)
 	{
 		$this->resetLastError();
 
@@ -119,7 +119,7 @@ class manager
 		return $this;
 	}
 
-	public function close($socket)
+	public function closeSocket($socket)
 	{
 		if (is_resource($socket) === true)
 		{

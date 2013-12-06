@@ -9,14 +9,14 @@ class socket
 
 	private $resource = null;
 
-	public function __construct($resource, socket\manager $manager = null)
+	public function __construct($resource, socket\manager\definition $manager = null)
 	{
 		$this->resource = $resource;
 
 		$this->setSocketManager($manager);
 	}
 
-	public function setSocketManager(socket\manager $manager = null)
+	public function setSocketManager(socket\manager\definition $manager = null)
 	{
 		$this->socketManager = $manager ?: new socket\manager();
 
@@ -51,22 +51,22 @@ class socket
 
 	public function getPeer()
 	{
-		return $this->socketManager->getPeer($this->resource);
+		return $this->socketManager->getSocketPeer($this->resource);
 	}
 
 	public function read($length, $mode)
 	{
-		return $this->socketManager->read($this->resource, $length, $mode);
+		return $this->socketManager->readSocket($this->resource, $length, $mode);
 	}
 
 	public function write($data)
 	{
-		return $this->socketManager->write($this->resource, $data);
+		return $this->socketManager->writeSocket($this->resource, $data);
 	}
 
 	public function close()
 	{
-		$this->socketManager->close($this->resource);
+		$this->socketManager->closeSocket($this->resource);
 
 		return $this;
 	}

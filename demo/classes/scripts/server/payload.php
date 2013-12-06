@@ -3,6 +3,7 @@
 namespace server\demo\scripts\server;
 
 use
+	server,
 	server\socket,
 	server\network,
 	server\daemon\payloads
@@ -48,51 +49,44 @@ class payload extends payloads\server
 	public function acceptClient($clientsSocket)
 	{
 		$this->wait($clientsSocket)->onRead(array($this, __FUNCTION__));
-		$this->wait($clientSocket = $this->acceptSocket($clientsSocket))
-			->onRead(array($this, 'readClient'))
-			->onTimeout(new socket\timer(60), array($this, 'clientTimeout'))
+
+		$clientSocket = new server\socket($this->acceptSocket($clientsSocket), $this);
+
+		$timeoutHandler = function() use ($clientSocket) {
+				$peer = $clientSocket->getPeer();
+
+				$this->writeInfo('Client ' . $peer . ' timeout!');
+
+				$clientSocket->close();
+
+				$this->writeInfo('Client ' . $peer . ' kicked!');
+			}
 		;
 
-		return $this->writeInfo('Accept peer ' . $this->getSocketPeer($clientSocket));
-	}
+		$readHandler = function() use ($clientSocket, $timeoutHandler, & $readHandler) {
+				$data = $clientSocket->read(2048, PHP_BINARY_READ);
 
-	public function readClient($socket)
-	{
-		$data = $this->readSocket($socket, 2048, PHP_BINARY_READ);
+				$this->writeInfo('Receive \'' . trim($data) . '\' from peer ' . $clientSocket->getPeer());
 
-		$this->writeInfo('Receive \'' . trim($data) . '\' from peer ' . $this->getSocketPeer($socket));
-
-		if ($data !== '')
-		{
-			$this->wait($socket)
-				->onRead(array($this, __FUNCTION__))
-				->onTimeout(new socket\timer(60), array($this, 'clientTimeout'))
-			;
-		}
-		else
-		{
-			$this->closeClient($socket);
-		}
-
-		return $this;
-	}
-
-
-	public function clientTimeout($socket)
-	{
-		return $this
-			->writeInfo('Client ' . $this->getSocketPeer($socket) . ' timeout!')
-			->closeClient($socket)
-		;
-	}
-
-	public function closeClient($socket)
-	{
-		$this
-			->writeInfo('Close connection with ' . $this->getSocketPeer($socket))
-			->closeSocket($socket)
+				if ($data === '')
+				{
+					$clientSocket->close();
+				}
+				else
+				{
+					$clientSocket
+						->onRead($this->getSocketSelect(), $readHandler)
+						->onTimeout($this->getSocketSelect(), new socket\timer(60), $timeoutHandler)
+					;
+				}
+			}
 		;
 
-		return $this;
+		$clientSocket
+			->onRead($this->getSocketSelect(), $readHandler)
+			->onTimeout($this->getSocketSelect(), new socket\timer(60), $timeoutHandler)
+		;
+
+		return $this->writeInfo('Accept peer ' . $clientSocket->getPeer());
 	}
 }

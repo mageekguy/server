@@ -100,22 +100,22 @@ class select extends atoum
 
 			->if(
 				$this->calling($socketEvents)->__isset = function($event) { return ($event == 'onRead' || $event == 'onWrite'); },
-				$this->calling($socketManager)->select = function(& $read, & $write) { $read = $write = array(); }
+				$this->calling($socketManager)->pollSockets = function(& $read, & $write) { $read = $write = array(); }
 			)
 			->then
 				->object($select->wait($timeout))->isIdenticalTo($select)
-				->mock($socketManager)->call('select')->withArguments(array($socket1), array($socket1), array(), $timeout)->once()
+				->mock($socketManager)->call('pollSockets')->withArguments(array($socket1), array($socket1), array(), $timeout)->once()
 				->mock($socketEvents)->call('triggerOnRead')->withArguments($socket1)->never()
 				->mock($socketEvents)->call('triggerOnWrite')->withArguments($socket1)->never()
 
 			->if(
-				$this->calling($socketManager)->select = function(& $read) use ($socket1) { $read = array($socket1); $write = array($socket1); },
+				$this->calling($socketManager)->pollSockets = function(& $read) use ($socket1) { $read = array($socket1); $write = array($socket1); },
 				$this->calling($socketEvents)->triggerOnRead->returnThis(),
 				$this->calling($socketEvents)->triggerOnWrite->returnThis()
 			)
 			->then
 				->object($select->wait($timeout))->isIdenticalTo($select)
-				->mock($socketManager)->call('select')->withArguments(array($socket1), array($socket1), array(), $timeout)->once()
+				->mock($socketManager)->call('pollSockets')->withArguments(array($socket1), array($socket1), array(), $timeout)->once()
 				->mock($socketEvents)
 					->call('triggerOnRead')
 						->withArguments($socket1)
@@ -125,7 +125,7 @@ class select extends atoum
 						->withArguments($socket1)
 							->once()
 
-			->if($this->calling($socketManager)->select->throw = $exception = new \exception())
+			->if($this->calling($socketManager)->pollSockets->throw = $exception = new \exception())
 			->then
 				->exception(function() use ($select) { $select->wait(rand(1, PHP_INT_MAX)); })
 					->isIdenticalTo($exception)

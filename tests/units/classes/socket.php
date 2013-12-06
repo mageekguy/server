@@ -128,10 +128,10 @@ class socket extends atoum
 				$socket->setSocketManager($socketManager = new \mock\server\socket\manager())
 			)
 
-			->if($this->calling($socketManager)->getPeer = $peer = new network\peer(new network\ip('127.0.0.1'), new network\port(8080)))
+			->if($this->calling($socketManager)->getSocketPeer = $peer = new network\peer(new network\ip('127.0.0.1'), new network\port(8080)))
 			->then
 				->object($socket->getPeer())->isIdenticalTo($peer)
-				->mock($socketManager)->call('getPeer')->withArguments($resource)->once()
+				->mock($socketManager)->call('getSocketPeer')->withArguments($resource)->once()
 		;
 	}
 
@@ -143,10 +143,10 @@ class socket extends atoum
 				$socket->setSocketManager($socketManager = new \mock\server\socket\manager())
 			)
 
-			->if($this->calling($socketManager)->read = $data = uniqid())
+			->if($this->calling($socketManager)->readSocket = $data = uniqid())
 			->then
 				->string($socket->read($length = rand(1, PHP_INT_MAX), $mode = uniqid()))->isEqualTo($data)
-				->mock($socketManager)->call('read')->withArguments($resource, $length, $mode)->once()
+				->mock($socketManager)->call('readSocket')->withArguments($resource, $length, $mode)->once()
 		;
 	}
 
@@ -158,10 +158,10 @@ class socket extends atoum
 				$socket->setSocketManager($socketManager = new \mock\server\socket\manager())
 			)
 
-			->if($this->calling($socketManager)->write = $bytesWritten = rand(1, PHP_INT_MAX))
+			->if($this->calling($socketManager)->writeSocket = $bytesWritten = rand(1, PHP_INT_MAX))
 			->then
 				->integer($socket->write($data = uniqid()))->isEqualTo($bytesWritten)
-				->mock($socketManager)->call('write')->withArguments($resource, $data)->once()
+				->mock($socketManager)->call('writeSocket')->withArguments($resource, $data)->once()
 		;
 	}
 
@@ -173,10 +173,10 @@ class socket extends atoum
 				$socket->setSocketManager($socketManager = new \mock\server\socket\manager())
 			)
 
-			->if($this->calling($socketManager)->close->returnThis())
+			->if($this->calling($socketManager)->closeSocket->returnThis())
 			->then
 				->object($socket->close())->isIdenticalTo($socket)
-				->mock($socketManager)->call('close')->withArguments($resource)->once()
+				->mock($socketManager)->call('closeSocket')->withArguments($resource)->once()
 		;
 	}
 }

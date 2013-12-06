@@ -8,7 +8,7 @@ use
 	server\daemon
 ;
 
-class server extends daemon\payload
+class server extends daemon\payload implements socket\manager\definition
 {
 	protected $socketManager = null;
 	protected $socketSelect = null;
@@ -26,7 +26,7 @@ class server extends daemon\payload
 		;
 	}
 
-	public function setSocketManager(socket\manager $manager = null)
+	public function setSocketManager(socket\manager\definition $manager = null)
 	{
 		$this->socketManager = $manager ?: new socket\manager();
 
@@ -67,33 +67,55 @@ class server extends daemon\payload
 		return $this->socketSelect->socket($socket);
 	}
 
+	public function getLastSocketErrorCode()
+	{
+		return $this->socketManager->getLastSocketErrorCode();
+	}
+
+	public function getLastSocketErrorMessage()
+	{
+		return $this->socketManager->getLastSocketErrorMessage();
+	}
+
 	public function getSocketPeer($socket)
 	{
-		return $this->socketManager->getPeer($socket);
+		return $this->socketManager->getSocketPeer($socket);
+	}
+
+	public function pollSockets(array & $read, array & $write, array & $except, $timeout)
+	{
+		$this->socketManager->pollSockets($read, $write, $except, $timeout);
+
+		return $this;
 	}
 
 	public function readSocket($socket, $length, $mode)
 	{
-		return $this->socketManager->read($socket, $length, $mode);
+		return $this->socketManager->readSocket($socket, $length, $mode);
+	}
+
+	public function writeSocket($socket, $data)
+	{
+		return $this->socketManager->writeSocket($socket, $data);
 	}
 
 	public function closeSocket($socket)
 	{
-		$this->socketManager->close($socket);
+		$this->socketManager->closeSocket($socket);
 
-		$this->sockets = array_filter($this->sockets, function($serverSocket) use ($socket) { return ($serverSocket !== $socket[0]); });
+		$this->sockets = array_filter($this->sockets, function($serverSocket) use ($socket) { return ($serverSocket[0] !== $socket); });
 
 		return $this;
 	}
 
 	public function bindSocketTo(network\ip $ip, network\port $port)
 	{
-		return $this->addSocket($this->socketManager->bindTo($ip, $port), new network\peer($ip, $port));
+		return $this->addSocket($this->socketManager->bindSocketTo($ip, $port), new network\peer($ip, $port));
 	}
 
 	public function acceptSocket($serverSocket)
 	{
-		return $this->addSocket($this->socketManager->accept($serverSocket));
+		return $this->addSocket($this->socketManager->acceptSocket($serverSocket));
 	}
 
 	public function execute()
