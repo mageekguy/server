@@ -4,6 +4,7 @@ namespace server\socket;
 
 class events
 {
+	protected $bind = null;
 	protected $onRead = null;
 	protected $onWrite = null;
 	protected $onTimeout = null;
@@ -23,6 +24,13 @@ class events
 		return $this;
 	}
 
+	public function bind($object)
+	{
+		$this->bind = $object;
+
+		return $this;
+	}
+
 	public function onRead(callable $callable)
 	{
 		$this->onRead = $callable;
@@ -38,7 +46,7 @@ class events
 
 			$this->onRead = null;
 
-			call_user_func_array($onRead, array($socket));
+			call_user_func_array($onRead, array($this->bind ?: $socket));
 		}
 
 		return $this;
@@ -59,7 +67,7 @@ class events
 
 			$this->onWrite = null;
 
-			call_user_func_array($onWrite, array($socket));
+			call_user_func_array($onWrite, array($this->bind ?: $socket));
 		}
 
 		return $this;
@@ -82,7 +90,7 @@ class events
 
 			if ($remaining <= 0)
 			{
-				call_user_func_array($this->onTimeout[1], array($socket));
+				call_user_func_array($this->onTimeout[1], array($this->bind ?: $socket));
 			}
 		}
 

@@ -64,6 +64,15 @@ class events extends atoum
 		;
 	}
 
+	public function testBind()
+	{
+		$this
+			->given($events = new testedClass())
+			->then
+				->object($events->bind($this))->isIdenticalTo($events)
+		;
+	}
+
 	public function testOnRead()
 	{
 		$this
@@ -86,6 +95,15 @@ class events extends atoum
 			->then
 				->object($events->triggerOnRead($socket))->isIdenticalTo($events)
 				->string($socketUsed)->isEqualTo($socket)
+				->boolean(isset($events->onRead))->isFalse()
+
+			->if(
+				$events->onRead(function($socket) use (& $socketUsed) { $socketUsed = $socket; }),
+				$events->bind($this)
+			)
+			->then
+				->object($events->triggerOnRead($socket))->isIdenticalTo($events)
+				->object($socketUsed)->isIdenticalTo($this)
 				->boolean(isset($events->onRead))->isFalse()
 		;
 	}
@@ -112,6 +130,15 @@ class events extends atoum
 			->then
 				->object($events->triggerOnWrite($socket))->isIdenticalTo($events)
 				->string($socketUsed)->isEqualTo($socket)
+				->boolean(isset($events->onWrite))->isFalse()
+
+			->if(
+				$events->onWrite(function($socket) use (& $socketUsed) { $socketUsed = $socket; }),
+				$events->bind($this)
+			)
+			->then
+				->object($events->triggerOnWrite($socket))->isIdenticalTo($events)
+				->object($socketUsed)->isIdenticalTo($this)
 				->boolean(isset($events->onWrite))->isFalse()
 		;
 	}
@@ -156,6 +183,14 @@ class events extends atoum
 				->string($socketTimeout)->isEqualTo($socket)
 				->integer($events->triggerOnTimeout($socket))->isZero()
 				->string($socketTimeout)->isEqualTo($socket)
+
+			->if(
+				$events->onWrite(function($socket) use (& $socketUsed) { $socketUsed = $socket; }),
+				$events->bind($this)
+			)
+			->then
+				->integer($events->triggerOnTimeout($socket))->isZero()
+				->object($socketTimeout)->isIdenticalTo($this)
 		;
 	}
 }

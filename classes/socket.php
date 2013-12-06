@@ -129,7 +129,7 @@ class socket
 	{
 		if ($this->events === null || (isset($this->events->onRead) === false && isset($this->events->onWrite) === false))
 		{
-			$this->events = $poller->pollSocket($this->resource);
+			$this->events = $poller->pollSocket($this->resource)->bind($this);
 		}
 
 		return $this;

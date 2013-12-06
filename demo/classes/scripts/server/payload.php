@@ -52,14 +52,14 @@ class payload extends payloads\server
 
 		$clientSocket = new server\socket($resource = $this->acceptSocket($clientsSocket), $this);
 
-		$timeoutHandler = function() use ($clientSocket) {
+		$timeoutHandler = function($clientSocket) {
 				$this->writeInfo('Client ' . $clientSocket . ' timeout!');
 
 				$clientSocket->close();
 			}
 		;
 
-		$readHandler = function() use ($clientSocket, $timeoutHandler, & $readHandler) {
+		$readHandler = function($clientSocket) use ($timeoutHandler, & $readHandler) {
 				$data = $clientSocket->read(2048, PHP_BINARY_READ);
 
 				$this->writeInfo('Receive \'' . trim($data) . '\' from peer ' . $clientSocket);
@@ -72,7 +72,7 @@ class payload extends payloads\server
 				{
 					$clientSocket
 						->onRead($this, $readHandler)
-						->onWrite($this, function() use ($clientSocket, $data) { $clientSocket->write(str_rot13($data)); })
+						->onWrite($this, function($clientSocket) use ($data) { $clientSocket->write(str_rot13($data)); })
 						->onTimeout($this, new socket\timer(60), $timeoutHandler)
 					;
 				}
