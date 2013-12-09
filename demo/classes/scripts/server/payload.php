@@ -66,6 +66,8 @@ class payload extends payloads\server
 
 				if ($data === '')
 				{
+					$this->writeInfo('Client ' . $clientSocket . ' disconnected!');
+
 					$clientSocket->close();
 				}
 				else
