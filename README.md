@@ -1,4 +1,4 @@
-#Server
+#Server [![Build Status](https://travis-ci.org/mageekguy/server.png?branch=master)](https://travis-ci.org/mageekguy/server)
 
 Server is a generic (asynchronous) socket server written in PHP.  
 
