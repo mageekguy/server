@@ -116,6 +116,8 @@ class daemon extends atoum
 				->object($daemon->getOutputLogger())->isEqualTo(new \server\logger())
 				->boolean($daemon->isDaemon())->isFalse()
 				->object($daemon->getController())->isEqualTo(new server\daemon\controller())
+				->object($daemon->getStdoutFileWriter())->isEqualTo(new server\writers\file(testedClass::defaultStdoutFile))
+				->object($daemon->getStderrFileWriter())->isEqualTo(new server\writers\file(testedClass::defaultStderrFile))
 		;
 	}
 
@@ -141,14 +143,38 @@ class daemon extends atoum
 	public function testSetUnixUser()
 	{
 		$this
-			->if($server = new testedClass(uniqid()))
+			->if($daemon = new testedClass(uniqid()))
 			->then
-				->object($server->setUnixUser($user = new unix\user()))->isIdenticalTo($server)
-				->object($server->getUnixUser())->isIdenticalTo($user)
-				->object($server->setUnixUser())->isIdenticalTo($server)
-				->object($server->getUnixUser())
+				->object($daemon->setUnixUser($user = new unix\user()))->isIdenticalTo($daemon)
+				->object($daemon->getUnixUser())->isIdenticalTo($user)
+				->object($daemon->setUnixUser())->isIdenticalTo($daemon)
+				->object($daemon->getUnixUser())
 					->isNotIdenticalTo($user)
 					->isEqualTo(new unix\user())
+		;
+	}
+
+	public function testSetStdoutFileWriter()
+	{
+		$this
+			->if($daemon = new testedClass(uniqid()))
+			->then
+				->object($daemon->setStdoutFileWriter($writer = new server\writers\file(uniqid())))->isIdenticalTo($daemon)
+				->object($daemon->getStdoutFileWriter())->isEqualTo($writer)
+				->object($daemon->setStdoutFileWriter())->isIdenticalTo($daemon)
+				->object($daemon->getStdoutFileWriter())->isEqualTo(new server\writers\file(testedClass::defaultStdoutFile))
+		;
+	}
+
+	public function testSetStderrFileWriter()
+	{
+		$this
+			->if($daemon = new testedClass(uniqid()))
+			->then
+				->object($daemon->setStderrFileWriter($writer = new server\writers\file(uniqid())))->isIdenticalTo($daemon)
+				->object($daemon->getStderrFileWriter())->isEqualTo($writer)
+				->object($daemon->setStderrFileWriter())->isIdenticalTo($daemon)
+				->object($daemon->getStderrFileWriter())->isEqualTo(new server\writers\file(testedClass::defaultStderrFile))
 		;
 	}
 
@@ -442,7 +468,11 @@ class daemon extends atoum
 			->given(
 				$daemon = new testedClass(uniqid()),
 				$daemon->setUnixUser($unixUser = new \mock\server\unix\user()),
-				$daemon->setController($controller = new \mock\server\daemon\controller())
+				$daemon->setController($controller = new \mock\server\daemon\controller()),
+				$daemon->setStdoutFileWriter($stdoutFileWriter = new \mock\server\writers\file(uniqid())),
+				$this->calling($stdoutFileWriter)->openFile->returnThis(),
+				$daemon->setStderrFileWriter($stderrFileWriter = new \mock\server\writers\file(uniqid())),
+				$this->calling($stderrFileWriter)->openFile->returnThis()
 			)
 
 			->exception(function() use ($daemon) { $daemon->run(); })
@@ -475,7 +505,9 @@ class daemon extends atoum
 
 			->if(
 				$this->function->pcntl_fork = $pid = rand(1, PHP_INT_MAX),
-				$this->function->pcntl_signal->doesNothing()
+				$this->function->pcntl_signal->doesNothing(),
+				$this->function->fclose->doesNothing(),
+				$this->function->fopen->doesNothing()
 			)
 			->then
 				->object($daemon->run())->isIdenticalTo($daemon)
@@ -497,6 +529,23 @@ class daemon extends atoum
 					->hasMessage('Unable to become a session leader')
 				->boolean($daemon->isDaemon())->isTrue()
 				->integer($daemon->getPid())->isEqualTo($pid)
+				->function('fclose')
+					->wasCalledWithArguments(STDIN)->once()
+					->wasCalledWithArguments(STDOUT)->once()
+					->wasCalledWithArguments(STDERR)->once()
+				->function('fopen')
+					->wasCalledWithArguments(testedClass::defaultStdinFile, 'r')
+						->before(
+							$this->mock($stdoutFileWriter)
+								->call('openFile')
+									->before(
+										$this->mock($stderrFileWriter)
+											->call('openFile')
+												->once()
+									)
+										->once()
+						)
+							->once()
 
 			->if(
 				$this->function->posix_setsid = 0,
@@ -572,7 +621,6 @@ class daemon extends atoum
 			->if(
 				$this->function->posix_setuid = true,
 				$this->function->umask->doesNothing(),
-				$this->function->fclose->doesNothing(),
 				$this->calling($controller)->dispatchSignals->returnThis(),
 				$this->calling($controller)->daemonShouldRun[1] = true,
 				$this->calling($controller)->daemonShouldRun[2] = false
@@ -582,10 +630,6 @@ class daemon extends atoum
 				->boolean($daemon->isDaemon())->isTrue()
 				->integer($daemon->getPid())->isEqualTo($pid)
 				->function('umask')->wasCalledWithArguments(137)->once()
-				->function('fclose')
-					->wasCalledWithArguments(STDIN)->once()
-					->wasCalledWithArguments(STDOUT)->once()
-					->wasCalledWithArguments(STDERR)->once()
 				->mock($controller)
 					->call('daemonShouldRun')->wasCalled()
 						->after(

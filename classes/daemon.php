@@ -10,8 +10,15 @@ use
 
 abstract class daemon extends script\configurable
 {
+	const defaultStdinFile = '/dev/null';
+	const defaultStdoutFile = '/dev/null';
+	const defaultStderrFile = '/dev/null';
+
 	protected $user = null;
 	protected $controller = null;
+	protected $stdin = null;
+	protected $stdoutFileWriter = '';
+	protected $stderrFileWriter = '';
 	protected $infoLogger = null;
 	protected $errorLogger = null;
 	protected $outputLogger = null;
@@ -30,7 +37,19 @@ abstract class daemon extends script\configurable
 			->setOutputLogger()
 			->setUnixUser()
 			->setController()
+			->setStdoutFileWriter()
+			->setStderrFileWriter()
 		;
+	}
+
+	public function __destruct()
+	{
+		if ($this->stdin !== null)
+		{
+			@fclose($this->stdin);
+
+			$this->stdin = null;
+		}
 	}
 
 	public function __call($method, $arguments)
@@ -123,6 +142,30 @@ abstract class daemon extends script\configurable
 	public function isDaemon()
 	{
 		return ($this->isDaemon === true);
+	}
+
+	public function getStdoutFileWriter()
+	{
+		return $this->stdoutFileWriter;
+	}
+
+	public function setStdoutFileWriter(writers\file $writer = null)
+	{
+		$this->stdoutFileWriter = $writer ?: new writers\file(static::defaultStdoutFile);
+
+		return $this;
+	}
+
+	public function getStderrFileWriter()
+	{
+		return $this->stderrFileWriter;
+	}
+
+	public function setStderrFileWriter(writers\file $writer = null)
+	{
+		$this->stderrFileWriter = $writer ?: new writers\file(static::defaultStderrFile);
+
+		return $this;
 	}
 
 	public function getInfoLogger()
@@ -322,6 +365,26 @@ abstract class daemon extends script\configurable
 			$this->isDaemon = true;
 			$this->pid = posix_getpid();
 
+			if (defined('STDIN') === true)
+			{
+				fclose(STDIN);
+			}
+
+			if (defined('STDOUT') === true)
+			{
+				fclose(STDOUT);
+			}
+
+			if (defined('STDERR') === true)
+			{
+				fclose(STDERR);
+			}
+
+			$this->stdin = @fopen('/dev/null', 'r');
+
+			$this->stdoutFileWriter->openFile();
+			$this->stderrFileWriter->openFile();
+
 			if (posix_setsid() < 0)
 			{
 				throw $this->getException('Unable to become a session leader');
@@ -370,21 +433,6 @@ abstract class daemon extends script\configurable
 				}
 
 				umask(137);
-
-				if (defined('STDIN') === true)
-				{
-					fclose(STDIN);
-				}
-
-				if (defined('STDOUT') === true)
-				{
-					fclose(STDOUT);
-				}
-
-				if (defined('STDERR') === true)
-				{
-					fclose(STDERR);
-				}
 
 				$this->controller[SIGTERM] = array($this->controller, 'stopDaemon');
 

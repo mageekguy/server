@@ -50,6 +50,15 @@ class file extends atoum
 		;
 	}
 
+	public function test__toString()
+	{
+		$this
+			->if($file = new testedClass($path = uniqid()))
+			->then
+				->castToString($file)->isEqualTo($path)
+		;
+	}
+
 	public function testLog()
 	{
 		$this
@@ -61,7 +70,7 @@ class file extends atoum
 			->then
 				->exception(function() use ($file, & $log) { $file->log($log = uniqid()); })
 					->isInstanceOf('server\writers\file\exception')
-					->hasMessage('Unable to write log \'' . $log . '\' in \'' . $path . '\'')
+					->hasMessage('Unable to open \'' . $path . '\'')
 			->if(
 				$this->function->fopen = $resource = uniqid()
 			)
@@ -89,6 +98,51 @@ class file extends atoum
 				->exception(function() use ($file, & $log) { $file->log($log = uniqid()); })
 					->isInstanceOf('server\writers\file\exception')
 					->hasMessage('Unable to write log \'' . $log . '\' in \'' . $path . '\'')
+		;
+	}
+
+	public function testOpenFile()
+	{
+		$this
+			->given($file = new testedClass($path = uniqid()))
+
+			->if($this->function->fopen = false)
+			->then
+				->exception(function() use ($file, & $log) { $file->openFile(); })
+					->isInstanceOf('server\writers\file\exception')
+					->hasMessage('Unable to open \'' . $path . '\'')
+
+			->if($this->function->fopen = $resource = uniqid())
+			->then
+				->object($file->openFile())->isIdenticalTo($file)
+		;
+	}
+
+	public function testCloseFile()
+	{
+		$this
+			->given($file = new testedClass($path = uniqid()))
+			->then
+				->object($file->closeFile())->isIdenticalTo($file)
+
+			->if(
+				$this->function->fopen = $resource = uniqid(),
+				$this->function->fclose = false,
+				$file->openFile()
+			)
+			->then
+				->exception(function() use ($file, & $log) { $file->closeFile(); })
+					->isInstanceOf('server\writers\file\exception')
+					->hasMessage('Unable to close \'' . $path . '\'')
+				->function('fclose')->wasCalledWithArguments($resource)->once()
+
+			->if(
+				$this->function->fclose = true,
+				$file->openFile()
+			)
+			->then
+				->object($file->closeFile())->isIdenticalTo($file)
+				->function('fclose')->wasCalledWithArguments($resource)->twice()
 		;
 	}
 }

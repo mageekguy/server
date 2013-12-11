@@ -17,14 +17,14 @@ class file implements logger\writer
 		$this->path = (string) $path;
 	}
 
+	public function __toString()
+	{
+		return (string) $this->path;
+	}
+
 	public function __destruct()
 	{
-		if ($this->resource !== null)
-		{
-			fclose($this->resource);
-
-			$this->resource = null;
-		}
+		$this->closeFile();
 	}
 
 	public function getPath()
@@ -34,17 +34,7 @@ class file implements logger\writer
 
 	public function log($log)
 	{
-		if ($this->resource === null)
-		{
-			$resource = @fopen($this->path, 'a');
-
-			if ($resource === false)
-			{
-				throw new exception('Unable to write log \'' . $log . '\' in \'' . $this->path . '\'');
-			}
-
-			$this->resource = $resource;
-		}
+		$this->openFile();
 
 		while (strlen($log) > 0)
 		{
@@ -52,10 +42,42 @@ class file implements logger\writer
 
 			if ($bytesWritten === false)
 			{
-				throw new exception('Unable to write log \'' . $log . '\' in \'' . $this->path . '\'');
+				throw new exception('Unable to write log \'' . $log . '\' in \'' . $this . '\'');
 			}
 
 			$log = substr($log, $bytesWritten);
+		}
+
+		return $this;
+	}
+
+	public function openFile()
+	{
+		if ($this->resource === null)
+		{
+			$resource = fopen($this->path, 'a');
+
+			if ($resource === false)
+			{
+				throw new exception('Unable to open \'' . $this . '\'');
+			}
+
+			$this->resource = $resource;
+		}
+
+		return $this;
+	}
+
+	public function closeFile()
+	{
+		if ($this->resource !== null)
+		{
+			if (@fclose($this->resource) === false)
+			{
+				throw new exception('Unable to close \'' . $this . '\'');
+			}
+
+			$this->resource = null;
 		}
 
 		return $this;
