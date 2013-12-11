@@ -54,7 +54,7 @@ class payload extends server
 	{
 		$this->pollSocket($clientsSocket)->onRead(array($this, __FUNCTION__));
 
-		$client = new client(new socket($this->acceptSocket($clientsSocket)), $this);
+		$client = new client(new socket($this->acceptSocket($clientsSocket), $this), $this);
 
 		$client
 			->onTimeout(new timer(60), function($client) {
@@ -63,7 +63,7 @@ class payload extends server
 					$client->closeSocket();
 				}
 			)
-			->writeMessage(new message('Hello, type :quit to close the connection.' . "\r\n"))
+			->writeMessage(new message('Hello, type something to get its rot13 version, type :quit to close the connection.' . "\r\n"))
 			->readMessage((new message())->onRead(function($message) use ($client) {
 						$this->writeInfo('Receive \'' . trim($message) . '\' from peer ' . $client);
 
