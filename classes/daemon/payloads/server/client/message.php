@@ -8,10 +8,10 @@ use
 
 class message
 {
-	protected $data = null;
-	protected $buffer = '';
-	protected $onRead = null;
-	protected $onWrite = null;
+	private $data = null;
+	private $buffer = '';
+	private $onRead = null;
+	private $onWrite = null;
 
 	public function __construct($data = null)
 	{
@@ -47,11 +47,12 @@ class message
 			$this->data = null;
 		}
 
-		$this->buffer .= $socket->read(2048, PHP_NORMAL_READ);
+		$this->buffer .= $this->readData($socket);
 
-		if ($this->isRead() === true)
+		if ($this->dataAreRead($this->buffer) === true)
 		{
-			$this->data = $this->buffer;
+			$this($this->buffer);
+
 			$this->buffer = '';
 		}
 
@@ -68,6 +69,11 @@ class message
 
 			return true;
 		}
+	}
+
+	public function getBytesRead()
+	{
+		return strlen($this->data === null ? $this->buffer : $this->data);
 	}
 
 	public function onWrite(callable $handler)
@@ -109,8 +115,18 @@ class message
 		}
 	}
 
-	protected function isRead()
+	public function getBytesWritten()
 	{
-		return (substr($this->buffer, -2) === "\r\n");
+		return ($this->data === null ? 0 : strlen($this->data) - strlen($this->buffer));
+	}
+
+	protected function dataAreRead($data)
+	{
+		return (substr($data, -2) === "\r\n");
+	}
+
+	protected function readData(server\socket $socket)
+	{
+		return $socket->read(2048, PHP_NORMAL_READ);
 	}
 }
