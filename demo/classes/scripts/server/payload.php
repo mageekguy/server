@@ -67,33 +67,29 @@ class payload extends server
 			->readMessage((new message())->onRead(function($message) use ($client) {
 						$this->writeInfo('Receive \'' . trim($message) . '\' from peer ' . $client);
 
-						if (trim($message) == ':quit')
-						{
-							$client->writeMessage(
-								$message('Bye!' . "\r\n")
-									->onWrite(function($message) use ($client) {
-											$this->writeInfo('Close connection with peer ' . $client);
+						if (trim($message) == ':quit') $client->writeMessage(
+							$message('Bye!' . "\r\n")
+								->onWrite(function($message) use ($client) {
+										$this->writeInfo('Close connection with peer ' . $client);
 
-											$client->closeSocket();
-										}
-									)
-							);
-						}
-						else
-						{
-							$client->writeMessage(
-								$message('Rot13: ' . str_rot13($message))
-									->onWrite(function($message) use ($client) {
-											$this->writeInfo('Sent \'' . trim($message) . '\' to peer ' . $client);
+										$client->closeSocket();
+									}
+								)
+						);
 
-											$client->readMessage($message);
-										}
-									)
-							);
-						}
+						else $client->writeMessage(
+							$message('Rot13: ' . str_rot13($message))
+								->onWrite(function($message) use ($client) {
+										$this->writeInfo('Sent \'' . trim($message) . '\' to peer ' . $client);
+
+										$client->readMessage($message);
+									}
+								)
+						);
 					}
 				)
-			);
+			)
+		;
 
 		return $this->writeInfo('Accept peer ' . $client);
 	}
