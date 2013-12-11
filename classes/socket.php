@@ -6,7 +6,7 @@ class socket
 {
 	protected $socketManager = null;
 	protected $events = null;
-	protected $peer = null;
+	protected $bind = null;
 
 	private $resource = null;
 
@@ -103,6 +103,13 @@ class socket
 		}
 	}
 
+	public function bind($mixed)
+	{
+		$this->bind = $mixed;
+
+		return $this;
+	}
+
 	public function close()
 	{
 		try
@@ -129,7 +136,7 @@ class socket
 	{
 		if ($this->events === null || (isset($this->events->onRead) === false && isset($this->events->onWrite) === false))
 		{
-			$this->events = $poller->pollSocket($this->resource)->bind($this);
+			$this->events = $poller->pollSocket($this->resource)->bind($this->bind ?: $this);
 		}
 
 		return $this;

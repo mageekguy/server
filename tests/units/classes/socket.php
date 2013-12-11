@@ -104,6 +104,14 @@ class socket extends atoum
 				->mock($events)
 					->call('onRead')->withArguments($handler4)->once()
 					->call('bind')->withArguments($socket)->twice()
+
+			->if($socket->bind($bind = uniqid()))
+			->then
+				->object($socket->onRead($poller, $handler5 = function() {}))->isIdenticalTo($socket)
+				->mock($poller)->call('pollSocket')->withArguments($resource)->thrice()
+				->mock($events)
+					->call('onRead')->withArguments($handler5)->once()
+					->call('bind')->withArguments($bind)->once()
 		;
 	}
 
@@ -141,6 +149,14 @@ class socket extends atoum
 				->mock($events)
 					->call('onWrite')->withArguments($handler4)->once()
 					->call('bind')->withArguments($socket)->twice()
+
+			->if($socket->bind($bind = uniqid()))
+			->then
+				->object($socket->onWrite($poller, $handler5 = function() {}))->isIdenticalTo($socket)
+				->mock($poller)->call('pollSocket')->withArguments($resource)->thrice()
+				->mock($events)
+					->call('onWrite')->withArguments($handler5)->once()
+					->call('bind')->withArguments($bind)->once()
 		;
 	}
 
@@ -270,6 +286,15 @@ class socket extends atoum
 				->if($this->calling($socketManager)->isSocket = false)
 				->then
 					->boolean($socket->isClosed())->isTrue()
+		;
+	}
+
+	public function testBind()
+	{
+		$this
+			->given($socket = $this->getSocketInstance(uniqid()))
+			->then
+				->object($socket->bind($this))->isIdenticalTo($socket)
 		;
 	}
 

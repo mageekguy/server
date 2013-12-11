@@ -3,13 +3,17 @@
 namespace server\demo\scripts\server;
 
 use
-	server,
+	server\network\ip,
+	server\network\port,
 	server\socket,
-	server\network,
-	server\daemon\payloads
+	server\socket\timer,
+	server\daemon\payloads\server,
+	server\daemon\payloads\server\endpoint,
+	server\daemon\payloads\server\client,
+	server\daemon\payloads\server\client\message
 ;
 
-class payload extends payloads\server
+class payload extends server
 {
 	protected $clientsEndpoint = null;
 
@@ -17,12 +21,12 @@ class payload extends payloads\server
 	{
 		parent::__construct();
 
-		$this->clientsEndpoint = (new payloads\server\endpoint(new network\ip('192.168.0.1'), new network\port(8080)))->onConnect(array($this, 'acceptClient'));
+		$this->clientsEndpoint = (new endpoint(new ip('192.168.0.1'), new port(8080)))->onConnect(array($this, 'acceptClient'));
 
 		$this->addEndpoint($this->clientsEndpoint);
 	}
 
-	public function setClientsIp(network\ip $ip)
+	public function setClientsIp(ip $ip)
 	{
 		$this->clientsEndpoint->setIp($ip);
 
@@ -34,7 +38,7 @@ class payload extends payloads\server
 		return $this->clientsEndpoint->getIp();
 	}
 
-	public function setClientsPort(network\port $port)
+	public function setClientsPort(port $port)
 	{
 		$this->clientsEndpoint->setPort($port);
 
@@ -50,42 +54,47 @@ class payload extends payloads\server
 	{
 		$this->pollSocket($clientsSocket)->onRead(array($this, __FUNCTION__));
 
-		$clientSocket = new server\socket($resource = $this->acceptSocket($clientsSocket), $this);
+		$client = new client(new socket($this->acceptSocket($clientsSocket)), $this);
 
-		$timeoutHandler = function($clientSocket) {
-				$this->writeInfo('Client ' . $clientSocket . ' timeout!');
+		$client
+			->onTimeout(new timer(60), function($client) {
+					$this->writeInfo('Client ' . $client . ' timeout!');
 
-				$clientSocket->close();
-			}
-		;
-
-		$readHandler = function($clientSocket) use ($timeoutHandler, & $readHandler) {
-				$data = $clientSocket->read(2048, PHP_BINARY_READ);
-
-				$this->writeInfo('Receive \'' . trim($data) . '\' from peer ' . $clientSocket);
-
-				if ($data === '')
-				{
-					$this->writeInfo('Client ' . $clientSocket . ' disconnected!');
-
-					$clientSocket->close();
+					$client->closeSocket();
 				}
-				else
-				{
-					$clientSocket
-						->onRead($this, $readHandler)
-						->onWrite($this, function($clientSocket) use ($data) { $clientSocket->write(str_rot13($data)); })
-						->onTimeout($this, new socket\timer(60), $timeoutHandler)
-					;
-				}
-			}
-		;
+			)
+			->writeMessage(new message('Hello, type :quit to close the connection.' . "\r\n"))
+			->readMessage((new message())->onRead(function($message) use ($client) {
+						$this->writeInfo('Receive \'' . trim($message) . '\' from peer ' . $client);
 
-		$clientSocket
-			->onRead($this, $readHandler)
-			->onTimeout($this, new socket\timer(60), $timeoutHandler)
-		;
+						if (trim($message) == ':quit')
+						{
+							$client->writeMessage(
+								$message('Bye!' . "\r\n")
+									->onWrite(function($message) use ($client) {
+											$this->writeInfo('Close connection with peer ' . $client);
 
-		return $this->writeInfo('Accept peer ' . $clientSocket);
+											$client->closeSocket();
+										}
+									)
+							);
+						}
+						else
+						{
+							$client->writeMessage(
+								$message('Rot13: ' . str_rot13($message))
+									->onWrite(function($message) use ($client) {
+											$this->writeInfo('Sent \'' . trim($message) . '\' to peer ' . $client);
+
+											$client->readMessage($message);
+										}
+									)
+							);
+						}
+					}
+				)
+			);
+
+		return $this->writeInfo('Accept peer ' . $client);
 	}
 }

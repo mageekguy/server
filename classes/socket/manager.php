@@ -99,6 +99,8 @@ class manager implements manager\definition
 	{
 		$this->resetLastError();
 
+		$data = (string) $data;
+
 		$bytesWritten = socket_write($socket, $data, strlen($data));
 
 		if ($bytesWritten === false)
