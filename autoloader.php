@@ -2,8 +2,6 @@
 
 namespace server;
 
-use atoum;
-
 require_once __DIR__ . '/tests/units/atoum/classes/autoloader.php';
 
-atoum\autoloader::get()->addDirectory(__NAMESPACE__, __DIR__ . '/classes');
+\atoum\autoloader::get()->addDirectory(__NAMESPACE__, __DIR__ . '/classes');
