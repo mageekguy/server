@@ -53,7 +53,7 @@ class client
 		{
 			if ($this->currentReadMessage->readSocket($this->socket) === false)
 			{
-					$this->socket->onRead($this->poller, array($this, __FUNCTION__));
+				$this->socket->onRead($this->poller, array($this, __FUNCTION__));
 			}
 			else
 			{
