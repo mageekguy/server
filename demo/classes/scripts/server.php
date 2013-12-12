@@ -4,7 +4,8 @@ namespace server\demo\scripts;
 
 use
 	atoum,
-	server\network
+	server\network\ip,
+	server\network\port
 ;
 
 class server extends \server\daemon
@@ -28,9 +29,9 @@ class server extends \server\daemon
 
 						try
 						{
-							$ip = new network\ip(reset($values));
+							$ip = new ip(reset($values));
 						}
-						catch (network\ip\exception $exception)
+						catch (ip\exception $exception)
 						{
 							throw new \runtimeException(sprintf($script->getLocale()->_('IP \'%s\' is invalid'), reset($values)));
 						}
@@ -50,9 +51,9 @@ class server extends \server\daemon
 
 						try
 						{
-							$port = new network\port(reset($values));
+							$port = new port(reset($values));
 						}
-						catch (network\ip\exception $exception)
+						catch (port\exception $exception)
 						{
 							throw new \runtimeException(sprintf($script->getLocale()->_('Port \'%s\' is invalid'), reset($values)));
 						}
