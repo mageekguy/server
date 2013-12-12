@@ -12,6 +12,8 @@ class message
 	private $buffer = '';
 	private $onRead = null;
 	private $onWrite = null;
+	private $onError = null;
+	private $onSocketClosed = null;
 
 	public function __construct($data = null)
 	{
@@ -42,32 +44,54 @@ class message
 
 	public function readSocket(server\socket $socket)
 	{
-		if ($this->data !== null)
+		try
 		{
-			$this->data = null;
-		}
-
-		$this->buffer .= $this->readData($socket);
-
-		if ($this->dataAreRead($this->buffer) === true)
-		{
-			$this($this->buffer);
-
-			$this->buffer = '';
-		}
-
-		if ($this->data === null)
-		{
-			return false;
-		}
-		else
-		{
-			if ($this->onRead !== null)
+			if ($this->data !== null)
 			{
-				call_user_func_array($this->onRead, array($this));
+				$this->data = null;
 			}
 
-			return true;
+			$data = $this->readData($socket);
+
+			if ($data === '')
+			{
+				throw new message\exception('Socket is closed');
+			}
+
+			$this->buffer .= $data;
+
+			if ($this->dataAreRead($this->buffer) === true)
+			{
+				$this($this->buffer);
+				$this->buffer = '';
+			}
+
+			if ($this->data === null)
+			{
+				return false;
+			}
+			else
+			{
+				if ($this->onRead !== null)
+				{
+					call_user_func_array($this->onRead, array($this));
+				}
+
+				return true;
+			}
+		}
+		catch (\exception $exception)
+		{
+			if ($this->onError === null)
+			{
+				throw new message\exception($exception->getMessage(), $exception->getCode());
+			}
+			else
+			{
+				call_user_func_array($this->onError, array($this, $exception));
+
+				return false;
+			}
 		}
 	}
 
@@ -118,6 +142,20 @@ class message
 	public function getBytesWritten()
 	{
 		return ($this->data === null ? 0 : strlen($this->data) - strlen($this->buffer));
+	}
+
+	public function onError(callable $handler)
+	{
+		$this->onError = $handler;
+
+		return $this;
+	}
+
+	public function onSocketClosed(callable $handler)
+	{
+		$this->onSocketClosed = $handler;
+
+		return $this;
 	}
 
 	protected function dataAreRead($data)

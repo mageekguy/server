@@ -92,6 +92,36 @@ class message extends atoum
 			->then
 				->boolean($message->readSocket($socket))->isTrue()
 				->boolean($messageRead)->isTrue()
+
+			->given(
+				$message = new testedClass(),
+				$message->onError(function($message, $exception) use (& $messageRead, & $catchedException) { $messageRead = $message; $catchedException = $exception; }),
+				$socket = new \mock\server\socket(uniqid()),
+				$this->calling($socket)->read->throw = $exception = new \exception()
+			)
+			->then
+				->boolean($message->readSocket($socket))->isFalse()
+				->object($messageRead)->isIdenticalTo($message)
+				->object($catchedException)->isIdenticalTo($exception)
+
+			->given(
+				$message = new testedClass(),
+				$this->calling($socket)->read->throw = $exception = new \exception(uniqid(), rand(1, PHP_INT_MAX))
+			)
+			->then
+				->exception(function() use ($message, $socket) { $message->readSocket($socket); })
+					->isInstanceOf('server\daemon\payloads\server\client\message\exception')
+					->hasCode($exception->getCode())
+					->hasMessage($exception->getMessage())
+
+			->given(
+				$message = new testedClass(),
+				$this->calling($socket)->read = ''
+			)
+			->then
+				->exception(function() use ($message, $socket) { $message->readSocket($socket); })
+					->isInstanceOf('server\daemon\payloads\server\client\message\exception')
+					->hasMessage('Socket is closed')
 		;
 	}
 
@@ -162,6 +192,15 @@ class message extends atoum
 			->then
 				->boolean($message->writeSocket($socket))->isTrue()
 				->boolean($messageWrited)->isTrue()
+		;
+	}
+
+	public function testOnError()
+	{
+		$this
+			->given($message = new testedClass())
+			->then
+				->object($message->onError(function() {}))->isIdenticalTo($message)
 		;
 	}
 }
