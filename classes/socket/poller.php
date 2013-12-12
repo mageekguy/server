@@ -59,14 +59,22 @@ class poller implements poller\definition
 		{
 			$socketResource = $this->socketsResource[$key];
 
-			if (isset($socketEvents->onRead) === true)
+			if (is_resource($socketResource) === false)
 			{
-				$read[$key] = $socketResource;
+				unset($this->socketsEvents[$key]);
+				unset($this->socketsResource[$key]);
 			}
-
-			if (isset($socketEvents->onWrite) === true)
+			else
 			{
-				$write[$key] = $socketResource;
+				if (isset($socketEvents->onRead) === true)
+				{
+					$read[$key] = $socketResource;
+				}
+
+				if (isset($socketEvents->onWrite) === true)
+				{
+					$write[$key] = $socketResource;
+				}
 			}
 		}
 
