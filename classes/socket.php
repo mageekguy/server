@@ -119,7 +119,6 @@ class socket
 		catch (\exception $exception)
 		{
 			throw $this->getExceptionFrom($exception);
-
 		}
 
 		$this->events = null;
