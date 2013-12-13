@@ -380,7 +380,7 @@ abstract class daemon extends script\configurable
 				fclose(STDERR);
 			}
 
-			$this->stdin = @fopen('/dev/null', 'r');
+			$this->stdin = @fopen(static::defaultStdinFile, 'r');
 
 			$this->stdoutFileWriter->openFile();
 			$this->stderrFileWriter->openFile();
