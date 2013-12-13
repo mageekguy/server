@@ -14,33 +14,41 @@ $script
 ;
 
 $trimDecorator = new decorators\trim();
-$prefixDecorator = new decorators\prefix(': ');
+$datePrefixDecorator = new decorators\prefix('|');
+$messagePrefixDecorator = new decorators\prefix(': ');
 $dateDecorator = new decorators\date();
 $eolDecorator = new decorators\eol();
+$idDecorator = new decorators\id();
 
-$script->setOutputLogger($outputLogger = new logger());
-$outputLogger
-	->addWriter(new writers\file(__DIR__ . '/output.log'))
-	->addDecorator($trimDecorator)
-	->addDecorator($prefixDecorator)
-	->addDecorator($dateDecorator)
-	->addDecorator($eolDecorator)
-; // Output log message will be '2013-12-03 21:03:28: The output here'
+$script
+	->getOutputLogger()
+		->addWriter(new writers\file(__DIR__ . '/output.log'))
+		->addDecorator($trimDecorator)
+		->addDecorator($messagePrefixDecorator)
+		->addDecorator($dateDecorator)
+		->addDecorator($datePrefixDecorator)
+		->addDecorator($idDecorator)
+		->addDecorator($eolDecorator)
+; // Output log message will be '52aacd5d033252.24168358|2013-12-03 21:03:28: The output here'
 
-$script->setInfoLogger($infoLogger = new logger());
-$infoLogger
-	->addWriter(new writers\file(__DIR__ . '/info.log'))
-	->addDecorator($trimDecorator)
-	->addDecorator($prefixDecorator)
-	->addDecorator($dateDecorator)
-	->addDecorator($eolDecorator)
-; // Info log message will be '2013-12-03 21:03:28: The info log message here'
+$script
+	->getInfoLogger()
+		->addWriter(new writers\file(__DIR__ . '/info.log'))
+		->addDecorator($trimDecorator)
+		->addDecorator($messagePrefixDecorator)
+		->addDecorator($dateDecorator)
+		->addDecorator($datePrefixDecorator)
+		->addDecorator($idDecorator)
+		->addDecorator($eolDecorator)
+; // Info log message will be '52aacd5d033252.24168358|2013-12-03 21:03:28: The info log message here'
 
-$script->setErrorLogger($errorLogger = new logger());
-$errorLogger
-	->addWriter(new writers\file(__DIR__ . '/error.log'))
-	->addDecorator($trimDecorator)
-	->addDecorator($prefixDecorator)
-	->addDecorator($dateDecorator)
-	->addDecorator($eolDecorator)
-; // Error log message will be '2013-12-03 21:03:28: The error log message here'
+$script
+	->getErrorLogger()
+		->addWriter(new writers\file(__DIR__ . '/error.log'))
+		->addDecorator($trimDecorator)
+		->addDecorator($messagePrefixDecorator)
+		->addDecorator($dateDecorator)
+		->addDecorator($datePrefixDecorator)
+		->addDecorator($idDecorator)
+		->addDecorator($eolDecorator)
+; // Error log message will be '52aacd5d033252.24168358|2013-12-03 21:03:28: The error log message here'

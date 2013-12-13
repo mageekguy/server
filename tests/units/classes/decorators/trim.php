@@ -16,6 +16,15 @@ class trim extends atoum
 		$this->testedClass->implements('server\logger\decorator');
 	}
 
+	public function testPrepareToDecorateLog()
+	{
+		$this
+			->if($decorator = new testedClass(uniqid()))
+			->then
+				->object($decorator->prepareToDecorateLog())->isIdenticalTo($decorator)
+		;
+	}
+
 	public function testDecorateLog()
 	{
 		$this

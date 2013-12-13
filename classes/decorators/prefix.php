@@ -15,6 +15,11 @@ class prefix implements logger\decorator
 		$this->prefix = $prefix;
 	}
 
+	public function prepareToDecorateLog()
+	{
+		return $this;
+	}
+
 	public function decorateLog($log)
 	{
 		return $this->prefix . $log;

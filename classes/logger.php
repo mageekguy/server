@@ -33,6 +33,11 @@ class logger
 
 	public function log($message)
 	{
+		foreach ($this->decorators as $decorator)
+		{
+			$decorator->prepareToDecorateLog();
+		}
+
 		$lines = preg_split("/\r?\n/", $message);
 
 		foreach ($lines as & $line)
