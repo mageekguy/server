@@ -529,23 +529,6 @@ class daemon extends atoum
 					->hasMessage('Unable to become a session leader')
 				->boolean($daemon->isDaemon())->isTrue()
 				->integer($daemon->getPid())->isEqualTo($pid)
-				->function('fclose')
-					->wasCalledWithArguments(STDIN)->once()
-					->wasCalledWithArguments(STDOUT)->once()
-					->wasCalledWithArguments(STDERR)->once()
-				->function('fopen')
-					->wasCalledWithArguments(testedClass::defaultStdinFile, 'r')
-						->before(
-							$this->mock($stdoutFileWriter)
-								->call('openFile')
-									->before(
-										$this->mock($stderrFileWriter)
-											->call('openFile')
-												->once()
-									)
-										->once()
-						)
-							->once()
 
 			->if(
 				$this->function->posix_setsid = 0,
@@ -572,7 +555,6 @@ class daemon extends atoum
 							->once()
 
 			->if(
-				$this->calling($unixUser)->goToHome->throw = $exception = new \exception(uniqid()),
 				$this->function->pcntl_fork[2] = 0,
 				$this->function->posix_getpid[2] = $pid = rand(1, PHP_INT_MAX),
 				$this->function->set_error_handler->doesNothing(),
@@ -581,23 +563,7 @@ class daemon extends atoum
 				$this->function->ob_implicit_flush->doesNothing(),
 				$this->function->ob_get_level[1] = 1,
 				$this->function->ob_get_level[2] = 0,
-				$this->function->ob_end_flush->doesNothing()
-			)
-			->then
-				->exception(function() use ($daemon) { $daemon->run(); })
-					->isInstanceOf('server\daemon\exception')
-					->hasMessage('Unable to set home directory to \'' . $daemon->getHome() . '\'')
-				->boolean($daemon->isDaemon())->isTrue()
-				->integer($daemon->getPid())->isEqualTo($pid)
-				->function('set_error_handler')->wasCalledWithArguments(array($daemon, 'errorHandler'))->once()
-				->function('set_exception_handler')->wasCalledWithArguments(array($daemon, 'exceptionHandler'))->once()
-				->function('ob_start')
-					->wasCalledWithArguments(array($daemon, 'outputHandler'))
-						->before($this->function('ob_implicit_flush')->wasCalledWithArguments(true)->once())
-							->once()
-
-			->if(
-				$this->calling($unixUser)->goToHome->returnThis(),
+				$this->function->ob_end_flush->doesNothing(),
 				$this->function->posix_setgid = false
 			)
 			->then
@@ -620,6 +586,17 @@ class daemon extends atoum
 
 			->if(
 				$this->function->posix_setuid = true,
+				$this->calling($unixUser)->goToHome->throw = $exception = new \exception(uniqid())
+			)
+			->then
+				->exception(function() use ($daemon) { $daemon->run(); })
+					->isInstanceOf('server\daemon\exception')
+					->hasMessage('Unable to set home directory to \'' . $daemon->getHome() . '\'')
+				->boolean($daemon->isDaemon())->isTrue()
+				->integer($daemon->getPid())->isEqualTo($pid)
+
+			->if(
+				$this->calling($unixUser)->goToHome->returnThis(),
 				$this->function->umask->doesNothing(),
 				$this->calling($controller)->dispatchSignals->returnThis(),
 				$this->calling($controller)->daemonShouldRun[1] = true,
@@ -627,9 +604,15 @@ class daemon extends atoum
 			)
 			->then
 				->object($daemon->run())->isIdenticalTo($daemon)
-				->boolean($daemon->isDaemon())->isTrue()
-				->integer($daemon->getPid())->isEqualTo($pid)
-				->function('umask')->wasCalledWithArguments(137)->once()
+				->boolean($daemon->isdaemon())->istrue()
+				->integer($daemon->getpid())->isequalto($pid)
+				->function('set_error_handler')->wasCalledWithArguments(array($daemon, 'errorHandler'))->once()
+				->function('set_exception_handler')->wasCalledWithArguments(array($daemon, 'exceptionHandler'))->once()
+				->function('ob_start')
+					->wasCalledWithArguments(array($daemon, 'outputHandler'))
+						->before($this->function('ob_implicit_flush')->wasCalledWithArguments(true)->once())
+							->once()
+				->function('umask')->wasCalledWithArguments(0133)->once()
 				->mock($controller)
 					->call('daemonShouldRun')->wasCalled()
 						->after(

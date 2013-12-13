@@ -365,26 +365,6 @@ abstract class daemon extends script\configurable
 			$this->isDaemon = true;
 			$this->pid = posix_getpid();
 
-			if (defined('STDIN') === true)
-			{
-				fclose(STDIN);
-			}
-
-			if (defined('STDOUT') === true)
-			{
-				fclose(STDOUT);
-			}
-
-			if (defined('STDERR') === true)
-			{
-				fclose(STDERR);
-			}
-
-			$this->stdin = @fopen(static::defaultStdinFile, 'r');
-
-			$this->stdoutFileWriter->openFile();
-			$this->stderrFileWriter->openFile();
-
 			if (posix_setsid() < 0)
 			{
 				throw $this->getException('Unable to become a session leader');
@@ -405,22 +385,7 @@ abstract class daemon extends script\configurable
 			}
 			else
 			{
-				set_error_handler(array($this, 'errorHandler'));
-				set_exception_handler(array($this, 'exceptionHandler'));
-
-				ob_start(array($this, 'outputHandler'));
-				ob_implicit_flush(true);
-
 				$this->pid = posix_getpid();
-
-				try
-				{
-					$this->user->goToHome();
-				}
-				catch (\exception $exception)
-				{
-					throw $this->getException('Unable to set home directory to \'' . $this->getHome() . '\'');
-				}
 
 				if (posix_setgid($this->getGid()) === false)
 				{
@@ -432,7 +397,42 @@ abstract class daemon extends script\configurable
 					throw $this->getException('Unable to set UID to \'' . $this->getUid() . '\'');
 				}
 
-				umask(137);
+				try
+				{
+					$this->user->goToHome();
+				}
+				catch (\exception $exception)
+				{
+					throw $this->getException('Unable to set home directory to \'' . $this->getHome() . '\'');
+				}
+
+				umask(0133);
+
+				if (defined('STDIN') === true)
+				{
+					fclose(STDIN);
+				}
+
+				if (defined('STDOUT') === true)
+				{
+					fclose(STDOUT);
+				}
+
+				if (defined('STDERR') === true)
+				{
+					fclose(STDERR);
+				}
+
+				$this->stdin = @fopen(static::defaultStdinFile, 'r');
+
+				$this->stdoutFileWriter->openFile();
+				$this->stderrFileWriter->openFile();
+
+				set_error_handler(array($this, 'errorHandler'));
+				set_exception_handler(array($this, 'exceptionHandler'));
+
+				ob_start(array($this, 'outputHandler'));
+				ob_implicit_flush(true);
 
 				$this->controller[SIGTERM] = array($this->controller, 'stopDaemon');
 
