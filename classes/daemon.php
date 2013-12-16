@@ -22,6 +22,7 @@ abstract class daemon extends script\configurable
 	protected $infoLogger = null;
 	protected $errorLogger = null;
 	protected $outputLogger = null;
+	protected $foreground = false;
 	protected $isDaemon = false;
 	protected $pid = null;
 
@@ -67,6 +68,13 @@ abstract class daemon extends script\configurable
 		}
 
 		return $return;
+	}
+
+	public function runInForeground()
+	{
+		$this->foreground = true;
+
+		return $this;
 	}
 
 	public function setUnixUser(unix\user $user = null)
@@ -142,6 +150,11 @@ abstract class daemon extends script\configurable
 	public function isDaemon()
 	{
 		return ($this->isDaemon === true);
+	}
+
+	public function isForeground()
+	{
+		return ($this->isDaemon() === false || $this->foreground === true);
 	}
 
 	public function getStdoutFileWriter()
@@ -250,16 +263,6 @@ abstract class daemon extends script\configurable
 		return true;
 	}
 
-	public function outputHandler($buffer)
-	{
-		if ($buffer != '')
-		{
-			$this->outputLogger->log($buffer);
-		}
-
-		return '';
-	}
-
 	public function writeMessage($message)
 	{
 		if ($this->isDaemon() === false)
@@ -276,7 +279,7 @@ abstract class daemon extends script\configurable
 
 	public function writeInfo($info)
 	{
-		if ($this->isDaemon() === false)
+		if ($this->isForeground() === true)
 		{
 			parent::writeInfo($info);
 		}
@@ -290,7 +293,7 @@ abstract class daemon extends script\configurable
 
 	public function writeHelp($help)
 	{
-		if ($this->isDaemon() === false)
+		if ($this->isForeground() === true)
 		{
 			parent::writeHelp($help);
 		}
@@ -304,7 +307,7 @@ abstract class daemon extends script\configurable
 
 	public function writeWarning($warning)
 	{
-		if ($this->isDaemon() === false)
+		if ($this->isForeground() === true)
 		{
 			parent::writeWarning($warning);
 		}
@@ -318,7 +321,7 @@ abstract class daemon extends script\configurable
 
 	public function writeError($error)
 	{
-		if ($this->isDaemon() === false)
+		if ($this->isForeground() === true)
 		{
 			parent::writeError($error);
 		}
@@ -347,46 +350,15 @@ abstract class daemon extends script\configurable
 			throw $this->getException('Home is undefined');
 		}
 
-		$pid = pcntl_fork();
-
-		if ($pid === -1)
+		if ($this->fork()->isDaemon() === true)
 		{
-			throw $this->getException('Unable to fork to start daemon');
-		}
-
-		$this->pid = $pid;
-
-		if ($this->pid !== 0)
-		{
-			pcntl_signal(SIGCHLD, SIG_IGN); // Avoid zombie
-		}
-		else
-		{
-			$this->isDaemon = true;
-			$this->pid = posix_getpid();
-
-			if (posix_setsid() < 0)
+			if ($this->isForeground() === false && posix_setsid() < 0)
 			{
 				throw $this->getException('Unable to become a session leader');
 			}
 
-			$pid = pcntl_fork();
-
-			if ($pid === -1)
+			if ($this->fork()->isDaemon() === true)
 			{
-				throw $this->getException('Unable to fork to start daemon');
-			}
-
-			$this->pid = $pid;
-
-			if ($this->pid !== 0)
-			{
-				pcntl_signal(SIGCHLD, SIG_IGN); // Avoid zombie
-			}
-			else
-			{
-				$this->pid = posix_getpid();
-
 				if (posix_setgid($this->getGid()) === false)
 				{
 					throw $this->getException('Unable to set GID to \'' . $this->getGid() . '\'');
@@ -408,31 +380,31 @@ abstract class daemon extends script\configurable
 
 				umask(0133);
 
-				if (defined('STDIN') === true)
+				if ($this->isForeground() === false)
 				{
-					fclose(STDIN);
+					if (defined('STDIN') === true)
+					{
+						fclose(STDIN);
+					}
+
+					if (defined('STDOUT') === true)
+					{
+						fclose(STDOUT);
+					}
+
+					if (defined('STDERR') === true)
+					{
+						fclose(STDERR);
+					}
+
+					$this->stdin = @fopen(static::defaultStdinFile, 'r');
+
+					$this->stdoutFileWriter->openFile();
+					$this->stderrFileWriter->openFile();
 				}
-
-				if (defined('STDOUT') === true)
-				{
-					fclose(STDOUT);
-				}
-
-				if (defined('STDERR') === true)
-				{
-					fclose(STDERR);
-				}
-
-				$this->stdin = @fopen(static::defaultStdinFile, 'r');
-
-				$this->stdoutFileWriter->openFile();
-				$this->stderrFileWriter->openFile();
 
 				set_error_handler(array($this, 'errorHandler'));
 				set_exception_handler(array($this, 'exceptionHandler'));
-
-				ob_start(array($this, 'outputHandler'));
-				ob_implicit_flush(true);
 
 				$this->controller[SIGTERM] = array($this->controller, 'stopDaemon');
 
@@ -449,11 +421,6 @@ abstract class daemon extends script\configurable
 				}
 
 				$this->payload->deactivate();
-
-				while (ob_get_level() > 0)
-				{
-					ob_end_flush();
-				}
 			}
 		}
 	}
@@ -465,7 +432,7 @@ abstract class daemon extends script\configurable
 					function($script, $argument, $values) {
 						if (sizeof($values) !== 1)
 						{
-							throw new exceptions\logic\invalidArgument(sprintf($script->getLocale()->_('Bad usage of %s, do php %s --help for more informations'), $argument, $script->getName()));
+							throw new daemon\exceptions\invalidArgument(sprintf($script->getLocale()->_('Bad usage of %s, do php %s --help for more informations'), $argument, $script->getName()));
 						}
 
 						$script->setUid(reset($values));
@@ -473,6 +440,19 @@ abstract class daemon extends script\configurable
 					array('-u', '--uid'),
 					null,
 					$this->locale->_('Define UID')
+				)
+			->addArgumentHandler(
+					function($script, $argument, $values) {
+						if (sizeof($values) !== 0)
+						{
+							throw new daemon\exceptions\invalidArgument(sprintf($script->getLocale()->_('Bad usage of %s, do php %s --help for more informations'), $argument, $script->getName()));
+						}
+
+						$script->runInForeground();
+					},
+					array('-f', '--foreground'),
+					null,
+					$this->locale->_('Run daemon in foreground')
 				)
 		;
 
@@ -482,5 +462,37 @@ abstract class daemon extends script\configurable
 	protected function getException($message)
 	{
 		return new daemon\exception($message);
+	}
+
+	private function fork()
+	{
+		$this->isDaemon = false;
+
+		if ($this->foreground === true)
+		{
+			$this->pid = posix_getpid();
+			$this->isDaemon = true;
+		}
+		else
+		{
+			$this->pid =  pcntl_fork();
+
+			if ($this->pid === -1)
+			{
+				throw $this->getException('Unable to fork to start daemon');
+			}
+
+			if ($this->pid !== 0)
+			{
+				pcntl_signal(SIGCHLD, SIG_IGN); // Avoid zombie
+			}
+			else
+			{
+				$this->isDaemon = true;
+				$this->pid = posix_getpid();
+			}
+		}
+
+		return $this;
 	}
 }

@@ -140,6 +140,15 @@ class daemon extends atoum
 		;
 	}
 
+	public function testRunInForeground()
+	{
+		$this
+			->if($daemon = new testedClass(uniqid()))
+			->then
+				->object($daemon->runInForeground())->isIdenticalTo($daemon)
+		;
+	}
+
 	public function testSetUnixUser()
 	{
 		$this
@@ -321,22 +330,6 @@ class daemon extends atoum
 		;
 	}
 
-	public function testOutputHandler()
-	{
-		$this
-			->if(
-				$daemon = new testedClass(uniqid()),
-				$daemon->setOutputLogger($logger = new \mock\server\logger()),
-				$this->calling($logger)->log->returnThis()
-			)
-			->then
-				->string($daemon->outputHandler($buffer = uniqid()))->isEmpty()
-				->mock($logger)->call('log')->withArguments($buffer)->once()
-				->string($daemon->outputHandler(''))->isEmpty()
-				->mock($logger)->call('log')->once()
-		;
-	}
-
 	public function testWriteMessage()
 	{
 		$this
@@ -373,13 +366,13 @@ class daemon extends atoum
 				$this->calling($logger)->log->returnThis()
 			)
 
-			->if($this->calling($daemon)->isDaemon = false)
+			->if($this->calling($daemon)->isForeground = true)
 			->then
 				->object($daemon->writeInfo($info = uniqid()))->isIdenticalTo($daemon)
 				->mock($writer)->call('write')->withArguments($info)->once()
 				->mock($logger)->call('log')->withArguments($info)->never()
 
-			->if($this->calling($daemon)->isDaemon = true)
+			->if($this->calling($daemon)->isForeground = false)
 			->then
 				->object($daemon->writeInfo($info = uniqid()))->isIdenticalTo($daemon)
 				->mock($writer)->call('write')->withArguments($info)->never()
@@ -398,13 +391,13 @@ class daemon extends atoum
 				$this->calling($logger)->log->returnThis()
 			)
 
-			->if($this->calling($daemon)->isDaemon = false)
+			->if($this->calling($daemon)->isForeground = true)
 			->then
 				->object($daemon->writeHelp($help = uniqid()))->isIdenticalTo($daemon)
 				->mock($writer)->call('write')->withArguments($help)->once()
 				->mock($logger)->call('log')->withArguments($help)->never()
 
-			->if($this->calling($daemon)->isDaemon = true)
+			->if($this->calling($daemon)->isForeground = false)
 			->then
 				->object($daemon->writeHelp($help = uniqid()))->isIdenticalTo($daemon)
 				->mock($writer)->call('write')->withArguments($help)->never()
@@ -423,13 +416,13 @@ class daemon extends atoum
 				$this->calling($logger)->log->returnThis()
 			)
 
-			->if($this->calling($daemon)->isDaemon = false)
+			->if($this->calling($daemon)->isForeground = true)
 			->then
 				->object($daemon->writeWarning($warning = uniqid()))->isIdenticalTo($daemon)
 				->mock($writer)->call('write')->withArguments($warning)->once()
 				->mock($logger)->call('log')->withArguments($warning)->never()
 
-			->if($this->calling($daemon)->isDaemon = true)
+			->if($this->calling($daemon)->isForeground = false)
 			->then
 				->object($daemon->writeWarning($warning = uniqid()))->isIdenticalTo($daemon)
 				->mock($writer)->call('write')->withArguments($warning)->never()
@@ -448,13 +441,13 @@ class daemon extends atoum
 				$this->calling($logger)->log->returnThis()
 			)
 
-			->if($this->calling($daemon)->isDaemon = false)
+			->if($this->calling($daemon)->isForeground = true)
 			->then
 				->object($daemon->writeError($error = uniqid()))->isIdenticalTo($daemon)
 				->mock($writer)->call('write')->withArguments($error)->once()
 				->mock($logger)->call('log')->withArguments($error)->never()
 
-			->if($this->calling($daemon)->isDaemon = true)
+			->if($this->calling($daemon)->isForeground = false)
 			->then
 				->object($daemon->writeError($error = uniqid()))->isIdenticalTo($daemon)
 				->mock($writer)->call('write')->withArguments($error)->never()
@@ -462,7 +455,7 @@ class daemon extends atoum
 		;
 	}
 
-	public function testRun()
+	public function testRunWithFork()
 	{
 		$this
 			->given(
@@ -538,8 +531,8 @@ class daemon extends atoum
 				->exception(function() use ($daemon) { $daemon->run(); })
 					->isInstanceOf('server\daemon\exception')
 					->hasMessage('Unable to fork to start daemon')
-				->boolean($daemon->isDaemon())->isTrue()
-				->integer($daemon->getPid())->isEqualTo($pid)
+				->boolean($daemon->isDaemon())->isFalse()
+				->integer($daemon->getPid())->isEqualTo(-1)
 
 			->if(
 				$this->function->pcntl_fork[2] = $pid = rand(1, PHP_INT_MAX),
@@ -547,7 +540,7 @@ class daemon extends atoum
 			)
 			->then
 				->object($daemon->run())->isIdenticalTo($daemon)
-				->boolean($daemon->isDaemon())->isTrue()
+				->boolean($daemon->isDaemon())->isFalse()
 				->integer($daemon->getPid())->isEqualTo($pid)
 				->function('pcntl_signal')
 					->wasCalledWithArguments(SIGCHLD, SIG_IGN)
@@ -559,11 +552,6 @@ class daemon extends atoum
 				$this->function->posix_getpid[2] = $pid = rand(1, PHP_INT_MAX),
 				$this->function->set_error_handler->doesNothing(),
 				$this->function->set_exception_handler->doesNothing(),
-				$this->function->ob_start->doesNothing(),
-				$this->function->ob_implicit_flush->doesNothing(),
-				$this->function->ob_get_level[1] = 1,
-				$this->function->ob_get_level[2] = 0,
-				$this->function->ob_end_flush->doesNothing(),
 				$this->function->posix_setgid = false
 			)
 			->then
@@ -608,10 +596,6 @@ class daemon extends atoum
 				->integer($daemon->getpid())->isequalto($pid)
 				->function('set_error_handler')->wasCalledWithArguments(array($daemon, 'errorHandler'))->once()
 				->function('set_exception_handler')->wasCalledWithArguments(array($daemon, 'exceptionHandler'))->once()
-				->function('ob_start')
-					->wasCalledWithArguments(array($daemon, 'outputHandler'))
-						->before($this->function('ob_implicit_flush')->wasCalledWithArguments(true)->once())
-							->once()
 				->function('umask')->wasCalledWithArguments(0133)->once()
 				->mock($controller)
 					->call('daemonShouldRun')->wasCalled()
@@ -630,6 +614,83 @@ class daemon extends atoum
 					->call('deactivate')
 						->after($this->mock($payload)->call('release'))
 							->once()
+		;
+	}
+
+	public function testRunWithoutFork()
+	{
+		$this
+			->given(
+				$daemon = new testedClass(uniqid()),
+				$daemon->setUnixUser($unixUser = new \mock\server\unix\user()),
+				$daemon->setController($controller = new \mock\server\daemon\controller()),
+				$daemon->setStdoutFileWriter($stdoutFileWriter = new \mock\server\writers\file(uniqid())),
+				$this->calling($stdoutFileWriter)->openFile->returnThis(),
+				$daemon->setStderrFileWriter($stderrFileWriter = new \mock\server\writers\file(uniqid())),
+				$this->calling($stderrFileWriter)->openFile->returnThis(),
+				$daemon->runInForeground()
+			)
+
+			->exception(function() use ($daemon) { $daemon->run(); })
+				->isInstanceOf('server\daemon\exception')
+				->hasMessage('Payload is undefined')
+
+			->if(
+				$daemon->setPayload($payload = new \mock\server\daemon\payload()),
+				$this->calling($unixUser)->getUid = null
+			)
+			->then
+				->exception(function() use ($daemon) { $daemon->run(); })
+					->isInstanceOf('server\daemon\exception')
+					->hasMessage('UID is undefined')
+
+			->if($this->calling($unixUser)->getUid = $uid = rand(1, PHP_INT_MAX))
+			->then
+				->exception(function() use ($daemon) { $daemon->run(); })
+					->isInstanceOf('server\daemon\exception')
+					->hasMessage('Home is undefined')
+
+			->if(
+				$this->calling($unixUser)->getHomePath = $home = uniqid(),
+				$this->function->posix_getpid = $pid = rand(1, PHP_INT_MAX),
+				$this->function->pcntl_fork->doesNothing(),
+				$this->function->pcntl_signal->doesNothing(),
+				$this->function->fclose->doesNothing(),
+				$this->function->posix_setsid = 0,
+				$this->function->posix_setgid = true,
+				$this->function->posix_setuid = true,
+				$this->function->umask->doesNothing(),
+				$this->calling($controller)->dispatchSignals->returnThis(),
+				$this->calling($controller)->daemonShouldRun[1] = true,
+				$this->calling($controller)->daemonShouldRun[2] = false
+			)
+			->then
+				->object($daemon->run())->isIdenticalTo($daemon)
+				->boolean($daemon->isDaemon())->isTrue()
+				->integer($daemon->getPid())->isEqualTo($pid)
+				->function('pcntl_fork')->wasCalled()->never()
+				->function('posix_setsid')->wasCalled()->never()
+				->function('pcntl_signal')->wasCalled()->never()
+				->function('fclose')->wasCalled()->never()
+				->mock($controller)
+					->call('daemonShouldRun')->wasCalled()
+						->after(
+							$this->mock($controller)
+								->call('dispatchSignals')
+									->after($this->mock($controller)->call('offsetSet')->withArguments(SIGTERM, array($controller, 'stopDaemon'))->once())
+										->twice()
+						)
+							->before($this->mock($payload)->call('release')->once())
+								->once()
+				->mock($payload)
+					->call('activate')
+						->before($this->mock($payload)->call('release'))
+							->once()
+					->call('deactivate')
+						->after($this->mock($payload)->call('release'))
+							->once()
+				->mock($stdoutFileWriter)->wasNotCalled()
+				->mock($stderrFileWriter)->wasNotCalled()
 		;
 	}
 }
