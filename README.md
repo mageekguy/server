@@ -24,8 +24,14 @@ To run it:
 4. `sudo php server.php`;
 5. Start a telnet on the IP and the port and type something.
 
+Be aware that the user which run the server should have permissions to create log files.
 If the server works fine, each message sent to the server via telnet are logged in the info log file.  
 Moreover, the server should reply with a [rot13](http://en.wikipedia.org/wiki/ROT13) version of your message.  
-If it's not the case, errors are logged in the error log file.  
 To stop the server, just get the PID of the server with the `ps aux | grep php` command and kill it with `kill <pid>`.
+If you can't connect to the server, the first thing you should do is to run it in foreground with the following command:
+```
+sudo php server.php -f
+```
+In this mode, the server will not fork, so you can see all output and error directly on your screen.
+Note that error log file will be used too.
 For more informations to develop your own server, just look `demo/classes/scripts/server.php`.  
