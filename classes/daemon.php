@@ -385,17 +385,17 @@ abstract class daemon extends script\configurable
 				{
 					if (defined('STDIN') === true)
 					{
-						fclose(STDIN);
+						@fclose(STDIN);
 					}
 
 					if (defined('STDOUT') === true)
 					{
-						fclose(STDOUT);
+						@fclose(STDOUT);
 					}
 
 					if (defined('STDERR') === true)
 					{
-						fclose(STDERR);
+						@fclose(STDERR);
 					}
 
 					$this->stdin = @fopen(static::defaultStdinFile, 'r');

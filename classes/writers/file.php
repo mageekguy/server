@@ -55,7 +55,7 @@ class file implements logger\writer
 	{
 		if ($this->resource === null)
 		{
-			$resource = fopen($this->path, 'a');
+			$resource = @fopen($this->path, 'a');
 
 			if ($resource === false)
 			{

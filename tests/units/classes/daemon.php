@@ -606,7 +606,7 @@ class daemon extends atoum
 				->integer($daemon->getpid())->isequalto($pid)
 				->function('set_error_handler')->wasCalledWithArguments(array($daemon, 'errorHandler'))->once()
 				->function('set_exception_handler')->wasCalledWithArguments(array($daemon, 'exceptionHandler'))->once()
-				->function('umask')->wasCalledWithArguments(0133)->once()
+				->function('umask')->wasCalledWithArguments(testedClass::defaultUmask)->once()
 				->mock($controller)
 					->call('daemonShouldRun')->wasCalled()
 						->after(
