@@ -10,6 +10,7 @@ use
 
 abstract class daemon extends script\configurable
 {
+	const defaultUmask = 0133;
 	const defaultStdinFile = '/dev/null';
 	const defaultStdoutFile = '/dev/null';
 	const defaultStderrFile = '/dev/null';
@@ -378,7 +379,7 @@ abstract class daemon extends script\configurable
 					throw $this->getException('Unable to set home directory to \'' . $this->getHome() . '\'');
 				}
 
-				umask(0133);
+				umask(static::defaultUmask);
 
 				if ($this->isForeground() === false)
 				{

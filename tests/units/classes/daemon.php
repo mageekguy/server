@@ -102,6 +102,16 @@ class daemon extends atoum
 		;
 	}
 
+	public function testClassConstants()
+	{
+		$this
+			->integer(testedClass::defaultUmask)->isEqualTo(0133) // rw-r--r--
+			->string(testedClass::defaultStdinFile)->isEqualTo('/dev/null')
+			->string(testedClass::defaultStdoutFile)->isEqualTo('/dev/null')
+			->string(testedClass::defaultStderrFile)->isEqualTo('/dev/null')
+		;
+	}
+
 	public function test__construct()
 	{
 		$this
