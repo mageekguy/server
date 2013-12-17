@@ -3,22 +3,23 @@
 namespace server\daemon\payloads\server;
 
 use
-	server
+	server,
+	server\daemon\payloads
 ;
 
 class client
 {
 	protected $socket = null;
-	protected $poller = null;
+	protected $server = null;
 	protected $readMessages = null;
 	protected $currentReadMessage = null;
 	protected $writeMessages = null;
 	protected $currentWriteMessage = null;
 
-	public function __construct(server\socket $socket, server\socket\poller\definition $poller)
+	public function __construct(server\socket $socket, payloads\server $server)
 	{
 		$this->socket = $socket;
-		$this->poller = $poller;
+		$this->server = $server;
 		$this->readMessages = new client\queue();
 		$this->writeMessages = new client\queue();
 
@@ -30,13 +31,18 @@ class client
 		return (string) $this->socket;
 	}
 
+	public function getServer()
+	{
+		return $this->server;
+	}
+
 	public function readMessage(client\message $message)
 	{
 		$this->readMessages->addMessage($message);
 
 		if (sizeof($this->readMessages) == 1)
 		{
-			$this->socket->onRead($this->poller, array($this, 'readSocket'));
+			$this->socket->onRead($this->server, array($this, 'readSocket'));
 		}
 
 		return $this;
@@ -53,7 +59,7 @@ class client
 		{
 			if ($this->currentReadMessage->readSocket($this->socket) === false)
 			{
-				$this->socket->onRead($this->poller, array($this, __FUNCTION__));
+				$this->socket->onRead($this->server, array($this, __FUNCTION__));
 			}
 			else
 			{
@@ -61,7 +67,7 @@ class client
 
 				if (sizeof($this->readMessages) > 0)
 				{
-					$this->socket->onRead($this->poller, array($this, __FUNCTION__));
+					$this->socket->onRead($this->server, array($this, __FUNCTION__));
 				}
 			}
 		}
@@ -75,7 +81,7 @@ class client
 
 		if (sizeof($this->writeMessages) == 1)
 		{
-			$this->socket->onWrite($this->poller, array($this, 'writeSocket'));
+			$this->socket->onWrite($this->server, array($this, 'writeSocket'));
 		}
 
 		return $this;
@@ -92,7 +98,7 @@ class client
 		{
 			if ($this->currentWriteMessage->writeSocket($this->socket) === false)
 			{
-				$this->socket->onWrite($this->poller, array($this, __FUNCTION__));
+				$this->socket->onWrite($this->server, array($this, __FUNCTION__));
 			}
 			else
 			{
@@ -100,7 +106,7 @@ class client
 
 				if (sizeof($this->writeMessages) > 0)
 				{
-					$this->socket->onWrite($this->poller, array($this, __FUNCTION__));
+					$this->socket->onWrite($this->server, array($this, __FUNCTION__));
 				}
 			}
 		}
@@ -117,7 +123,7 @@ class client
 
 	public function onTimeout(server\socket\timer $timer, callable $handler)
 	{
-		$this->socket->onTimeout($this->poller, $timer, $handler);
+		$this->socket->onTimeout($this->server, $timer, $handler);
 
 		return $this;
 	}
