@@ -126,6 +126,7 @@ class daemon extends atoum
 				->object($daemon->getOutputLogger())->isEqualTo(new \server\logger())
 				->boolean($daemon->isDaemon())->isFalse()
 				->object($daemon->getController())->isEqualTo(new server\daemon\controller())
+				->object($daemon->getStdinFileReader())->isEqualTo(new server\readers\file(testedClass::defaultStdinFile))
 				->object($daemon->getStdoutFileWriter())->isEqualTo(new server\writers\file(testedClass::defaultStdoutFile))
 				->object($daemon->getStderrFileWriter())->isEqualTo(new server\writers\file(testedClass::defaultStderrFile))
 		;
@@ -170,6 +171,18 @@ class daemon extends atoum
 				->object($daemon->getUnixUser())
 					->isNotIdenticalTo($user)
 					->isEqualTo(new unix\user())
+		;
+	}
+
+	public function testSetStdinFileReader()
+	{
+		$this
+			->if($daemon = new testedClass(uniqid()))
+			->then
+				->object($daemon->setStdinFileReader($reader = new server\readers\file(uniqid())))->isIdenticalTo($daemon)
+				->object($daemon->getStdinFileReader())->isEqualTo($reader)
+				->object($daemon->setStdinFileReader())->isIdenticalTo($daemon)
+				->object($daemon->getStdinFileReader())->isEqualTo(new server\readers\file(testedClass::defaultStdinFile))
 		;
 	}
 
@@ -472,6 +485,8 @@ class daemon extends atoum
 				$daemon = new testedClass(uniqid()),
 				$daemon->setUnixUser($unixUser = new \mock\server\unix\user()),
 				$daemon->setController($controller = new \mock\server\daemon\controller()),
+				$daemon->setStdinFileReader($stdinFileReader = new \mock\server\readers\file(uniqid())),
+				$this->calling($stdinFileReader)->openFile->returnThis(),
 				$daemon->setStdoutFileWriter($stdoutFileWriter = new \mock\server\writers\file(uniqid())),
 				$this->calling($stdoutFileWriter)->openFile->returnThis(),
 				$daemon->setStderrFileWriter($stderrFileWriter = new \mock\server\writers\file(uniqid())),
@@ -607,6 +622,32 @@ class daemon extends atoum
 				->function('set_error_handler')->wasCalledWithArguments(array($daemon, 'errorHandler'))->once()
 				->function('set_exception_handler')->wasCalledWithArguments(array($daemon, 'exceptionHandler'))->once()
 				->function('umask')->wasCalledWithArguments(testedClass::defaultUmask)->once()
+				->before(
+					$this->mock($stdinFileReader)->call('closeFile')
+						->before($this->mock($stdinFileReader)->call('openFile')->once())
+						->after(
+							$this->function('fclose')->wasCalledWithArguments(STDIN)->once(),
+							$this->function('fclose')->wasCalledWithArguments(STDOUT)->once(),
+							$this->function('fclose')->wasCalledWithArguments(STDERR)->once()
+						)
+							->once(),
+					$this->mock($stdoutFileWriter)->call('closeFile')
+						->before($this->mock($stdoutFileWriter)->call('openFile')->once())
+						->after(
+							$this->function('fclose')->wasCalledWithArguments(STDIN)->once(),
+							$this->function('fclose')->wasCalledWithArguments(STDOUT)->once(),
+							$this->function('fclose')->wasCalledWithArguments(STDERR)->once()
+						)
+							->once(),
+					$this->mock($stderrFileWriter)->call('closeFile')
+						->before($this->mock($stderrFileWriter)->call('openFile')->once())
+						->after(
+							$this->function('fclose')->wasCalledWithArguments(STDIN)->once(),
+							$this->function('fclose')->wasCalledWithArguments(STDOUT)->once(),
+							$this->function('fclose')->wasCalledWithArguments(STDERR)->once()
+						)
+							->once()
+				)
 				->mock($controller)
 					->call('daemonShouldRun')->wasCalled()
 						->after(
@@ -634,6 +675,8 @@ class daemon extends atoum
 				$daemon = new testedClass(uniqid()),
 				$daemon->setUnixUser($unixUser = new \mock\server\unix\user()),
 				$daemon->setController($controller = new \mock\server\daemon\controller()),
+				$daemon->setStdinFileReader($stdinFileReader = new \mock\server\readers\file(uniqid())),
+				$this->calling($stdinFileReader)->openFile->returnThis(),
 				$daemon->setStdoutFileWriter($stdoutFileWriter = new \mock\server\writers\file(uniqid())),
 				$this->calling($stdoutFileWriter)->openFile->returnThis(),
 				$daemon->setStderrFileWriter($stderrFileWriter = new \mock\server\writers\file(uniqid())),
@@ -699,6 +742,7 @@ class daemon extends atoum
 					->call('deactivate')
 						->after($this->mock($payload)->call('release'))
 							->once()
+				->mock($stdinFileReader)->wasNotCalled()
 				->mock($stdoutFileWriter)->wasNotCalled()
 				->mock($stderrFileWriter)->wasNotCalled()
 		;

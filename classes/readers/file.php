@@ -1,13 +1,12 @@
 <?php
 
-namespace server\writers;
+namespace server\readers;
 
 use
-	server\logger,
-	server\writers\file\exception
+	server\readers\file\exception
 ;
 
-class file implements logger\writer
+class file
 {
 	protected $resource = null;
 	protected $path = '';
@@ -17,14 +16,14 @@ class file implements logger\writer
 		$this->path = (string) $path;
 	}
 
-	public function __toString()
-	{
-		return (string) $this->path;
-	}
-
 	public function __destruct()
 	{
 		$this->closeFile();
+	}
+
+	public function __toString()
+	{
+		return (string) $this->path;
 	}
 
 	public function getPath()
@@ -36,7 +35,7 @@ class file implements logger\writer
 	{
 		if ($this->resource === null)
 		{
-			$resource = @fopen($this->path, 'a');
+			$resource = @fopen($this->path, 'r');
 
 			if ($resource === false)
 			{
@@ -49,28 +48,16 @@ class file implements logger\writer
 		return $this;
 	}
 
-	public function writeInFile($data)
+	public function readFromFile($length)
 	{
-		$this->openFile();
+		$data = fread($this->openFile()->resource, $length);
 
-		while (strlen($data) > 0)
+		if ($data === false)
 		{
-			$bytesWritten = @fwrite($this->resource, $data);
-
-			if ($bytesWritten === false)
-			{
-				throw new exception('Unable to write \'' . $data . '\' in \'' . $this . '\'');
-			}
-
-			$data = substr($data, $bytesWritten);
+			throw new exception('Unable to read ' . $length . ' bytes from \'' . $this . '\'');
 		}
 
-		return $this;
-	}
-
-	public function log($log)
-	{
-		return $this->writeInFile($log);
+		return $data;
 	}
 
 	public function closeFile()

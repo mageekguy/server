@@ -37,13 +37,11 @@ class file extends atoum
 				$this->function->fopen = $resource = uniqid(),
 				$this->function->fwrite = function($data) { return strlen($data); }
 			)
+
 			->when(function() { $file = new testedClass(uniqid()); })
 			->then
 				->function('fclose')->wasCalledWithArguments($resource)->never()
-			->if(
-				$file = new testedClass($path = uniqid()),
-				$file->log(uniqid())
-			)
+
 			->when(function() { $file = new testedClass(uniqid()); $file->log(uniqid()); })
 			->then
 				->function('fclose')->wasCalledWithArguments($resource)->once()
@@ -56,6 +54,67 @@ class file extends atoum
 			->if($file = new testedClass($path = uniqid()))
 			->then
 				->castToString($file)->isEqualTo($path)
+		;
+	}
+
+	public function testOpenFile()
+	{
+		$this
+			->given($file = new testedClass($path = uniqid()))
+
+			->if($this->function->fopen = false)
+			->then
+				->exception(function() use ($file, & $log) { $file->openFile(); })
+					->isInstanceOf('server\writers\file\exception')
+					->hasMessage('Unable to open \'' . $path . '\'')
+				->function('fopen')->wasCalledWithArguments($path, 'a')->once()
+
+			->if($this->function->fopen = $resource = uniqid())
+			->then
+				->object($file->openFile())->isIdenticalTo($file)
+				->function('fopen')->wasCalledWithArguments($path, 'a')->twice()
+		;
+	}
+
+	public function testWriteInFile()
+	{
+		$this
+			->if(
+				$file = new testedClass($path = uniqid()),
+				$this->function->fopen = false,
+				$this->function->fwrite = function($data) { return strlen($data); }
+			)
+			->then
+				->exception(function() use ($file, & $data) { $file->writeInFile($data = uniqid()); })
+					->isInstanceOf('server\writers\file\exception')
+					->hasMessage('Unable to open \'' . $path . '\'')
+			->if(
+				$this->function->fopen = $resource = uniqid()
+			)
+			->then
+				->object($file->writeInFile($data = uniqid()))->isIdenticalTo($file)
+				->function('fopen')->wasCalledWithArguments($path, 'a')->twice()
+				->function('fwrite')->wasCalledWithArguments($resource, $data)->once()
+				->object($file->writeInFile($anotherData = uniqid()))->isIdenticalTo($file)
+				->function('fopen')->wasCalledWithArguments($path, 'a')->twice()
+				->function('fwrite')->wasCalledWithArguments($resource, $anotherData)->once()
+			->if(
+				$this->function->fwrite[3] = strlen(substr($longLog = uniqid(), 0, 3)),
+				$this->function->fwrite[4] = strlen(substr($longLog, 3))
+			)
+			->then
+				->object($file->writeInFile($longLog))->isIdenticalTo($file)
+				->function('fopen')->wasCalledWithArguments($path, 'a')->twice()
+				->function('fwrite')
+					->wasCalledWithArguments($resource, $longLog)->once()
+					->wasCalledWithArguments($resource, substr($longLog, 3))->once()
+			->if(
+				$this->function->fwrite[5] = false
+			)
+			->then
+				->exception(function() use ($file, & $data) { $file->writeInFile($data = uniqid()); })
+					->isInstanceOf('server\writers\file\exception')
+					->hasMessage('Unable to write \'' . $data . '\' in \'' . $path . '\'')
 		;
 	}
 
@@ -97,24 +156,7 @@ class file extends atoum
 			->then
 				->exception(function() use ($file, & $log) { $file->log($log = uniqid()); })
 					->isInstanceOf('server\writers\file\exception')
-					->hasMessage('Unable to write log \'' . $log . '\' in \'' . $path . '\'')
-		;
-	}
-
-	public function testOpenFile()
-	{
-		$this
-			->given($file = new testedClass($path = uniqid()))
-
-			->if($this->function->fopen = false)
-			->then
-				->exception(function() use ($file, & $log) { $file->openFile(); })
-					->isInstanceOf('server\writers\file\exception')
-					->hasMessage('Unable to open \'' . $path . '\'')
-
-			->if($this->function->fopen = $resource = uniqid())
-			->then
-				->object($file->openFile())->isIdenticalTo($file)
+					->hasMessage('Unable to write \'' . $log . '\' in \'' . $path . '\'')
 		;
 	}
 

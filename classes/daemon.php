@@ -17,9 +17,9 @@ abstract class daemon extends script\configurable
 
 	protected $user = null;
 	protected $controller = null;
-	protected $stdin = null;
-	protected $stdoutFileWriter = '';
-	protected $stderrFileWriter = '';
+	protected $stdinFileReader = null;
+	protected $stdoutFileWriter = null;
+	protected $stderrFileWriter = null;
 	protected $infoLogger = null;
 	protected $errorLogger = null;
 	protected $outputLogger = null;
@@ -39,19 +39,10 @@ abstract class daemon extends script\configurable
 			->setOutputLogger()
 			->setUnixUser()
 			->setController()
+			->setStdinFileReader()
 			->setStdoutFileWriter()
 			->setStderrFileWriter()
 		;
-	}
-
-	public function __destruct()
-	{
-		if ($this->stdin !== null)
-		{
-			@fclose($this->stdin);
-
-			$this->stdin = null;
-		}
 	}
 
 	public function __call($method, $arguments)
@@ -156,6 +147,18 @@ abstract class daemon extends script\configurable
 	public function isForeground()
 	{
 		return ($this->isDaemon() === false || $this->foreground === true);
+	}
+
+	public function getStdinFileReader()
+	{
+		return $this->stdinFileReader;
+	}
+
+	public function setStdinFileReader(readers\file $reader = null)
+	{
+		$this->stdinFileReader = $reader ?: new readers\file(static::defaultStdinFile);
+
+		return $this;
 	}
 
 	public function getStdoutFileWriter()
@@ -398,10 +401,20 @@ abstract class daemon extends script\configurable
 						@fclose(STDERR);
 					}
 
-					$this->stdin = @fopen(static::defaultStdinFile, 'r');
+					$this->stdinFileReader
+						->closeFile()
+						->openFile()
+					;
 
-					$this->stdoutFileWriter->openFile();
-					$this->stderrFileWriter->openFile();
+					$this->stdoutFileWriter
+						->closeFile()
+						->openFile()
+					;
+
+					$this->stderrFileWriter
+						->closeFile()
+						->openFile()
+					;
 				}
 
 				set_error_handler(array($this, 'errorHandler'));
