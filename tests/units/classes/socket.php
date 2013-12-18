@@ -205,6 +205,28 @@ class socket extends atoum
 		;
 	}
 
+	public function testGetName()
+	{
+		$this
+			->given(
+				$socket = $this->getSocketInstance($resource = uniqid()),
+				$socketManager = $socket->getSocketManager()
+			)
+
+			->if($this->calling($socketManager)->getSocketName = $peer = new network\peer(new network\ip('127.0.0.1'), new network\port(8080)))
+			->then
+				->object($socket->getName())->isIdenticalTo($peer)
+				->mock($socketManager)->call('getSocketName')->withArguments($resource)->once()
+
+			->if($this->calling($socketManager)->getSocketName->throw = $exception = new \exception(uniqid(), rand(1, PHP_INT_MAX)))
+			->then
+				->exception(function() use ($socket) { $socket->getName(); })
+					->isInstanceOf('server\socket\exception')
+					->hasCode($exception->getCode())
+					->hasMessage($exception->getMessage())
+		;
+	}
+
 	public function testRead()
 	{
 		$this

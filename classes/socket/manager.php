@@ -3,6 +3,7 @@
 namespace server\socket;
 
 use
+	server\fs,
 	server\network
 ;
 
@@ -27,12 +28,24 @@ class manager implements manager\definition
 	{
 		$this->resetLastError();
 
-		if (@socket_getpeername($socket, $ip, $port) === false)
+		if (@socket_getpeername($socket, $address, $port) === false)
 		{
 			throw $this->getException($socket);
 		}
 
-		return new network\peer(new network\ip($ip), new network\port($port));
+		return ($port === null ? new fs\path($address) : new network\peer(new network\ip($address), new network\port($port)));
+	}
+
+	public function getSocketName($socket)
+	{
+		$this->resetLastError();
+
+		if (@socket_getsockname($socket, $address, $port) === false)
+		{
+			throw $this->getException($socket);
+		}
+
+		return ($port === null ? new fs\path($address) : new network\peer(new network\ip($address), new network\port($port)));
 	}
 
 	public function bindSocketTo(network\ip $ip, network\port $port)

@@ -6,6 +6,7 @@ require __DIR__ . '/../../runner.php';
 
 use
 	atoum,
+	server\fs,
 	server\network,
 	server\socket\manager as testedClass,
 	mock\server\socket\manager as mockedTestedClass
@@ -264,6 +265,52 @@ class manager extends atoum
 			->then
 				->object($manager->getSocketPeer($socket))->isEqualTo(new network\peer(new network\ip($socketIp), new network\port($socketPort)))
 				->function('socket_getpeername')->wasCalledWithArguments($socket)->once()
+				->variable($manager->getLastSocketErrorCode())->isNull()
+				->variable($manager->getLastSocketErrorMessage())->isNull()
+
+			->if($this->function->socket_getpeername = function($socket, & $path, & $port) use (& $socketPath) { $path = $socketPath = uniqid(); $port = null; return true; })
+			->then
+				->object($manager->getSocketPeer($socket))->isEqualTo(new fs\path($socketPath))
+				->function('socket_getpeername')->wasCalledWithArguments($socket)->once()
+				->variable($manager->getLastSocketErrorCode())->isNull()
+				->variable($manager->getLastSocketErrorMessage())->isNull()
+		;
+	}
+
+	public function testGetSocketName()
+	{
+		$this
+			->given($manager = new testedClass())
+
+			->if(
+				$this->function->socket_getsockname = false,
+				$this->function->socket_last_error = $errorCode = rand(1,PHP_INT_MAX),
+				$this->function->socket_strerror = $errorMessage = uniqid(),
+				$this->function->socket_clear_error->doesNothing()
+			)
+			->then
+				->exception(function() use ($manager, & $socket) { $manager->getSocketName($socket = uniqid()); })
+					->isInstanceOf('server\socket\manager\exception')
+					->hasCode($errorCode)
+					->hasMessage($errorMessage)
+				->function('socket_last_error')
+					->wasCalledWithArguments($socket)
+						->after($this->function('socket_getsockname')->wasCalledWithArguments($socket)->once())
+							->once()
+				->integer($manager->getLastSocketErrorCode())->isEqualTo($errorCode)
+				->string($manager->getLastSocketErrorMessage())->isEqualTo($errorMessage)
+
+			->if($this->function->socket_getsockname = function($socket, & $ip, & $port) use (& $socketIp, & $socketPort) { $ip = $socketIp = '127.0.0.1'; $port = $socketPort = 8080; return true; })
+			->then
+				->object($manager->getSocketName($socket))->isEqualTo(new network\peer(new network\ip($socketIp), new network\port($socketPort)))
+				->function('socket_getsockname')->wasCalledWithArguments($socket)->once()
+				->variable($manager->getLastSocketErrorCode())->isNull()
+				->variable($manager->getLastSocketErrorMessage())->isNull()
+
+			->if($this->function->socket_getsockname = function($socket, & $path, & $port) use (& $socketPath) { $path = $socketPath = uniqid(); $port = null; return true; })
+			->then
+				->object($manager->getSocketName($socket))->isEqualTo(new fs\path($socketPath))
+				->function('socket_getsockname')->wasCalledWithArguments($socket)->once()
 				->variable($manager->getLastSocketErrorCode())->isNull()
 				->variable($manager->getLastSocketErrorMessage())->isNull()
 		;

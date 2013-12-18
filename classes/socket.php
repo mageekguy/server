@@ -79,6 +79,18 @@ class socket
 		}
 	}
 
+	public function getName()
+	{
+		try
+		{
+			return $this->socketManager->getSocketName($this->resource);
+		}
+		catch (\exception $exception)
+		{
+			throw $this->getExceptionFrom($exception);
+		}
+	}
+
 	public function read($length, $mode)
 	{
 		try
