@@ -3,10 +3,11 @@
 namespace server\network;
 
 use
+	server\socket,
 	server\network
 ;
 
-class peer
+class peer implements socket\name
 {
 	protected $ip = null;
 	protected $port = null;

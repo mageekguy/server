@@ -19,6 +19,11 @@ class peer extends atoum
 		$this->then = function() use ($test) { $test->getTestAdapterStorage()->resetCalls(); return $test; };
 	}
 
+	public function testClass()
+	{
+		$this->testedClass->implements('server\socket\name');
+	}
+
 	public function test__construct()
 	{
 		$this
