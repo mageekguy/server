@@ -5,15 +5,26 @@ namespace server\daemon\payloads\server\client;
 class queue implements \countable
 {
 	protected $messages = array();
+	protected $priorities = array();
+	protected $size = 0;
 
 	public function count()
 	{
-		return sizeof($this->messages);
+		return $this->size;
 	}
 
-	public function addMessage(message $message)
+	public function addMessage(message $message, $priority = 0)
 	{
-		$this->messages[] = $message;
+		if ($priority > 0 && isset($this->messages[$priority]) === false)
+		{
+			$this->priorities[] = $priority;
+
+			sort($this->priorities, SORT_NUMERIC);
+		}
+
+		$this->messages[$priority][] = $message;
+
+		$this->size++;
 
 		return $this;
 	}
@@ -22,11 +33,30 @@ class queue implements \countable
 	{
 		$message = null;
 
-		if (sizeof($this) > 0)
+		if ($this->size > 0)
 		{
-			$message = array_shift($this->messages);
+			$priority = reset($this->priorities);
+
+			if ($priority === false)
+			{
+				$priority = 0;
+			}
+
+			$message = array_shift($this->messages[$priority]);
+
+			if (sizeof($this->messages[$priority]) <= 0)
+			{
+				unset($this->messages[$priority]);
+
+				if ($priority > 0)
+				{
+					array_shift($this->priorities);
+				}
+			}
+
+			$this->size--;
 		}
 
-		return $message ?: null;
+		return $message;
 	}
 }

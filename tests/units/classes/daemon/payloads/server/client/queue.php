@@ -33,9 +33,25 @@ class queue extends atoum
 			->if($queue = $this->testedClassInstance())
 			->then
 				->object($queue->addMessage($message1 = new client\message()))->isIdenticalTo($queue)
-				->sizeof($queue)->isEqualTo(1)
 				->object($queue->addMessage($message2 = new client\message()))->isIdenticalTo($queue)
-				->sizeof($queue)->isEqualTo(2)
+				->object($queue->addMessage($message3 = new client\message()))->isIdenticalTo($queue)
+				->sizeof($queue)->isEqualTo(3)
+				->object($queue->shiftMessage())->isIdenticalTo($message1)
+				->object($queue->shiftMessage())->isIdenticalTo($message2)
+				->object($queue->shiftMessage())->isIdenticalTo($message3)
+				->object($queue->addMessage($message1 = new client\message()))->isIdenticalTo($queue)
+				->object($queue->addMessage($message2 = new client\message()))->isIdenticalTo($queue)
+				->object($queue->addMessage($message3 = new client\message(), 2))->isIdenticalTo($queue)
+				->object($queue->addMessage($message4 = new client\message(), 1))->isIdenticalTo($queue)
+				->object($queue->addMessage($message5 = new client\message()))->isIdenticalTo($queue)
+				->object($queue->addMessage($message6 = new client\message(), 1))->isIdenticalTo($queue)
+				->sizeof($queue)->isEqualTo(6)
+				->object($queue->shiftMessage())->isIdenticalTo($message4)
+				->object($queue->shiftMessage())->isIdenticalTo($message6)
+				->object($queue->shiftMessage())->isIdenticalTo($message3)
+				->object($queue->shiftMessage())->isIdenticalTo($message1)
+				->object($queue->shiftMessage())->isIdenticalTo($message2)
+				->object($queue->shiftMessage())->isIdenticalTo($message5)
 		;
 	}
 
