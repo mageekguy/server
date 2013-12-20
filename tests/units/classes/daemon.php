@@ -7,6 +7,7 @@ require __DIR__ . '/../runner.php';
 use
 	atoum,
 	server,
+	server\fs,
 	server\unix,
 	mock\server\daemon as testedClass
 ;
@@ -157,6 +158,16 @@ class daemon extends atoum
 			->if($daemon = new testedClass(uniqid()))
 			->then
 				->object($daemon->runInForeground())->isIdenticalTo($daemon)
+		;
+	}
+
+	public function testSetUnixSocket()
+	{
+		$this
+			->if($daemon = new testedClass(uniqid()))
+			->then
+				->object($daemon->setUnixSocket($socket = new fs\path(uniqid())))->isIdenticalTo($daemon)
+				->object($daemon->getUnixSocket())->isIdenticalTo($socket)
 		;
 	}
 

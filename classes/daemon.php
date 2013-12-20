@@ -5,6 +5,7 @@ namespace server;
 use
 	atoum,
 	atoum\script,
+	server\fs,
 	server\unix
 ;
 
@@ -26,6 +27,7 @@ abstract class daemon extends script\configurable
 	protected $foreground = false;
 	protected $isDaemon = false;
 	protected $pid = null;
+	protected $unixSocket = null;
 
 	private $payload = null;
 
@@ -67,6 +69,18 @@ abstract class daemon extends script\configurable
 		$this->foreground = true;
 
 		return $this;
+	}
+
+	public function setUnixSocket(fs\path $path)
+	{
+		$this->unixSocket = $path;
+
+		return $this;
+	}
+
+	public function getUnixSocket()
+	{
+		return $this->unixSocket;
 	}
 
 	public function setUnixUser(unix\user $user = null)
