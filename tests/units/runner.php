@@ -2,7 +2,7 @@
 
 namespace server\tests\units;
 
-require_once __DIR__ . '/../../autoloader.php';
+require_once __DIR__ . '/../../bootstrap.php';
 
 if (defined('atoum\scripts\runner') === false)
 {

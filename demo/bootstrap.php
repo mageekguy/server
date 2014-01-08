@@ -1,7 +1,5 @@
 <?php
 
-namespace server\demo;
+call_user_func_array(include(__DIR__ . '/../autoloader.php'), [ [ 'server\demo' =>  __DIR__ . '/classes' ] ]);
 
-require_once __DIR__ . '/../autoloader.php';
-
-\atoum\autoloader::get()->addDirectory(__NAMESPACE__, __DIR__ . '/classes');
+require_once __DIR__ . '/../bootstrap.php';
