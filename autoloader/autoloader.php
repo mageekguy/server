@@ -10,10 +10,22 @@ return function($directories, $fileFormat = null, $namespaceAliases = null, $cla
 
 			foreach ($namespaceAliases as $alias => $namespace)
 			{
-				if ($realClass !== $alias && stripos($realClass, $alias) === 0)
-				{
-					$realClass = $namespace . substr($class, strlen($alias));
+				$aliasLength = strlen($alias);
 
+				if ($realClass !== $alias && strncmp($alias, $realClass, $aliasLength) === 0)
+				{
+					$realClass = $namespace . substr($class, $aliasLength);
+					break;
+				}
+			}
+
+			if ($realClass === $class || class_exists($realClass, false) === false) foreach ($directories as $namespace => $directory)
+			{
+				$namespaceLength = strlen($namespace);
+
+				if ($realClass !== $namespace && strncmp($namespace, $realClass, $namespaceLength) === 0)
+				{
+					@include($directory . sprintf($fileFormat, str_replace('\\', DIRECTORY_SEPARATOR, substr($realClass, $namespaceLength))));
 					break;
 				}
 			}
@@ -21,23 +33,6 @@ return function($directories, $fileFormat = null, $namespaceAliases = null, $cla
 			if ($realClass !== $class && class_exists($realClass, false) === true)
 			{
 				class_alias($realClass, $class);
-			}
-			else
-			{
-				foreach ($directories as $namespace => $directory)
-				{
-					if ($realClass !== $namespace && stripos($realClass, $namespace) === 0)
-					{
-						@include($directory . str_replace('\\', DIRECTORY_SEPARATOR, substr($realClass, strlen($namespace))) . '.php');
-
-						if (class_exists($realClass, false) === true && $realClass !== $class)
-						{
-							class_alias($realClass, $class);
-						}
-
-						break;
-					}
-				}
 			}
 		}
 	);
