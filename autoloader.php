@@ -18,7 +18,6 @@ return function($directories, $fileFormat = null, $namespaceAliases = null, $cla
 				}
 			}
 
-
 			if ($realClass !== $class && class_exists($realClass, false) === true)
 			{
 				class_alias($realClass, $class);
