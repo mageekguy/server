@@ -6,8 +6,6 @@ return function($directories, $fileFormat = null, $namespaceAliases = null, $cla
 	$classAliases = $classAliases ?: array();
 
 	spl_autoload_register(function($class) use ($fileFormat, $directories, $namespaceAliases, $classAliases) {
-			$class = strtolower($class);
-
 			$realClass = (isset($classAliases[$class]) === false ? $class : $classAliases[$class]);
 
 			foreach ($namespaceAliases as $alias => $namespace)
