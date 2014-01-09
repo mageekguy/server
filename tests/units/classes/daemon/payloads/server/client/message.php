@@ -65,23 +65,33 @@ class message extends atoum
 			->if($this->calling($socket)->read = $data1 = uniqid())
 			->then
 				->boolean($message->readSocket($socket))->isFalse()
-				->mock($socket)->call('read')->withArguments(2048, PHP_NORMAL_READ)->once()
+				->mock($socket)
+					->call('read')->withArguments(2048, PHP_NORMAL_READ)->once()
+					->call('bufferize')->withArguments($data1)->once()
 				->castToString($message)->isEmpty()
-				->integer($message->getBytesRead())->isEqualTo(strlen($data1))
 
-			->if($this->calling($socket)->read = $data2 = (uniqid() . "\r\n"))
+			->if($this->calling($socket)->read = $data1 . ($data2 = (uniqid() . "\r\n")))
 			->then
 				->boolean($message->readSocket($socket))->isTrue()
-				->mock($socket)->call('read')->withArguments(2048, PHP_NORMAL_READ)->once()
+				->mock($socket)
+					->call('read')->withArguments(2048, PHP_NORMAL_READ)->once()
+					->call('bufferize')
+						->withArguments($data1)->never()
+						->withArguments($data2)->never()
+						->withArguments($data1 . $data2)->never()
 				->castToString($message)->isEqualTo($data1 . $data2)
-				->integer($message->getBytesRead())->isEqualTo(strlen($data1 . $data2))
 
 			->if($this->calling($socket)->read = $data3 = uniqid())
 			->then
 				->boolean($message->readSocket($socket))->isFalse()
-				->mock($socket)->call('read')->withArguments(2048, PHP_NORMAL_READ)->once()
+				->mock($socket)
+					->call('read')->withArguments(2048, PHP_NORMAL_READ)->once()
+					->call('bufferize')
+						->withArguments($data1)->never()
+						->withArguments($data2)->never()
+						->withArguments($data1 . $data2)->never()
+						->withArguments($data3)->once()
 				->castToString($message)->isEmpty()
-				->integer($message->getBytesRead())->isEqualTo(strlen($data3))
 
 			->given(
 				$message = new testedClass(),
@@ -144,13 +154,11 @@ class message extends atoum
 			->then
 				->boolean($message->writeSocket($socket))->isTrue()
 				->mock($socket)->call('write')->never()
-				->integer($message->getBytesWritten())->isZero()
 
 			->if($message = new testedClass(''))
 			->then
 				->boolean($message->writeSocket($socket))->isTrue()
 				->mock($socket)->call('write')->never()
-				->integer($message->getBytesWritten())->isZero()
 
 			->if(
 				$message = new testedClass($data = 'ABCDEFGH'),
@@ -159,10 +167,8 @@ class message extends atoum
 			->then
 				->boolean($message->writeSocket($socket))->isFalse()
 				->mock($socket)->call('write')->withArguments($data)->once()
-				->integer($message->getBytesWritten())->isEqualTo(1)
 				->boolean($message->writeSocket($socket))->isFalse()
 				->mock($socket)->call('write')->withArguments('BCDEFGH')->once()
-				->integer($message->getBytesWritten())->isEqualTo(2)
 
 			->if(
 				$this->calling($socket)->write = 5
@@ -170,7 +176,6 @@ class message extends atoum
 			->then
 				->boolean($message->writeSocket($socket))->isFalse()
 				->mock($socket)->call('write')->withArguments('CDEFGH')->once()
-				->integer($message->getBytesWritten())->isEqualTo(7)
 
 			->if(
 				$this->calling($socket)->write = 1
@@ -178,11 +183,9 @@ class message extends atoum
 			->then
 				->boolean($message->writeSocket($socket))->isTrue()
 				->mock($socket)->call('write')->withArguments('H')->once()
-				->integer($message->getBytesWritten())->isEqualTo(8)
 				->boolean($message->writeSocket($socket))->isFalse()
 				->mock($socket)->call('write')->withArguments($data)->once()
 				->mock($socket)->call('write')->withArguments('ABCDEFGH')->once()
-				->integer($message->getBytesWritten())->isEqualTo(1)
 
 			->if(
 				$message = new testedClass($data = 'ABCDEFGH'),

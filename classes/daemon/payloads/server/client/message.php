@@ -58,16 +58,15 @@ class message
 				throw new message\exception('Socket is closed');
 			}
 
-			$this->buffer .= $data;
-
-			if ($this->dataAreRead($this->buffer) === true)
+			if ($this->dataAreRead($data) === true)
 			{
-				$this($this->buffer);
-				$this->buffer = '';
+				$this($data);
 			}
 
 			if ($this->data === null)
 			{
+				$socket->bufferize($data);
+
 				return false;
 			}
 			else
@@ -93,11 +92,6 @@ class message
 				return false;
 			}
 		}
-	}
-
-	public function getBytesRead()
-	{
-		return strlen($this->data === null ? $this->buffer : $this->data);
 	}
 
 	public function onWrite(callable $handler)
@@ -137,11 +131,6 @@ class message
 
 			return true;
 		}
-	}
-
-	public function getBytesWritten()
-	{
-		return ($this->data === null ? 0 : strlen($this->data) - strlen($this->buffer));
 	}
 
 	public function onError(callable $handler)
