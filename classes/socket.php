@@ -7,6 +7,7 @@ class socket
 	protected $socketManager = null;
 	protected $events = null;
 	protected $bind = null;
+	protected $buffer = '';
 
 	private $resource = null;
 
@@ -32,6 +33,18 @@ class socket
 		{
 			return '';
 		}
+	}
+
+	public function getBuffer()
+	{
+		return $this->buffer;
+	}
+
+	public function bufferize($data)
+	{
+		$this->buffer = $data;
+
+		return $this;
 	}
 
 	public function setSocketManager(socket\manager\definition $manager = null)
@@ -95,7 +108,11 @@ class socket
 	{
 		try
 		{
-			return $this->socketManager->readSocket($this->resource, $length, $mode);
+			$data = $this->buffer . $this->socketManager->readSocket($this->resource, $length, $mode);
+
+			$this->buffer = '';
+
+			return $data;
 		}
 		catch (\exception $exception)
 		{
