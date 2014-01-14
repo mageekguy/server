@@ -104,7 +104,7 @@ class endpoint extends atoum
 						->withArguments($endpoint->getIp(), $endpoint->getPort())
 								->once()
 					->call('pollSocket')->withArguments($socket)->once()
-				->mock($socketEvents)->call('onRead')->withArguments($handler)->once()
+				->mock($socketEvents)->call('onReadNotBlock')->withArguments($handler)->once()
 		;
 	}
 }

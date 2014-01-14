@@ -98,8 +98,8 @@ class poller extends atoum
 			->then
 				->object($poller->waitSockets($timeout))->isIdenticalTo($poller)
 				->mock($socketManager)->call('select')->withArguments(array($socket1), array(), array(), $timeout)->never()
-				->mock($socketEvents)->call('triggerOnRead')->withArguments($socket1)->never()
-				->mock($socketEvents)->call('triggerOnWrite')->withArguments($socket1)->never()
+				->mock($socketEvents)->call('triggerOnReadNotBlock')->withArguments($socket1)->never()
+				->mock($socketEvents)->call('triggerOnWriteNotBlock')->withArguments($socket1)->never()
 
 			->if(
 				$this->calling($socketEvents)->__isset = function($event) { return ($event == 'onRead' || $event == 'onWrite'); },
@@ -108,23 +108,23 @@ class poller extends atoum
 			->then
 				->object($poller->waitSockets($timeout))->isIdenticalTo($poller)
 				->mock($socketManager)->call('pollSockets')->withArguments(array($socket1), array($socket1), array(), $timeout)->once()
-				->mock($socketEvents)->call('triggerOnRead')->withArguments($socket1)->never()
-				->mock($socketEvents)->call('triggerOnWrite')->withArguments($socket1)->never()
+				->mock($socketEvents)->call('triggerOnReadNotBlock')->withArguments($socket1)->never()
+				->mock($socketEvents)->call('triggerOnWriteNotBlock')->withArguments($socket1)->never()
 
 			->if(
 				$this->calling($socketManager)->pollSockets = function(& $read) use ($socket1) { $read = array($socket1); $write = array($socket1); },
-				$this->calling($socketEvents)->triggerOnRead->returnThis(),
-				$this->calling($socketEvents)->triggerOnWrite->returnThis()
+				$this->calling($socketEvents)->triggerOnReadNotBlock->returnThis(),
+				$this->calling($socketEvents)->triggerOnWriteNotBlock->returnThis()
 			)
 			->then
 				->object($poller->waitSockets($timeout))->isIdenticalTo($poller)
 				->mock($socketManager)->call('pollSockets')->withArguments(array($socket1), array($socket1), array(), $timeout)->once()
 				->mock($socketEvents)
-					->call('triggerOnRead')
+					->call('triggerOnReadNotBlock')
 						->withArguments($socket1)
 							->once()
 				->mock($socketEvents)
-					->call('triggerOnWrite')
+					->call('triggerOnWriteNotBlock')
 						->withArguments($socket1)
 							->once()
 

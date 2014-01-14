@@ -65,9 +65,9 @@ class client extends atoum
 			->given($client = new testedClass($socket = new \mock\server\socket(uniqid()), $server = new server()))
 			->then
 				->object($client->readMessage($message1 = new server\client\message()))->isIdenticalTo($client)
-				->mock($socket)->call('onRead')->withArguments($server, array($client, 'readSocket'))->once()
+				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($client, 'readSocket'))->once()
 				->object($client->readMessage($message2 = new server\client\message()))->isIdenticalTo($client)
-				->mock($socket)->call('onRead')->withArguments($server, array($client, 'readSocket'))->once()
+				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($client, 'readSocket'))->once()
 		;
 	}
 
@@ -88,10 +88,10 @@ class client extends atoum
 			->then
 				->object($client->readSocket())->isIdenticalTo($client)
 				->mock($message1)->call('readSocket')->withArguments($socket)->once()
-				->mock($socket)->call('onRead')->withArguments($server, array($client, 'readSocket'))->once()
+				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($client, 'readSocket'))->once()
 				->object($client->readSocket())->isIdenticalTo($client)
 				->mock($message1)->call('readSocket')->withArguments($socket)->twice()
-				->mock($socket)->call('onRead')->withArguments($server, array($client, 'readSocket'))->twice()
+				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($client, 'readSocket'))->twice()
 
 			->if(
 				$this->calling($message1)->readSocket = true,
@@ -102,26 +102,26 @@ class client extends atoum
 				->object($client->readSocket())->isIdenticalTo($client)
 				->mock($message1)->call('readSocket')->withArguments($socket)->once()
 				->mock($message2)->call('readSocket')->withArguments($socket)->never()
-				->mock($socket)->call('onRead')->withArguments($server, array($client, 'readSocket'))->once()
+				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($client, 'readSocket'))->once()
 				->object($client->readSocket())->isIdenticalTo($client)
 				->mock($message1)->call('readSocket')->withArguments($socket)->once()
 				->mock($message2)->call('readSocket')->withArguments($socket)->once()
-				->mock($socket)->call('onRead')->withArguments($server, array($client, 'readSocket'))->twice()
+				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($client, 'readSocket'))->twice()
 				->object($client->readSocket())->isIdenticalTo($client)
 				->mock($message1)->call('readSocket')->withArguments($socket)->once()
 				->mock($message2)->call('readSocket')->withArguments($socket)->once()
 				->mock($message3)->call('readSocket')->withArguments($socket)->once()
-				->mock($socket)->call('onRead')->withArguments($server, array($client, 'readSocket'))->thrice()
+				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($client, 'readSocket'))->thrice()
 				->object($client->readSocket())->isIdenticalTo($client)
 				->mock($message1)->call('readSocket')->withArguments($socket)->once()
 				->mock($message2)->call('readSocket')->withArguments($socket)->once()
 				->mock($message3)->call('readSocket')->withArguments($socket)->twice()
-				->mock($socket)->call('onRead')->withArguments($server, array($client, 'readSocket'))->exactly(4)
+				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($client, 'readSocket'))->exactly(4)
 				->object($client->readSocket())->isIdenticalTo($client)
 				->mock($message1)->call('readSocket')->withArguments($socket)->once()
 				->mock($message2)->call('readSocket')->withArguments($socket)->once()
 				->mock($message3)->call('readSocket')->withArguments($socket)->thrice()
-				->mock($socket)->call('onRead')->withArguments($server, array($client, 'readSocket'))->exactly(5)
+				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($client, 'readSocket'))->exactly(5)
 
 			->if(
 				$this->calling($message3)->readSocket = true
@@ -129,10 +129,10 @@ class client extends atoum
 			->then
 				->object($client->readSocket())->isIdenticalTo($client)
 				->mock($message3)->call('readSocket')->withArguments($socket)->once()
-				->mock($socket)->call('onRead')->withArguments($server, array($client, 'readSocket'))->never()
+				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($client, 'readSocket'))->never()
 				->object($client->readSocket())->isIdenticalTo($client)
 				->mock($message3)->call('readSocket')->withArguments($socket)->once()
-				->mock($socket)->call('onRead')->withArguments($server, array($client, 'readSocket'))->never()
+				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($client, 'readSocket'))->never()
 		;
 	}
 
@@ -142,9 +142,9 @@ class client extends atoum
 			->given($client = new testedClass($socket = new \mock\server\socket(uniqid()), $server = new server()))
 			->then
 				->object($client->writeMessage($message1 = new server\client\message()))->isIdenticalTo($client)
-				->mock($socket)->call('onWrite')->withArguments($server, array($client, 'writeSocket'))->once()
+				->mock($socket)->call('onWriteNotBlock')->withArguments($server, array($client, 'writeSocket'))->once()
 				->object($client->writeMessage($message2 = new server\client\message()))->isIdenticalTo($client)
-				->mock($socket)->call('onWrite')->withArguments($server, array($client, 'writeSocket'))->once()
+				->mock($socket)->call('onWriteNotBlock')->withArguments($server, array($client, 'writeSocket'))->once()
 		;
 	}
 

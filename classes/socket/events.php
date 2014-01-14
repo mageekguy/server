@@ -5,8 +5,8 @@ namespace server\socket;
 class events
 {
 	protected $bind = null;
-	protected $onRead = null;
-	protected $onWrite = null;
+	protected $onReadNotBlock = null;
+	protected $onWriteNotBlock = null;
 	protected $onTimeout = null;
 
 	public function __isset($event)
@@ -31,43 +31,43 @@ class events
 		return $this;
 	}
 
-	public function onRead(callable $callable)
+	public function onReadNotBlock(callable $callable)
 	{
-		$this->onRead = $callable;
+		$this->onReadNotBlock = $callable;
 
 		return $this;
 	}
 
-	public function triggerOnRead($socket)
+	public function triggerOnReadNotBlock($socket)
 	{
-		if ($this->onRead !== null)
+		if ($this->onReadNotBlock !== null)
 		{
-			$onRead = $this->onRead;
+			$onReadNotBlock = $this->onReadNotBlock;
 
-			$this->onRead = null;
+			$this->onReadNotBlock = null;
 
-			call_user_func_array($onRead, array($this->bind ?: $socket));
+			call_user_func_array($onReadNotBlock, array($this->bind ?: $socket));
 		}
 
 		return $this;
 	}
 
-	public function onWrite(callable $callable)
+	public function onWriteNotBlock(callable $callable)
 	{
-		$this->onWrite = $callable;
+		$this->onWriteNotBlock = $callable;
 
 		return $this;
 	}
 
-	public function triggerOnWrite($socket)
+	public function triggerOnWriteNotBlock($socket)
 	{
-		if ($this->onWrite !== null)
+		if ($this->onWriteNotBlock !== null)
 		{
-			$onWrite = $this->onWrite;
+			$onWriteNotBlock = $this->onWriteNotBlock;
 
-			$this->onWrite = null;
+			$this->onWriteNotBlock = null;
 
-			call_user_func_array($onWrite, array($this->bind ?: $socket));
+			call_user_func_array($onWriteNotBlock, array($this->bind ?: $socket));
 		}
 
 		return $this;

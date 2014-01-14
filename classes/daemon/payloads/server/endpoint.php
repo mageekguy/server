@@ -43,7 +43,7 @@ class endpoint extends network\peer
 
 		if ($this->connectHandler !== null)
 		{
-			$payload->pollSocket($socket)->onRead($this->connectHandler);
+			$payload->pollSocket($socket)->onReadNotBlock($this->connectHandler);
 		}
 
 		return $socket;

@@ -42,7 +42,7 @@ class client
 
 		if (sizeof($this->readMessages) == 1)
 		{
-			$this->socket->onRead($this->server, array($this, 'readSocket'));
+			$this->socket->onReadNotBlock($this->server, array($this, 'readSocket'));
 		}
 
 		return $this;
@@ -59,7 +59,7 @@ class client
 		{
 			if ($this->currentReadMessage->readSocket($this->socket) === false)
 			{
-				$this->socket->onRead($this->server, array($this, __FUNCTION__));
+				$this->socket->onReadNotBlock($this->server, array($this, __FUNCTION__));
 			}
 			else
 			{
@@ -67,7 +67,7 @@ class client
 
 				if (sizeof($this->readMessages) > 0)
 				{
-					$this->socket->onRead($this->server, array($this, __FUNCTION__));
+					$this->socket->onReadNotBlock($this->server, array($this, __FUNCTION__));
 				}
 			}
 		}
@@ -81,7 +81,7 @@ class client
 
 		if (sizeof($this->writeMessages) == 1)
 		{
-			$this->socket->onWrite($this->server, array($this, 'writeSocket'));
+			$this->socket->onWriteNotBlock($this->server, array($this, 'writeSocket'));
 		}
 
 		return $this;
@@ -98,7 +98,7 @@ class client
 		{
 			if ($this->currentWriteMessage->writeSocket($this->socket) === false)
 			{
-				$this->socket->onWrite($this->server, array($this, __FUNCTION__));
+				$this->socket->onWriteNotBlock($this->server, array($this, __FUNCTION__));
 			}
 			else
 			{
@@ -106,7 +106,7 @@ class client
 
 				if (sizeof($this->writeMessages) > 0)
 				{
-					$this->socket->onWrite($this->server, array($this, __FUNCTION__));
+					$this->socket->onWriteNotBlock($this->server, array($this, __FUNCTION__));
 				}
 			}
 		}

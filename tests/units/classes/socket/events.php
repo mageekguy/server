@@ -24,8 +24,8 @@ class events extends atoum
 		$this
 			->given($events = new testedClass())
 			->then
-				->boolean(isset($events->onRead))->isFalse()
-				->boolean(isset($events->onWrite))->isFalse()
+				->boolean(isset($events->onReadNotBlock))->isFalse()
+				->boolean(isset($events->onWriteNotBlock))->isFalse()
 				->boolean(isset($events->onTimeout))->isFalse()
 				->boolean(isset($events->{uniqid()}))->isFalse()
 		;
@@ -36,31 +36,31 @@ class events extends atoum
 		$this
 			->given($events = new testedClass())
 
-			->when(function() use ($events) { unset($events->onRead); })
+			->when(function() use ($events) { unset($events->onReadNotBlock); })
 			->then
-				->boolean(isset($events->onRead))->isFalse()
-				->boolean(isset($events->onWrite))->isFalse()
+				->boolean(isset($events->onReadNotBlock))->isFalse()
+				->boolean(isset($events->onWriteNotBlock))->isFalse()
 
-			->when(function() use ($events) { unset($events->onWrite); })
+			->when(function() use ($events) { unset($events->onWriteNotBlock); })
 			->then
-				->boolean(isset($events->onRead))->isFalse()
-				->boolean(isset($events->onWrite))->isFalse()
+				->boolean(isset($events->onReadNotBlock))->isFalse()
+				->boolean(isset($events->onWriteNotBlock))->isFalse()
 
-			->if($events->onRead(function() {}))
-			->when(function() use ($events) { unset($events->onRead); })
+			->if($events->onReadNotBlock(function() {}))
+			->when(function() use ($events) { unset($events->onReadNotBlock); })
 			->then
-				->boolean(isset($events->onRead))->isFalse()
-				->boolean(isset($events->onWrite))->isFalse()
+				->boolean(isset($events->onReadNotBlock))->isFalse()
+				->boolean(isset($events->onWriteNotBlock))->isFalse()
 
-			->if($events->onWrite(function() {}))
-			->when(function() use ($events) { unset($events->onWrite); })
+			->if($events->onWriteNotBlock(function() {}))
+			->when(function() use ($events) { unset($events->onWriteNotBlock); })
 			->then
-				->boolean(isset($events->onRead))->isFalse()
-				->boolean(isset($events->onWrite))->isFalse()
+				->boolean(isset($events->onReadNotBlock))->isFalse()
+				->boolean(isset($events->onWriteNotBlock))->isFalse()
 			->when(function() use ($events) { unset($events->{uniqid()}); })
 			->then
-				->boolean(isset($events->onRead))->isFalse()
-				->boolean(isset($events->onWrite))->isFalse()
+				->boolean(isset($events->onReadNotBlock))->isFalse()
+				->boolean(isset($events->onWriteNotBlock))->isFalse()
 		;
 	}
 
@@ -73,73 +73,73 @@ class events extends atoum
 		;
 	}
 
-	public function testOnRead()
+	public function testOnReadNotBlock()
 	{
 		$this
 			->given($events = new testedClass())
 			->then
-				->object($events->onRead($callable = function() {}))->isIdenticalTo($events)
-				->boolean(isset($events->onRead))->isTrue()
+				->object($events->onReadNotBlock($callable = function() {}))->isIdenticalTo($events)
+				->boolean(isset($events->onReadNotBlock))->isTrue()
 		;
 	}
 
-	public function testTriggerOnRead()
+	public function testTriggerOnReadNotBlock()
 	{
 		$this
 			->given($events = new testedClass())
 			->then
-				->object($events->triggerOnRead($socket = uniqid()))->isIdenticalTo($events)
-				->boolean(isset($events->onRead))->isFalse()
+				->object($events->triggerOnReadNotBlock($socket = uniqid()))->isIdenticalTo($events)
+				->boolean(isset($events->onReadNotBlock))->isFalse()
 
-			->if($events->onRead(function($socket) use (& $socketUsed) { $socketUsed = $socket; }))
+			->if($events->onReadNotBlock(function($socket) use (& $socketUsed) { $socketUsed = $socket; }))
 			->then
-				->object($events->triggerOnRead($socket))->isIdenticalTo($events)
+				->object($events->triggerOnReadNotBlock($socket))->isIdenticalTo($events)
 				->string($socketUsed)->isEqualTo($socket)
-				->boolean(isset($events->onRead))->isFalse()
+				->boolean(isset($events->onReadNotBlock))->isFalse()
 
 			->if(
-				$events->onRead(function($socket) use (& $socketUsed) { $socketUsed = $socket; }),
+				$events->onReadNotBlock(function($socket) use (& $socketUsed) { $socketUsed = $socket; }),
 				$events->bind($this)
 			)
 			->then
-				->object($events->triggerOnRead($socket))->isIdenticalTo($events)
+				->object($events->triggerOnReadNotBlock($socket))->isIdenticalTo($events)
 				->object($socketUsed)->isIdenticalTo($this)
-				->boolean(isset($events->onRead))->isFalse()
+				->boolean(isset($events->onReadNotBlock))->isFalse()
 		;
 	}
 
-	public function testOnWrite()
+	public function testOnWriteNotBlock()
 	{
 		$this
 			->given($events = new testedClass())
 			->then
-				->object($events->onWrite($callable = function() {}))->isIdenticalTo($events)
-				->boolean(isset($events->onWrite))->isTrue()
+				->object($events->onWriteNotBlock($callable = function() {}))->isIdenticalTo($events)
+				->boolean(isset($events->onWriteNotBlock))->isTrue()
 		;
 	}
 
-	public function testTriggerOnWrite()
+	public function testTriggerOnWriteNotBlock()
 	{
 		$this
 			->given($events = new testedClass())
 			->then
-				->object($events->triggerOnWrite($socket = uniqid()))->isIdenticalTo($events)
-				->boolean(isset($events->onWrite))->isFalse()
+				->object($events->triggerOnWriteNotBlock($socket = uniqid()))->isIdenticalTo($events)
+				->boolean(isset($events->onWriteNotBlock))->isFalse()
 
-			->if($events->onWrite(function($socket) use (& $socketUsed) { $socketUsed = $socket; }))
+			->if($events->onWriteNotBlock(function($socket) use (& $socketUsed) { $socketUsed = $socket; }))
 			->then
-				->object($events->triggerOnWrite($socket))->isIdenticalTo($events)
+				->object($events->triggerOnWriteNotBlock($socket))->isIdenticalTo($events)
 				->string($socketUsed)->isEqualTo($socket)
-				->boolean(isset($events->onWrite))->isFalse()
+				->boolean(isset($events->onWriteNotBlock))->isFalse()
 
 			->if(
-				$events->onWrite(function($socket) use (& $socketUsed) { $socketUsed = $socket; }),
+				$events->onWriteNotBlock(function($socket) use (& $socketUsed) { $socketUsed = $socket; }),
 				$events->bind($this)
 			)
 			->then
-				->object($events->triggerOnWrite($socket))->isIdenticalTo($events)
+				->object($events->triggerOnWriteNotBlock($socket))->isIdenticalTo($events)
 				->object($socketUsed)->isIdenticalTo($this)
-				->boolean(isset($events->onWrite))->isFalse()
+				->boolean(isset($events->onWriteNotBlock))->isFalse()
 		;
 	}
 
@@ -185,7 +185,7 @@ class events extends atoum
 				->string($socketTimeout)->isEqualTo($socket)
 
 			->if(
-				$events->onWrite(function($socket) use (& $socketUsed) { $socketUsed = $socket; }),
+				$events->onWriteNotBlock(function($socket) use (& $socketUsed) { $socketUsed = $socket; }),
 				$events->bind($this)
 			)
 			->then

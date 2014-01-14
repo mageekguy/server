@@ -93,7 +93,7 @@ class poller implements poller\definition
 			{
 				foreach ($read as $key => $socket)
 				{
-					$this->socketsEvents[$key]->triggerOnRead($socket);
+					$this->socketsEvents[$key]->triggerOnReadNotBlock($socket);
 
 					if (isset($this->socketsEvents[$key]->onWrite) === false)
 					{
@@ -109,7 +109,7 @@ class poller implements poller\definition
 
 				foreach ($write as $key => $socket)
 				{
-					$this->socketsEvents[$key]->triggerOnWrite($socket);
+					$this->socketsEvents[$key]->triggerOnWriteNotBlock($socket);
 
 					if (isset($this->socketsEvents[$key]->onRead) === false)
 					{

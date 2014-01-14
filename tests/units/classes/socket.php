@@ -81,7 +81,7 @@ class socket extends atoum
 		;
 	}
 
-	public function testOnRead()
+	public function testOnReadNotBlock()
 	{
 		$this
 			->given(
@@ -91,42 +91,42 @@ class socket extends atoum
 
 			->if($this->calling($poller)->pollSocket = $events = new \mock\server\socket\events())
 			->then
-				->object($socket->onRead($poller, $handler1 = function() {}))->isIdenticalTo($socket)
+				->object($socket->onReadNotBlock($poller, $handler1 = function() {}))->isIdenticalTo($socket)
 				->mock($poller)->call('pollSocket')->withArguments($resource)->once()
-				->mock($events)->call('onRead')->withArguments($handler1)->once()
-				->object($socket->onRead($poller, $handler2 = function() {}))->isIdenticalTo($socket)
+				->mock($events)->call('onReadNotBlock')->withArguments($handler1)->once()
+				->object($socket->onReadNotBlock($poller, $handler2 = function() {}))->isIdenticalTo($socket)
 				->mock($poller)->call('pollSocket')->withArguments($resource)->once()
 				->mock($events)
-					->call('onRead')->withArguments($handler2)->once()
+					->call('onReadNotBlock')->withArguments($handler2)->once()
 					->call('bind')->withArguments($socket)->once()
 
-			->if($this->calling($events)->__isset = function($event) { return ($event == 'onRead'); })
+			->if($this->calling($events)->__isset = function($event) { return ($event == 'onReadNotBlock'); })
 			->then
-				->object($socket->onRead($poller, $handler3 = function() {}))->isIdenticalTo($socket)
+				->object($socket->onReadNotBlock($poller, $handler3 = function() {}))->isIdenticalTo($socket)
 				->mock($poller)->call('pollSocket')->withArguments($resource)->once()
 				->mock($events)
-					->call('onRead')->withArguments($handler3)->once()
+					->call('onReadNotBlock')->withArguments($handler3)->once()
 					->call('bind')->withArguments($socket)->once()
 
 			->if($this->calling($events)->__isset = false)
 			->then
-				->object($socket->onRead($poller, $handler4 = function() {}))->isIdenticalTo($socket)
+				->object($socket->onReadNotBlock($poller, $handler4 = function() {}))->isIdenticalTo($socket)
 				->mock($poller)->call('pollSocket')->withArguments($resource)->twice()
 				->mock($events)
-					->call('onRead')->withArguments($handler4)->once()
+					->call('onReadNotBlock')->withArguments($handler4)->once()
 					->call('bind')->withArguments($socket)->twice()
 
 			->if($socket->bind($bind = uniqid()))
 			->then
-				->object($socket->onRead($poller, $handler5 = function() {}))->isIdenticalTo($socket)
+				->object($socket->onReadNotBlock($poller, $handler5 = function() {}))->isIdenticalTo($socket)
 				->mock($poller)->call('pollSocket')->withArguments($resource)->thrice()
 				->mock($events)
-					->call('onRead')->withArguments($handler5)->once()
+					->call('onReadNotBlock')->withArguments($handler5)->once()
 					->call('bind')->withArguments($bind)->once()
 		;
 	}
 
-	public function testOnWrite()
+	public function testOnWriteNotBlock()
 	{
 		$this
 			->given(
@@ -136,37 +136,37 @@ class socket extends atoum
 
 			->if($this->calling($poller)->pollSocket = $events = new \mock\server\socket\events())
 			->then
-				->object($socket->onWrite($poller, $handler1 = function() {}))->isIdenticalTo($socket)
+				->object($socket->onWriteNotBlock($poller, $handler1 = function() {}))->isIdenticalTo($socket)
 				->mock($poller)->call('pollSocket')->withArguments($resource)->once()
-				->mock($events)->call('onWrite')->withArguments($handler1)->once()
-				->object($socket->onWrite($poller, $handler2 = function() {}))->isIdenticalTo($socket)
+				->mock($events)->call('onWriteNotBlock')->withArguments($handler1)->once()
+				->object($socket->onWriteNotBlock($poller, $handler2 = function() {}))->isIdenticalTo($socket)
 				->mock($poller)->call('pollSocket')->withArguments($resource)->once()
 				->mock($events)
-					->call('onWrite')->withArguments($handler2)->once()
+					->call('onWriteNotBlock')->withArguments($handler2)->once()
 					->call('bind')->withArguments($socket)->once()
 
-			->if($this->calling($events)->__isset = function($event) { return ($event == 'onWrite'); })
+			->if($this->calling($events)->__isset = function($event) { return ($event == 'onWriteNotBlock'); })
 			->then
-				->object($socket->onWrite($poller, $handler3 = function() {}))->isIdenticalTo($socket)
+				->object($socket->onWriteNotBlock($poller, $handler3 = function() {}))->isIdenticalTo($socket)
 				->mock($poller)->call('pollSocket')->withArguments($resource)->once()
 				->mock($events)
-					->call('onWrite')->withArguments($handler3)->once()
+					->call('onWriteNotBlock')->withArguments($handler3)->once()
 					->call('bind')->withArguments($socket)->once()
 
 			->if($this->calling($events)->__isset = false)
 			->then
-				->object($socket->onWrite($poller, $handler4 = function() {}))->isIdenticalTo($socket)
+				->object($socket->onWriteNotBlock($poller, $handler4 = function() {}))->isIdenticalTo($socket)
 				->mock($poller)->call('pollSocket')->withArguments($resource)->twice()
 				->mock($events)
-					->call('onWrite')->withArguments($handler4)->once()
+					->call('onWriteNotBlock')->withArguments($handler4)->once()
 					->call('bind')->withArguments($socket)->twice()
 
 			->if($socket->bind($bind = uniqid()))
 			->then
-				->object($socket->onWrite($poller, $handler5 = function() {}))->isIdenticalTo($socket)
+				->object($socket->onWriteNotBlock($poller, $handler5 = function() {}))->isIdenticalTo($socket)
 				->mock($poller)->call('pollSocket')->withArguments($resource)->thrice()
 				->mock($events)
-					->call('onWrite')->withArguments($handler5)->once()
+					->call('onWriteNotBlock')->withArguments($handler5)->once()
 					->call('bind')->withArguments($bind)->once()
 		;
 	}
