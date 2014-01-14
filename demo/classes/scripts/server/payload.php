@@ -52,7 +52,7 @@ class payload extends server
 
 	public function acceptClient($clientsSocket)
 	{
-		$this->pollSocket($clientsSocket)->onRead(array($this, __FUNCTION__));
+		$this->pollSocket($clientsSocket)->onReadNotBlock(array($this, __FUNCTION__));
 
 		$client = new client(new socket($this->acceptSocket($clientsSocket), $this), $this);
 

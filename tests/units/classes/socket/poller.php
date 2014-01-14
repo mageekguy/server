@@ -102,7 +102,7 @@ class poller extends atoum
 				->mock($socketEvents)->call('triggerOnWriteNotBlock')->withArguments($socket1)->never()
 
 			->if(
-				$this->calling($socketEvents)->__isset = function($event) { return ($event == 'onRead' || $event == 'onWrite'); },
+				$this->calling($socketEvents)->__isset = function($event) { return ($event == 'onReadNotBlock' || $event == 'onWriteNotBlock'); },
 				$this->calling($socketManager)->pollSockets = function(& $read, & $write) { $read = $write = array(); }
 			)
 			->then

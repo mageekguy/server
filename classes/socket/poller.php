@@ -66,12 +66,12 @@ class poller implements poller\definition
 			}
 			else
 			{
-				if (isset($socketEvents->onRead) === true)
+				if (isset($socketEvents->onReadNotBlock) === true)
 				{
 					$read[$key] = $socketResource;
 				}
 
-				if (isset($socketEvents->onWrite) === true)
+				if (isset($socketEvents->onWriteNotBlock) === true)
 				{
 					$write[$key] = $socketResource;
 				}
@@ -95,7 +95,7 @@ class poller implements poller\definition
 				{
 					$this->socketsEvents[$key]->triggerOnReadNotBlock($socket);
 
-					if (isset($this->socketsEvents[$key]->onWrite) === false)
+					if (isset($this->socketsEvents[$key]->onWriteNotBlock) === false)
 					{
 						unset($this->socketsEvents[$key]);
 						unset($this->socketsResource[$key]);
@@ -111,7 +111,7 @@ class poller implements poller\definition
 				{
 					$this->socketsEvents[$key]->triggerOnWriteNotBlock($socket);
 
-					if (isset($this->socketsEvents[$key]->onRead) === false)
+					if (isset($this->socketsEvents[$key]->onReadNotBlock) === false)
 					{
 						unset($this->socketsEvents[$key]);
 						unset($this->socketsResource[$key]);
