@@ -9,8 +9,9 @@ use
 
 class client
 {
-	protected $socket = null;
 	protected $server = null;
+	protected $socket = null;
+	protected $onError = null;
 	protected $readMessages = null;
 	protected $currentReadMessage = null;
 	protected $writeMessages = null;
@@ -50,29 +51,50 @@ class client
 
 	public function readSocket()
 	{
-		if ($this->currentReadMessage === null)
+		try
 		{
-			$this->currentReadMessage = $this->readMessages->shiftMessage();
-		}
-
-		if ($this->currentReadMessage !== null)
-		{
-			if ($this->currentReadMessage->readSocket($this->socket) === false)
+			if ($this->socket->read(2048, PHP_NORMAL_READ) === '')
 			{
-				$this->socket->onReadNotBlock($this->server, array($this, __FUNCTION__));
+				throw new client\exception('Socket is closed');
 			}
-			else
-			{
-				$this->currentReadMessage = null;
 
-				if (sizeof($this->readMessages) > 0)
+			if ($this->currentReadMessage === null)
+			{
+				$this->currentReadMessage = $this->readMessages->shiftMessage();
+			}
+
+			if ($this->currentReadMessage !== null)
+			{
+				if ($this->currentReadMessage->readSocket($this->socket) === false)
 				{
 					$this->socket->onReadNotBlock($this->server, array($this, __FUNCTION__));
 				}
+				else
+				{
+					$this->currentReadMessage = null;
+
+					if (sizeof($this->readMessages) > 0)
+					{
+						$this->socket->onReadNotBlock($this->server, array($this, __FUNCTION__));
+					}
+				}
+			}
+
+			return $this;
+		}
+		catch (\exception $exception)
+		{
+			if ($this->onError === null)
+			{
+				throw new client\exception($exception->getMessage(), $exception->getCode());
+			}
+			else
+			{
+				call_user_func_array($this->onError, array($this, $exception));
+
+				return $this;
 			}
 		}
-
-		return $this;
 	}
 
 	public function writeMessage(client\message $message)
@@ -96,17 +118,33 @@ class client
 
 		if ($this->currentWriteMessage !== null)
 		{
-			if ($this->currentWriteMessage->writeSocket($this->socket) === false)
+			try
 			{
-				$this->socket->onWriteNotBlock($this->server, array($this, __FUNCTION__));
-			}
-			else
-			{
-				$this->currentWriteMessage = null;
-
-				if (sizeof($this->writeMessages) > 0)
+				if ($this->currentWriteMessage->writeSocket($this->socket) === false)
 				{
 					$this->socket->onWriteNotBlock($this->server, array($this, __FUNCTION__));
+				}
+				else
+				{
+					$this->currentWriteMessage = null;
+
+					if (sizeof($this->writeMessages) > 0)
+					{
+						$this->socket->onWriteNotBlock($this->server, array($this, __FUNCTION__));
+					}
+				}
+			}
+			catch (\exception $exception)
+			{
+				if ($this->onError === null)
+				{
+					throw new client\exception($exception->getMessage(), $exception->getCode());
+				}
+				else
+				{
+					call_user_func_array($this->onError, array($this, $exception));
+
+					return $this;
 				}
 			}
 		}
@@ -124,6 +162,13 @@ class client
 	public function onTimeout(server\socket\timer $timer, callable $handler)
 	{
 		$this->socket->onTimeout($this->server, $timer, $handler);
+
+		return $this;
+	}
+
+	public function onError(callable $handler)
+	{
+		$this->onError = $handler;
 
 		return $this;
 	}

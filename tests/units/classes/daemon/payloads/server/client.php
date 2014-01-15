@@ -59,6 +59,15 @@ class client extends atoum
 		;
 	}
 
+	public function testOnError()
+	{
+		$this
+			->given($client = new testedClass($socket = new \mock\server\socket(uniqid()), $server = new server()))
+			->then
+				->object($client->onError(function() {}))->isIdenticalTo($client)
+		;
+	}
+
 	public function testReadMessage()
 	{
 		$this
@@ -77,7 +86,7 @@ class client extends atoum
 			->given($client = new testedClass($socket = new \mock\server\socket(uniqid()), $server = new server()))
 			->then
 				->object($client->readSocket())->isIdenticalTo($client)
-				->mock($socket)->call('read')->never()
+				->mock($socket)->call('read')->withArguments(2048, PHP_NORMAL_READ)->once()
 
 			->if(
 				$client->readMessage($message1 = new \mock\server\daemon\payloads\server\client\message()),
@@ -133,6 +142,24 @@ class client extends atoum
 				->object($client->readSocket())->isIdenticalTo($client)
 				->mock($message3)->call('readSocket')->withArguments($socket)->once()
 				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($client, 'readSocket'))->never()
+
+			->if($this->calling($socket)->read = '')
+			->then
+				->exception(function() use ($client) { $client->readSocket(); })
+					->isInstanceOf('server\daemon\payloads\server\client\exception')
+					->hasMessage('Socket is closed')
+
+			->if($this->calling($socket)->read->throw = $exception = new \exception(uniqid(), rand(1, PHP_INT_MAX)))
+			->then
+				->exception(function() use ($client) { $client->readSocket(); })
+					->isInstanceOf('server\daemon\payloads\server\client\exception')
+					->hasMessage($exception->getMessage())
+					->hasCode($exception->getCode())
+
+			->if($client->onError(function() use (& $onError) { $onError = true; }))
+			->then
+				->object($client->readSocket())->isIdenticalTo($client)
+				->boolean($onError)->isTrue()
 		;
 	}
 
@@ -154,7 +181,7 @@ class client extends atoum
 			->given($client = new testedClass($socket = new \mock\server\socket(uniqid()), $server = new server()))
 			->then
 				->object($client->writeSocket())->isIdenticalTo($client)
-				->mock($socket)->call('read')->never()
+				->mock($socket)->call('write')->never()
 
 			->if(
 				$client->writeMessage($message1 = new \mock\server\daemon\payloads\server\client\message()),
@@ -190,14 +217,27 @@ class client extends atoum
 				->mock($message2)->call('writeSocket')->withArguments($socket)->once()
 				->mock($message3)->call('writeSocket')->withArguments($socket)->twice()
 
-			->if(
-				$this->calling($message3)->writeSocket = true
-			)
+			->if($this->calling($message3)->writeSocket = true)
 			->then
 				->object($client->writeSocket())->isIdenticalTo($client)
 				->mock($message3)->call('writeSocket')->withArguments($socket)->once()
 				->object($client->writeSocket())->isIdenticalTo($client)
 				->mock($message3)->call('writeSocket')->withArguments($socket)->once()
+
+			->if(
+				$client->writeMessage($message1 = new \mock\server\daemon\payloads\server\client\message()),
+				$this->calling($message1)->writeSocket->throw = $exception = new \exception(uniqid(), rand(1, PHP_INT_MAX))
+			)
+			->then
+				->exception(function() use ($client) { $client->writeSocket(); })
+					->isInstanceOf('server\daemon\payloads\server\client\exception')
+					->hasMessage($exception->getMessage())
+					->hasCode($exception->getCode())
+
+			->if($client->onError(function() use (& $onError) { $onError = true; }))
+			->then
+				->object($client->writeSocket())->isIdenticalTo($client)
+				->boolean($onError)->isTrue()
 		;
 	}
 

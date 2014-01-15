@@ -35,7 +35,7 @@ class socket extends atoum
 			)
 			->then
 				->object($socket->getSocketManager())->isIdenticalTo($socketManager)
-				->string($socket->getBuffer())->isEmpty()
+				->string($socket->getData())->isEmpty()
 		;
 	}
 
@@ -54,16 +54,6 @@ class socket extends atoum
 			->if($this->calling($socketManager)->getSocketPeer->throw = $exception = new \exception())
 			->then
 				->castToString($socket)->isEmpty()
-		;
-	}
-
-	public function testBufferize()
-	{
-		$this
-			->given($socket = $this->getSocketInstance($resource = uniqid()))
-			->then
-				->object($socket->bufferize($data = uniqid()))->isIdenticalTo($socket)
-				->string($socket->getBuffer())->isEqualTo($data)
 		;
 	}
 
@@ -246,19 +236,17 @@ class socket extends atoum
 				$socket->setSocketManager($socketManager = new \mock\server\socket\manager())
 			)
 
-			->if($this->calling($socketManager)->readSocket = $data = uniqid())
+			->if($this->calling($socketManager)->readSocket = $data1 = uniqid())
 			->then
-				->string($socket->read($length = rand(1, PHP_INT_MAX), $mode = uniqid()))->isEqualTo($data)
+				->string($socket->read($length = rand(1, PHP_INT_MAX), $mode = uniqid()))->isEqualTo($data1)
+				->string($socket->getData())->isEqualTo($data1)
 				->mock($socketManager)->call('readSocket')->withArguments($resource, $length, $mode)->once()
 
-			->if(
-				$this->calling($socketManager)->readSocket = $data = uniqid(),
-				$socket->bufferize($bufferizedData = uniqid())
-			)
+			->if($this->calling($socketManager)->readSocket = $data2 = uniqid())
 			->then
-				->string($socket->read($length = rand(1, PHP_INT_MAX), $mode = uniqid()))->isEqualTo($bufferizedData . $data)
+				->string($socket->read($length = rand(1, PHP_INT_MAX), $mode = uniqid()))->isEqualTo($data2)
+				->string($socket->getData())->isEqualTo($data1 . $data2)
 				->mock($socketManager)->call('readSocket')->withArguments($resource, $length, $mode)->once()
-				->string($socket->getBuffer())->isEmpty()
 
 			->if($this->calling($socketManager)->readSocket->throw = $exception = new \exception(uniqid(), rand(1, PHP_INT_MAX)))
 			->then
@@ -266,6 +254,58 @@ class socket extends atoum
 					->isInstanceOf('server\socket\exception')
 					->hasCode($exception->getCode())
 					->hasMessage($exception->getMessage())
+		;
+	}
+
+	public function testGetData()
+	{
+		$this
+			->given(
+				$socket = $this->getSocketInstance($resource = uniqid()),
+				$socket->setSocketManager($socketManager = new \mock\server\socket\manager())
+			)
+			->then
+				->string($socket->getData())->isEmpty()
+
+			->if(
+				$this->calling($socketManager)->readSocket = $data1 = uniqid(),
+				$socket->read(rand(1, PHP_INT_MAX), uniqid())
+			)
+			->then
+				->string($socket->getData())->isEqualTo($data1)
+
+			->if(
+				$this->calling($socketManager)->readSocket = $data2 = uniqid(),
+				$socket->read(rand(1, PHP_INT_MAX), uniqid())
+			)
+			->then
+				->string($socket->getData())->isEqualTo($data1 . $data2)
+		;
+	}
+
+	public function testPeekData()
+	{
+		$this
+			->given(
+				$socket = $this->getSocketInstance($resource = uniqid()),
+				$socket->setSocketManager($socketManager = new \mock\server\socket\manager())
+			)
+			->then
+				->variable($socket->peekData('/^.+END/'))->isNull()
+
+			->if(
+				$this->calling($socketManager)->readSocket = $data1 = uniqid(),
+				$socket->read(rand(1, PHP_INT_MAX), uniqid())
+			)
+			->then
+				->variable($socket->peekData('/^.+END/'))->isNull()
+
+			->if(
+				$this->calling($socketManager)->readSocket = 'END',
+				$socket->read(rand(1, PHP_INT_MAX), uniqid())
+			)
+			->then
+				->array($socket->peekData('/^.+END/'))->isEqualTo(array($data1 . 'END'))
 		;
 	}
 

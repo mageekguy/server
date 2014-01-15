@@ -46,38 +46,21 @@ class message
 	{
 		try
 		{
-			if ($this->data !== null)
-			{
-				$this->data = null;
-			}
+			$this->data = null;
 
-			$data = $this->readData($socket);
+			$data = $this->getData($socket);
 
-			if ($data === '')
-			{
-				throw new message\exception('Socket is closed');
-			}
-
-			if ($this->dataAreRead($data) === true)
+			if ($data !== null)
 			{
 				$this($data);
-			}
 
-			if ($this->data === null)
-			{
-				$socket->bufferize($data);
-
-				return false;
-			}
-			else
-			{
 				if ($this->onRead !== null)
 				{
 					call_user_func_array($this->onRead, array($this));
 				}
-
-				return true;
 			}
+
+			return ($this->data !== null);
 		}
 		catch (\exception $exception)
 		{
@@ -133,27 +116,15 @@ class message
 		}
 	}
 
-	public function onError(callable $handler)
+	protected function getData(server\socket $socket)
 	{
-		$this->onError = $handler;
+		$data = $socket->peekData('/^.*' . "\r\n" . '/');
 
-		return $this;
-	}
+		if ($data !== null)
+		{
+			$data = $data[0];
+		}
 
-	public function onSocketClosed(callable $handler)
-	{
-		$this->onSocketClosed = $handler;
-
-		return $this;
-	}
-
-	protected function dataAreRead($data)
-	{
-		return (substr($data, -2) === "\r\n");
-	}
-
-	protected function readData(server\socket $socket)
-	{
-		return $socket->read(2048, PHP_NORMAL_READ);
+		return $data;
 	}
 }

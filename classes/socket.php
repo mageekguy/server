@@ -7,7 +7,7 @@ class socket
 	protected $socketManager = null;
 	protected $events = null;
 	protected $bind = null;
-	protected $buffer = '';
+	protected $data = '';
 
 	private $resource = null;
 
@@ -33,18 +33,6 @@ class socket
 		{
 			return '';
 		}
-	}
-
-	public function getBuffer()
-	{
-		return $this->buffer;
-	}
-
-	public function bufferize($data)
-	{
-		$this->buffer = $data;
-
-		return $this;
 	}
 
 	public function setSocketManager(socket\manager\definition $manager = null)
@@ -108,9 +96,7 @@ class socket
 	{
 		try
 		{
-			$data = $this->buffer . $this->socketManager->readSocket($this->resource, $length, $mode);
-
-			$this->buffer = '';
+			$this->data .= ($data = $this->socketManager->readSocket($this->resource, $length, $mode));
 
 			return $data;
 		}
@@ -118,6 +104,32 @@ class socket
 		{
 			throw $this->getExceptionFrom($exception);
 		}
+	}
+
+	public function getData()
+	{
+		return $this->data;
+	}
+
+	public function peekData($regex)
+	{
+		if (preg_match($regex, $this->data, $data) === 0)
+		{
+			$data = null;
+		}
+		else
+		{
+			$this->truncateData(strlen($data[0]));
+		}
+
+		return $data;
+	}
+
+	public function truncateData($bytes)
+	{
+		$this->data = substr($this->data, $bytes);
+
+		return $this;
 	}
 
 	public function write($data)
