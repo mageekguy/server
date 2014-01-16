@@ -89,7 +89,7 @@ class client
 			}
 			else
 			{
-				call_user_func_array($this->onError, array($this, $exception));
+				call_user_func_array($this->onError, array($exception));
 
 				return $this;
 			}
