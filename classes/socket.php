@@ -49,21 +49,21 @@ class socket
 
 	public function onReadNotBlock(socket\poller\definition $poller, callable $callable)
 	{
-		$this->setEvents($poller)->events->onReadNotBlock($callable);
+		$this->pollWith($poller)->onReadNotBlock($callable);
 
 		return $this;
 	}
 
 	public function onWriteNotBlock(socket\poller\definition $poller, callable $callable)
 	{
-		$this->setEvents($poller)->events->onWriteNotBlock($callable);
+		$this->pollWith($poller)->onWriteNotBlock($callable);
 
 		return $this;
 	}
 
 	public function onTimeout(socket\poller\definition $poller, socket\timer $timer, callable $callable)
 	{
-		$this->setEvents($poller)->events->onTimeout($timer, $callable);
+		$this->pollWith($poller)->onTimeout($timer, $callable);
 
 		return $this;
 	}
@@ -172,14 +172,9 @@ class socket
 		return ($this->socketManager->isSocket($this->resource) === false);
 	}
 
-	protected function setEvents(socket\poller\definition $poller)
+	protected function pollWith(socket\poller\definition $poller)
 	{
-		if ($this->events === null || (isset($this->events->onReadNotBlock) === false && isset($this->events->onWriteNotBlock) === false))
-		{
-			$this->events = $poller->pollSocket($this->resource)->bind($this->bind ?: $this);
-		}
-
-		return $this;
+		return $poller->pollSocket($this->resource)->bind($this->bind ?: $this);
 	}
 
 	protected function getException($message)

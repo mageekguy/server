@@ -84,46 +84,47 @@ class poller extends atoum
 				$poller
 					->setSocketManager($socketManager = new mock\socket\manager())
 					->setSocketEventsFactory($socketEventsFactory = new mock\socket\events\factory()),
-				$this->function->is_resource = true
+				$this->calling($socketManager)->isSocket = true
 			)
 			->then
 				->object($poller->waitSockets($timeout = rand(1, PHP_INT_MAX)))->isIdenticalTo($poller)
+				->mock($socketManager)->call('pollSockets')->never()
 
 			->given(
-				$this->calling($socketEventsFactory)->build = $socketEvents = new \mock\server\socket\events(),
-				$this->calling($socketEvents)->__isset = false
+				$this->calling($socketEventsFactory)->build = $socketEvents = new \mock\server\socket\events()
 			)
 
 			->if($poller->pollSocket($socket1 = uniqid()))
 			->then
 				->object($poller->waitSockets($timeout))->isIdenticalTo($poller)
-				->mock($socketManager)->call('select')->withArguments(array($socket1), array(), array(), $timeout)->never()
+				->mock($socketManager)->call('pollSockets')->withArguments(array($socket1), array(), array(), $timeout)->never()
 				->mock($socketEvents)->call('triggerOnReadNotBlock')->withArguments($socket1)->never()
 				->mock($socketEvents)->call('triggerOnWriteNotBlock')->withArguments($socket1)->never()
 
 			->if(
-				$this->calling($socketEvents)->__isset = function($event) { return ($event == 'onReadNotBlock' || $event == 'onWriteNotBlock'); },
+				$poller->pollSocket($socket1 = uniqid())
+					->onReadNotBlock(function() {})
+					->onWriteNotBlock(function() {}),
 				$this->calling($socketManager)->pollSockets = function(& $read, & $write) { $read = $write = array(); }
 			)
 			->then
 				->object($poller->waitSockets($timeout))->isIdenticalTo($poller)
-				->mock($socketManager)->call('pollSockets')->withArguments(array($socket1), array($socket1), array(), $timeout)->once()
+				->mock($socketManager)->call('pollSockets')->withArguments(array(1 => $socket1), array(1 => $socket1), array(), $timeout)->once()
 				->mock($socketEvents)->call('triggerOnReadNotBlock')->withArguments($socket1)->never()
 				->mock($socketEvents)->call('triggerOnWriteNotBlock')->withArguments($socket1)->never()
 
 			->if(
-				$this->calling($socketManager)->pollSockets = function(& $read) use ($socket1) { $read = array($socket1); $write = array($socket1); },
+				$this->calling($socketManager)->pollSockets = function(& $read) use ($socket1) { $read = array(1 => $socket1); $write = array(1 => $socket1); },
 				$this->calling($socketEvents)->triggerOnReadNotBlock->returnThis(),
 				$this->calling($socketEvents)->triggerOnWriteNotBlock->returnThis()
 			)
 			->then
 				->object($poller->waitSockets($timeout))->isIdenticalTo($poller)
-				->mock($socketManager)->call('pollSockets')->withArguments(array($socket1), array($socket1), array(), $timeout)->once()
+				->mock($socketManager)->call('pollSockets')->withArguments(array(1 => $socket1), array(1 => $socket1), array(), $timeout)->once()
 				->mock($socketEvents)
 					->call('triggerOnReadNotBlock')
 						->withArguments($socket1)
 							->once()
-				->mock($socketEvents)
 					->call('triggerOnWriteNotBlock')
 						->withArguments($socket1)
 							->once()

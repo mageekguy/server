@@ -43,8 +43,17 @@ class poller implements poller\definition
 
 	public function pollSocket($socket)
 	{
-		$this->socketsResource[] = $socket;
-		$this->socketsEvents[] = $socketEvents = $this->socketEventsFactory->build();
+		$socketKey = array_search($socket, $this->socketsResource, true);
+
+		if ($socketKey !== false)
+		{
+			$socketEvents = $this->socketsEvents[$socketKey];
+		}
+		else
+		{
+			$this->socketsResource[] = $socket;
+			$this->socketsEvents[] = $socketEvents = $this->socketEventsFactory->build();
+		}
 
 		return $socketEvents;
 	}
@@ -59,12 +68,7 @@ class poller implements poller\definition
 		{
 			$socketResource = $this->socketsResource[$key];
 
-			if (is_resource($socketResource) === false)
-			{
-				unset($this->socketsEvents[$key]);
-				unset($this->socketsResource[$key]);
-			}
-			else
+			if ($this->forgetSocket($key) === false)
 			{
 				if (isset($socketEvents->onReadNotBlock) === true)
 				{
@@ -93,29 +97,25 @@ class poller implements poller\definition
 			{
 				foreach ($read as $key => $socket)
 				{
-					$this->socketsEvents[$key]->triggerOnReadNotBlock($socket);
+					$events = $this->socketsEvents[$key];
 
-					if (isset($this->socketsEvents[$key]->onWriteNotBlock) === false)
-					{
-						unset($this->socketsEvents[$key]);
-						unset($this->socketsResource[$key]);
-					}
+					$this->forgetSocket($key);
+
+					$events->triggerOnReadNotBlock($socket);
 				}
 			}
 
 			if ($write)
 			{
-				$write = array_filter($write, function($socket) { return (is_resource($socket) === true); });
+				$write = array_filter($write, function($socket) { return ($this->socketManager->isSocket($socket) === true); });
 
 				foreach ($write as $key => $socket)
 				{
-					$this->socketsEvents[$key]->triggerOnWriteNotBlock($socket);
+					$events = $this->socketsEvents[$key];
 
-					if (isset($this->socketsEvents[$key]->onReadNotBlock) === false)
-					{
-						unset($this->socketsEvents[$key]);
-						unset($this->socketsResource[$key]);
-					}
+					$this->forgetSocket($key);
+
+					$events->triggerOnWriteNotBlock($socket);
 				}
 			}
 
@@ -131,30 +131,20 @@ class poller implements poller\definition
 
 		foreach (new \arrayIterator($this->socketsEvents) as $key => $socketEvents)
 		{
-			$socketResource = $this->socketsResource[$key];
-
-			if (is_resource($socketResource) === false)
+			if ($this->forgetSocket($key) === false)
 			{
-				unset($this->socketsResource[$key]);
-				unset($this->socketsEvents[$key]);
-			}
-			else if (isset($socketEvents->onTimeout) === true)
-			{
-				$timeout = $socketEvents->triggerOnTimeout($socketResource);
+				$timeout = $socketEvents->triggerOnTimeout($this->socketsResource[$key]);
 
-				switch (true)
+				if ($timeout !== null)
 				{
-					case $timeout <= 0:
-						unset($this->socketsResource[$key]);
-						unset($this->socketsEvents[$key]);
-						break;
-
-					case $minSocketTimeout === null:
-						$minSocketTimeout = $timeout;
-						break;
-
-					default:
-						$minSocketTimeout = min($minSocketTimeout, $timeout);
+					if ($timeout <= 0)
+					{
+						$this->forgetSocket($key, true);
+					}
+					else
+					{
+						$minSocketTimeout = min($minSocketTimeout ?: $timeout, $timeout);
+					}
 				}
 			}
 		}
@@ -170,5 +160,16 @@ class poller implements poller\definition
 	protected function getExceptionFrom(\exception $exception)
 	{
 		return new poller\exception($exception->getMessage(), $exception->getCode());
+	}
+
+	private function forgetSocket($key, $force = false)
+	{
+		if ($force === true || $this->socketManager->isSocket($this->socketsResource[$key]) === false || (isset($this->socketsEvents[$key]->onTimeout) === false && isset($this->socketsEvents[$key]->onWriteNotBlock) === false && isset($this->socketsEvents[$key]->onReadNotBlock) === false))
+		{
+			unset($this->socketsResource[$key]);
+			unset($this->socketsEvents[$key]);
+		}
+
+		return (isset($this->socketsResource[$key]) === false);
 	}
 }
