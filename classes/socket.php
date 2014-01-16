@@ -113,7 +113,7 @@ class socket
 
 	public function peekData($regex)
 	{
-		if (preg_match($regex, $this->data, $data) === 0)
+		if (preg_match($regex, $this->getData(), $data) === 0)
 		{
 			$data = null;
 		}
