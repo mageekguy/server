@@ -12,6 +12,7 @@ class client
 	protected $server = null;
 	protected $socket = null;
 	protected $onError = null;
+	protected $onPush = array();
 	protected $readMessages = null;
 	protected $currentReadMessage = null;
 	protected $writeMessages = null;
@@ -58,26 +59,24 @@ class client
 				throw new client\exception('Socket is closed');
 			}
 
+			foreach ($this->onPush as $pushMessage)
+			{
+				$pushMessage->readSocket($this->socket);
+			}
+
 			if ($this->currentReadMessage === null)
 			{
 				$this->currentReadMessage = $this->readMessages->shiftMessage();
 			}
 
-			if ($this->currentReadMessage !== null)
+			if ($this->currentReadMessage !== null && $this->currentReadMessage->readSocket($this->socket) === true)
 			{
-				if ($this->currentReadMessage->readSocket($this->socket) === false)
-				{
-					$this->socket->onReadNotBlock($this->server, array($this, __FUNCTION__));
-				}
-				else
-				{
-					$this->currentReadMessage = null;
+				$this->currentReadMessage = null;
+			}
 
-					if (sizeof($this->readMessages) > 0)
-					{
-						$this->socket->onReadNotBlock($this->server, array($this, __FUNCTION__));
-					}
-				}
+			if (sizeof($this->onPush) > 0 || $this->currentReadMessage !== null || sizeof($this->readMessages) > 0)
+			{
+				$this->socket->onReadNotBlock($this->server, array($this, __FUNCTION__));
 			}
 
 			return $this;
@@ -155,6 +154,18 @@ class client
 	public function closeSocket()
 	{
 		$this->socket->close();
+
+		return $this;
+	}
+
+	public function onPush(client\message $message)
+	{
+		$this->onPush[] = $message;
+
+		if (sizeof($this->onPush) === 1)
+		{
+			$this->socket->onReadNotBlock($this->server, array($this, 'readSocket'));
+		}
 
 		return $this;
 	}

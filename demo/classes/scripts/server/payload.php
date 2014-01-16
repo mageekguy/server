@@ -57,14 +57,8 @@ class payload extends server
 		$client = new client(new socket($this->acceptSocket($clientsSocket), $this), $this);
 
 		$client
-			->onTimeout(new timer(60), function($client) {
-					$this->writeInfo('Client ' . $client . ' timeout!');
-
-					$client->closeSocket();
-				}
-			)
 			->writeMessage(new message('Hello, type something to get its rot13 version, type :quit to close the connection.' . "\r\n"))
-			->readMessage((new message())->onRead(function($message) use ($client) {
+			->onPush((new message())->onRead(function($message) use ($client) {
 						$this->writeInfo('Receive \'' . trim($message) . '\' from peer ' . $client);
 
 						if (trim($message) == ':quit') $client->writeMessage(
@@ -76,18 +70,21 @@ class payload extends server
 									}
 								)
 						);
-
 						else $client->writeMessage(
 							$message('Rot13: ' . str_rot13($message))
 								->onWrite(function($message) use ($client) {
 										$this->writeInfo('Sent \'' . trim($message) . '\' to peer ' . $client);
-
-										$client->readMessage($message);
 									}
 								)
 						);
 					}
 				)
+			)
+			->onTimeout(new timer(60), function($client) {
+					$this->writeInfo('Client ' . $client . ' timeout!');
+
+					$client->closeSocket();
+				}
 			)
 		;
 
