@@ -11,6 +11,7 @@ interface definition
 	public function getLastSocketErrorCode();
 	public function getLastSocketErrorMessage();
 	public function getSocketPeer($socket);
+	public function createSocket($domain, $type, $protocol);
 	public function bindSocketTo(network\ip $ip, network\port $port);
 	public function acceptSocket($serverSocket);
 	public function readSocket($socket, $length, $mode);

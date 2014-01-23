@@ -36,6 +36,36 @@ class manager extends atoum
 		;
 	}
 
+	public function testCreateSocket()
+	{
+		$this
+			->given($manager = new mockedTestedClass())
+
+			->if(
+				$this->function->socket_create = false,
+				$this->function->socket_last_error = $errorCode = rand(1,PHP_INT_MAX),
+				$this->function->socket_strerror = $errorMessage = uniqid(),
+				$this->function->socket_clear_error->doesNothing()
+			)
+			->then
+				->exception(function() use ($manager, & $domain, & $type, & $protocol) { $manager->createSocket($domain = uniqid(), $type = uniqid(), $protocol = uniqid()); })
+					->isInstanceOf('server\socket\manager\exception')
+					->hasCode($errorCode)
+					->hasMessage($errorMessage)
+				->function('socket_create')->wasCalledWithArguments($domain, $type, $protocol)->once()
+				->function('socket_close')->wasCalled()->never()
+				->function('socket_close')->wasCalled()->never()
+				->function('socket_last_error')->wasCalledWithArguments(null)->once()
+				->integer($manager->getLastSocketErrorCode())->isEqualTo($errorCode)
+				->string($manager->getLastSocketErrorMessage())->isEqualTo($errorMessage)
+
+			->if($this->function->socket_create = $resource = uniqid())
+			->then
+				->string($manager->createSocket($domain = uniqid(), $type = uniqid(), $protocol = uniqid()))->isEqualTo($resource)
+				->function('socket_create')->wasCalledWithArguments($domain, $type, $protocol)->once()
+		;
+	}
+
 	public function testBindSocketTo()
 	{
 		$this

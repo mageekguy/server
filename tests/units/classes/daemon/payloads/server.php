@@ -216,6 +216,21 @@ class server extends atoum
 		;
 	}
 
+	public function testCreateSocket()
+	{
+		$this
+			->given(
+				$server = new testedClass(uniqid()),
+				$server->setSocketManager($socketManager = new \mock\server\socket\manager())
+			)
+
+			->if($this->calling($socketManager)->createSocket = $resource = uniqid())
+			->then
+				->string($server->createSocket($domain = uniqid(), $type = uniqid(), $protocol = uniqid()))->isEqualTo($resource)
+				->mock($socketManager)->call('createSocket')->withArguments($domain, $type, $protocol)->once()
+		;
+	}
+
 	public function testBindSocketTo()
 	{
 		$this

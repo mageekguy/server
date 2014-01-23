@@ -48,33 +48,40 @@ class manager implements manager\definition
 		return ($port === null ? new fs\path($address) : new network\peer(new network\ip($address), new network\port($port)));
 	}
 
-	public function bindSocketTo(network\ip $ip, network\port $port)
+	public function createSocket($domain, $type, $protocol)
 	{
 		$this->resetLastError();
 
-		$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+		$resource = socket_create($domain, $type, $protocol);
 
-		if ($socket === false)
+		if ($resource === false)
 		{
 			throw $this->getException();
 		}
+
+		return $resource;
+	}
+
+	public function bindSocketTo(network\ip $ip, network\port $port)
+	{
+		$resource = $this->resetLastError()->createSocket(AF_INET, SOCK_STREAM, SOL_TCP);
 
 		try
 		{
 			switch (true)
 			{
-				case socket_set_option($socket, SOL_SOCKET, SO_REUSEADDR, 1) === false:
-				case socket_bind($socket, (string) $ip, (string) $port) === false:
-				case socket_listen($socket) === false:
-					throw $this->getException($socket);
+				case socket_set_option($resource, SOL_SOCKET, SO_REUSEADDR, 1) === false:
+				case socket_bind($resource, (string) $ip, (string) $port) === false:
+				case socket_listen($resource) === false:
+					throw $this->getException($resource);
 
 				default:
-					return $socket;
+					return $resource;
 			}
 		}
 		catch (\exception $exception)
 		{
-			$this->closeSocket($socket);
+			$this->closeSocket($resource);
 
 			throw $exception;
 		}

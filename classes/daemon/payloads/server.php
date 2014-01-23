@@ -113,6 +113,11 @@ class server extends daemon\payload implements socket\manager\definition, socket
 		return $this;
 	}
 
+	public function createSocket($domain, $type, $protocol)
+	{
+		return $this->socketManager->createSocket($domain, $type, $protocol);
+	}
+
 	public function bindSocketTo(network\ip $ip, network\port $port)
 	{
 		return $this->addSocket($this->socketManager->bindSocketTo($ip, $port), new network\peer($ip, $port));
