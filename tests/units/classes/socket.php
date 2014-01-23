@@ -380,6 +380,21 @@ class socket extends atoum
 		;
 	}
 
+	public function testConnectTo()
+	{
+		$this
+			->given(
+				$socket = $this->getSocketInstance($resource = uniqid()),
+				$socket->setSocketManager($socketManager = new \mock\server\socket\manager())
+			)
+
+			->if($this->calling($socketManager)->connectSocketTo->returnThis())
+			->then
+				->object($socket->connectTo($ip = new network\ip('127.0.0.1'), $port = new network\port(8080)))->isIdenticalTo($socket)
+				->mock($socketManager)->call('connectSocketTo')->withArguments($resource, $ip, $port)->once()
+		;
+	}
+
 	protected function getSocketInstance($resource = null)
 	{
 		$socketManager = new \mock\server\socket\manager();

@@ -52,39 +52,51 @@ class manager implements manager\definition
 	{
 		$this->resetLastError();
 
-		$resource = socket_create($domain, $type, $protocol);
+		$socket = socket_create($domain, $type, $protocol);
 
-		if ($resource === false)
+		if ($socket === false)
 		{
 			throw $this->getException();
 		}
 
-		return $resource;
+		return $socket;
 	}
 
 	public function bindSocketTo(network\ip $ip, network\port $port)
 	{
-		$resource = $this->resetLastError()->createSocket(AF_INET, SOCK_STREAM, SOL_TCP);
+		$socket = $this->resetLastError()->createSocket(AF_INET, SOCK_STREAM, SOL_TCP);
 
 		try
 		{
 			switch (true)
 			{
-				case socket_set_option($resource, SOL_SOCKET, SO_REUSEADDR, 1) === false:
-				case socket_bind($resource, (string) $ip, (string) $port) === false:
-				case socket_listen($resource) === false:
-					throw $this->getException($resource);
+				case socket_set_option($socket, SOL_SOCKET, SO_REUSEADDR, 1) === false:
+				case socket_bind($socket, (string) $ip, (string) $port) === false:
+				case socket_listen($socket) === false:
+					throw $this->getException($socket);
 
 				default:
-					return $resource;
+					return $socket;
 			}
 		}
 		catch (\exception $exception)
 		{
-			$this->closeSocket($resource);
+			$this->closeSocket($socket);
 
 			throw $exception;
 		}
+	}
+
+	public function connectSocketTo($socket, network\ip $ip, network\port $port)
+	{
+		$this->resetLastError();
+
+		if (socket_connect($socket, $ip, $port) === false)
+		{
+			throw $this->getException($socket);
+		}
+
+		return $this;
 	}
 
 	public function acceptSocket($serverSocket)

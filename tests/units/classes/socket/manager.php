@@ -499,4 +499,32 @@ class manager extends atoum
 					->function('get_resource_type')->never()
 		;
 	}
+
+	public function testConnectSocketTo()
+	{
+		$this
+			->given($manager = new mockedTestedClass())
+
+			->if(
+				$this->function->socket_connect = false,
+				$this->function->socket_last_error = $errorCode = rand(1,PHP_INT_MAX),
+				$this->function->socket_strerror = $errorMessage = uniqid(),
+				$this->function->socket_clear_error->doesNothing()
+			)
+			->then
+				->exception(function() use ($manager, & $resource, & $ip, & $port) { $manager->connectSocketTo($resource, $ip = new network\ip('127.0.0.1'), $port = new network\port(8080)); })
+					->isInstanceOf('server\socket\manager\exception')
+					->hasCode($errorCode)
+					->hasMessage($errorMessage)
+				->function('socket_connect')->wasCalledWithArguments($resource, $ip, $port)->once()
+				->function('socket_last_error')->wasCalledWithArguments($resource)->once()
+				->integer($manager->getLastSocketErrorCode())->isEqualTo($errorCode)
+				->string($manager->getLastSocketErrorMessage())->isEqualTo($errorMessage)
+
+			->if($this->function->socket_connect = true)
+			->then
+				->object($manager->connectSocketTo($resource, $ip, $port))->isIdenticalTo($manager)
+				->function('socket_connect')->wasCalledWithArguments($resource, $ip, $port)->once()
+		;
+	}
 }

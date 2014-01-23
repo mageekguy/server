@@ -92,6 +92,20 @@ class socket
 		}
 	}
 
+	public function connectTo(network\ip $ip, network\port $port)
+	{
+		try
+		{
+			$this->socketManager->connectSocketTo($this->resource, $ip, $port);
+
+			return $this;
+		}
+		catch (\exception $exception)
+		{
+			throw $this->getExceptionFrom($exception);
+		}
+	}
+
 	public function read($length, $mode)
 	{
 		try
