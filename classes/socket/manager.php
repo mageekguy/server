@@ -91,7 +91,7 @@ class manager implements manager\definition
 	{
 		$this->resetLastError();
 
-		if (socket_connect($socket, $ip, $port) === false)
+		if (socket_connect($socket, (string) $ip, (string) $port) === false)
 		{
 			throw $this->getException($socket);
 		}

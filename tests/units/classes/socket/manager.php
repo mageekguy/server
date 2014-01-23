@@ -516,7 +516,7 @@ class manager extends atoum
 					->isInstanceOf('server\socket\manager\exception')
 					->hasCode($errorCode)
 					->hasMessage($errorMessage)
-				->function('socket_connect')->wasCalledWithArguments($resource, $ip, $port)->once()
+				->function('socket_connect')->wasCalledWithArguments($resource, (string) $ip, (string) $port)->once()
 				->function('socket_last_error')->wasCalledWithArguments($resource)->once()
 				->integer($manager->getLastSocketErrorCode())->isEqualTo($errorCode)
 				->string($manager->getLastSocketErrorMessage())->isEqualTo($errorMessage)
@@ -524,7 +524,7 @@ class manager extends atoum
 			->if($this->function->socket_connect = true)
 			->then
 				->object($manager->connectSocketTo($resource, $ip, $port))->isIdenticalTo($manager)
-				->function('socket_connect')->wasCalledWithArguments($resource, $ip, $port)->once()
+				->function('socket_connect')->wasCalledWithArguments($resource, (string) $ip, (string) $port)->once()
 		;
 	}
 }
