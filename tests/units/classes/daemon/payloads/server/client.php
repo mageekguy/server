@@ -168,9 +168,11 @@ class client extends atoum
 
 			->if($this->calling($socket)->read = '')
 			->then
-				->exception(function() { $this->testedInstance->readSocket(); })
-					->isInstanceOf('server\daemon\payloads\server\client\exception')
-					->hasMessage('Socket is closed')
+				->object($this->testedInstance->readSocket())->isTestedInstance
+				->mock($message1)->call('readSocket')->withArguments($socket)->once()
+				->mock($message2)->call('readSocket')->withArguments($socket)->once()
+				->mock($message3)->call('readSocket')->withArguments($socket)->once()
+				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($this->testedInstance, 'readSocket'))->once()
 
 			->if($this->calling($socket)->read->throw = $exception = new \exception(uniqid(), rand(1, PHP_INT_MAX)))
 			->then

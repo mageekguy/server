@@ -77,7 +77,7 @@ class message extends atoum
 		$this
 			->given(
 				$message = new testedClass(),
-				$socket = new \mock\server\socket(uniqid())
+				$socket = $this->getMockedSocket()
 			)
 
 			->if($this->calling($socket)->getData = '')
@@ -100,7 +100,7 @@ class message extends atoum
 			->given(
 				$message = new testedClass(),
 				$message->onRead(function() use (& $messageRead) { $messageRead = true; }),
-				$socket = new \mock\server\socket(uniqid()),
+				$socket = $this->getMockedSocket(),
 				$this->calling($socket)->getData = uniqid() . "\r\n"
 			)
 			->then
@@ -123,7 +123,7 @@ class message extends atoum
 		$this
 			->given(
 				$message = new testedClass(),
-				$socket = new \mock\server\socket(uniqid())
+				$socket = $this->getMockedSocket()
 			)
 			->then
 				->boolean($message->writeSocket($socket))->isTrue()
@@ -170,5 +170,12 @@ class message extends atoum
 				->boolean($message->writeSocket($socket))->isTrue()
 				->boolean($messageWrited)->isTrue()
 		;
+	}
+
+	protected function getMockedSocket()
+	{
+		$this->mockGenerator->orphanize('__construct');
+
+		return new \mock\server\socket(uniqid());
 	}
 }

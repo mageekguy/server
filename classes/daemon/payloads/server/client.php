@@ -54,10 +54,7 @@ class client
 	{
 		try
 		{
-			if ($this->socket->read(2048, PHP_NORMAL_READ) === '')
-			{
-				throw new client\exception('Socket is closed');
-			}
+			$this->socket->read(2048, PHP_NORMAL_READ);
 
 			foreach ($this->onPush as $pushMessage)
 			{
