@@ -8,15 +8,18 @@ use
 
 class message
 {
-	private $data = null;
+	private $serializer = null;
+
 	private $buffer = '';
+
 	private $onRead = null;
 	private $onWrite = null;
 	private $onError = null;
-	private $onSocketClosed = null;
 
 	public function __construct($data = null)
 	{
+		$this->setSerializer();
+
 		if ($data !== null)
 		{
 			$this($data);
@@ -25,14 +28,46 @@ class message
 
 	public function __toString()
 	{
-		return (string) $this->data;
+		return $this->serializer->serializeMessage();
+	}
+
+	public function __set($property, $value)
+	{
+		$this->serializer->{$property} = $value;
+
+		return $this;
+	}
+
+	public function __get($property)
+	{
+		return $this->serializer->{$property};
+	}
+
+	public function __isset($property)
+	{
+		return isset($this->serializer->{$property});
 	}
 
 	public function __invoke($data)
 	{
-		$this->data = $data;
+		if ($this->serializer->unserializeMessage($data) === false)
+		{
+			throw new message\exception('Data \'' . $data . '\' are invalid');
+		}
 
 		return $this;
+	}
+
+	public function setSerializer(message\serializer $serializer = null)
+	{
+		$this->serializer = $serializer ?: new message\serializers\eol();
+
+		return $this;
+	}
+
+	public function getSerializer()
+	{
+		return $this->serializer;
 	}
 
 	public function onRead(callable $handler)
@@ -46,13 +81,11 @@ class message
 	{
 		try
 		{
-			$this->data = null;
+			$unserializeOk = ($this->serializer->unserializeMessage($socket->getData()) === true);
 
-			$data = $this->getData($socket);
-
-			if ($data !== null)
+			if ($unserializeOk === true)
 			{
-				$this($data);
+				$socket->truncateData(strlen((string) $this));
 
 				if ($this->onRead !== null)
 				{
@@ -60,7 +93,7 @@ class message
 				}
 			}
 
-			return ($this->data !== null);
+			return $unserializeOk;
 		}
 		catch (\exception $exception)
 		{
@@ -86,9 +119,9 @@ class message
 
 	public function writeSocket(server\socket $socket)
 	{
-		if ($this->buffer === '' && $this->data !== null)
+		if ($this->buffer === '')
 		{
-			$this->buffer = $this->data;
+			$this->buffer = (string) $this;
 		}
 
 		if ($this->buffer !== '')
@@ -114,17 +147,5 @@ class message
 
 			return true;
 		}
-	}
-
-	protected function getData(server\socket $socket)
-	{
-		$data = $socket->peekData('/^.*' . "\r\n" . '/');
-
-		if ($data !== null)
-		{
-			$data = $data[0];
-		}
-
-		return $data;
 	}
 }

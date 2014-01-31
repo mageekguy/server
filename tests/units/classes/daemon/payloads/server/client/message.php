@@ -23,25 +23,43 @@ class message extends atoum
 	public function test__construct()
 	{
 		$this
-			->if($message = new testedClass())
+			->if($this->newTestedInstance())
 			->then
-				->castToString($message)->isEmpty()
+				->castToString($this->testedInstance)->isEmpty()
+				->object($this->testedInstance->getSerializer())->isEqualTo(new testedClass\serializers\eol())
 
-			->if($message = new testedClass($data = uniqid()))
+			->if($this->newTestedInstance($data = uniqid() . "\r\n"))
 			->then
-				->castToString($message)->isEqualTo($data)
+				->castToString($this->testedInstance)->isEqualTo($data)
 		;
 	}
 
 	public function test__invoke()
 	{
 		$this
-			->if($message = new testedClass())
+			->if($message = $this->newTestedInstance())
 			->then
-				->object($message(''))->isIdenticalTo($message)
+				->object($message('' . "\r\n"))->isIdenticalTo($message)
 				->castToString($message)->isEmpty()
-				->object($message($data = uniqid()))->isIdenticalTo($message)
+				->object($message($data = uniqid() . "\r\n"))->isIdenticalTo($message)
 				->castToString($message)->isEqualTo($data)
+				->exception(function() use ($message, & $dataWithoutEol) { $message($dataWithoutEol = uniqid()); })
+					->isInstanceOf('server\daemon\payloads\server\client\message\exception')
+					->hasMessage('Data \'' . $dataWithoutEol . '\' are invalid')
+		;
+	}
+
+	public function testSetSerializer()
+	{
+		$this
+			->if($this->newTestedInstance())
+			->then
+				->object($this->testedInstance->setSerializer($serializer = new \mock\server\daemon\payloads\server\client\message\serializer()))->isTestedInstance
+				->object($this->testedInstance->getSerializer())->isIdenticalTo($serializer)
+				->object($this->testedInstance->setSerializer())->isTestedInstance
+				->object($this->testedInstance->getSerializer())
+					->isNotIdenticalTo($serializer)
+					->isEqualTo(new testedClass\serializers\eol())
 		;
 	}
 
@@ -62,25 +80,28 @@ class message extends atoum
 				$socket = new \mock\server\socket(uniqid())
 			)
 
-			->if($this->calling($socket)->peekData = null)
+			->if($this->calling($socket)->getData = '')
 			->then
 				->boolean($message->readSocket($socket))->isFalse()
 				->mock($socket)
-					->call('peekData')->withArguments('/^.*' . "\r\n/")->once()
+					->call('getData')->once()
 				->castToString($message)->isEmpty()
 
-			->if($this->calling($socket)->peekData = array($data1 = uniqid()))
+			->if($this->calling($socket)->getData = $data1 = uniqid() . "\r\n")
 			->then
 				->boolean($message->readSocket($socket))->isTrue()
 				->mock($socket)
-					->call('peekData')->withArguments('/^.*' . "\r\n/")->once()
+					->call('getData')->once()
+					->before(
+						$this->mock($socket)->call('truncateData')->withArguments(strlen($data1))->once()
+					)
 				->castToString($message)->isEqualTo($data1)
 
 			->given(
 				$message = new testedClass(),
 				$message->onRead(function() use (& $messageRead) { $messageRead = true; }),
 				$socket = new \mock\server\socket(uniqid()),
-				$this->calling($socket)->peekData = array(uniqid() . "\r\n")
+				$this->calling($socket)->getData = uniqid() . "\r\n"
 			)
 			->then
 				->boolean($message->readSocket($socket))->isTrue()
@@ -108,40 +129,40 @@ class message extends atoum
 				->boolean($message->writeSocket($socket))->isTrue()
 				->mock($socket)->call('write')->never()
 
-			->if($message = new testedClass(''))
+			->if($message = new testedClass('' . "\r\n"))
 			->then
 				->boolean($message->writeSocket($socket))->isTrue()
 				->mock($socket)->call('write')->never()
 
 			->if(
-				$message = new testedClass($data = 'ABCDEFGH'),
+				$message = new testedClass($data = 'ABCDEFGH' . "\r\n"),
 				$this->calling($socket)->write = 1
 			)
 			->then
 				->boolean($message->writeSocket($socket))->isFalse()
 				->mock($socket)->call('write')->withArguments($data)->once()
 				->boolean($message->writeSocket($socket))->isFalse()
-				->mock($socket)->call('write')->withArguments('BCDEFGH')->once()
+				->mock($socket)->call('write')->withArguments('BCDEFGH' . "\r\n")->once()
 
 			->if(
 				$this->calling($socket)->write = 5
 			)
 			->then
 				->boolean($message->writeSocket($socket))->isFalse()
-				->mock($socket)->call('write')->withArguments('CDEFGH')->once()
+				->mock($socket)->call('write')->withArguments('CDEFGH' . "\r\n")->once()
 
 			->if(
-				$this->calling($socket)->write = 1
+				$this->calling($socket)->write = 3
 			)
 			->then
 				->boolean($message->writeSocket($socket))->isTrue()
-				->mock($socket)->call('write')->withArguments('H')->once()
+				->mock($socket)->call('write')->withArguments('H' . "\r\n")->once()
 				->boolean($message->writeSocket($socket))->isFalse()
 				->mock($socket)->call('write')->withArguments($data)->once()
-				->mock($socket)->call('write')->withArguments('ABCDEFGH')->once()
+				->mock($socket)->call('write')->withArguments('ABCDEFGH' . "\r\n")->once()
 
 			->if(
-				$message = new testedClass($data = 'ABCDEFGH'),
+				$message = new testedClass($data = 'ABCDEFGH' . "\r\n"),
 				$message->onWrite(function() use (& $messageWrited) { $messageWrited = true; }),
 				$this->calling($socket)->write = function($data) { return strlen($data); }
 			)
