@@ -434,7 +434,7 @@ abstract class daemon extends script\configurable
 				set_error_handler(array($this, 'errorHandler'));
 				set_exception_handler(array($this, 'exceptionHandler'));
 
-				$this->controller[SIGTERM] = array($this->controller, 'stopDaemon');
+				$this->controller[SIGTERM] = $this->controller[SIGINT] = array($this->controller, 'stopDaemon');
 
 				$this->payload->setInfoLogger($this->infoLogger);
 				$this->payload->setErrorLogger($this->errorLogger);

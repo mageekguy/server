@@ -72,16 +72,6 @@ class server extends daemon\payload implements socket\manager\definition, socket
 		return $this->socketPoller->waitSockets();
 	}
 
-	public function getLastSocketErrorCode()
-	{
-		return $this->socketManager->getLastSocketErrorCode();
-	}
-
-	public function getLastSocketErrorMessage()
-	{
-		return $this->socketManager->getLastSocketErrorMessage();
-	}
-
 	public function getSocketPeer($socket)
 	{
 		return $this->socketManager->getSocketPeer($socket);

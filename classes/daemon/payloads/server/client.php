@@ -54,26 +54,33 @@ class client
 	{
 		try
 		{
-			$this->socket->read(2048, PHP_NORMAL_READ);
+			$data = @$this->socket->read(2048, PHP_BINARY_READ);
 
-			foreach ($this->onPush as $pushMessage)
+			if ($data == '')
 			{
-				$pushMessage->readSocket($this->socket);
+				$this->closeSocket();
 			}
-
-			if ($this->currentReadMessage === null)
+			else
 			{
-				$this->currentReadMessage = $this->readMessages->shiftMessage();
-			}
+				foreach ($this->onPush as $pushMessage)
+				{
+					$pushMessage->readSocket($this->socket);
+				}
 
-			if ($this->currentReadMessage !== null && $this->currentReadMessage->readSocket($this->socket) === true)
-			{
-				$this->currentReadMessage = null;
-			}
+				if ($this->currentReadMessage === null)
+				{
+					$this->currentReadMessage = $this->readMessages->shiftMessage();
+				}
 
-			if (sizeof($this->onPush) > 0 || $this->currentReadMessage !== null || sizeof($this->readMessages) > 0)
-			{
-				$this->socket->onReadNotBlock($this->server, array($this, __FUNCTION__));
+				if ($this->currentReadMessage !== null && $this->currentReadMessage->readSocket($this->socket) === true)
+				{
+					$this->currentReadMessage = null;
+				}
+
+				if (sizeof($this->onPush) > 0 || $this->currentReadMessage !== null || sizeof($this->readMessages) > 0)
+				{
+					$this->socket->onReadNotBlock($this->server, array($this, __FUNCTION__));
+				}
 			}
 
 			return $this;

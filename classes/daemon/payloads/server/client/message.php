@@ -50,7 +50,7 @@ class message
 
 	public function __invoke($data)
 	{
-		if ($this->serializer->unserializeMessage($data) === false)
+		if ($this->serializer->unserializeMessage($data) === 0)
 		{
 			throw new message\exception('Data \'' . $data . '\' are invalid');
 		}
@@ -81,11 +81,15 @@ class message
 	{
 		try
 		{
-			$unserializeOk = ($this->serializer->unserializeMessage($socket->getData()) === true);
+			$messageRead = false;
 
-			if ($unserializeOk === true)
+			$messageLength = $this->serializer->unserializeMessage($socket->getData());
+
+			if ($messageLength > 0)
 			{
-				$socket->truncateData(strlen((string) $this));
+				$messageRead = true;
+
+				$socket->truncateData($messageLength);
 
 				if ($this->onRead !== null)
 				{
@@ -93,7 +97,7 @@ class message
 				}
 			}
 
-			return $unserializeOk;
+			return $messageRead;
 		}
 		catch (\exception $exception)
 		{
@@ -121,7 +125,7 @@ class message
 	{
 		if ($this->buffer === '')
 		{
-			$this->buffer = (string) $this;
+			$this->buffer = $this->serializer->serializeMessage();
 		}
 
 		if ($this->buffer !== '')

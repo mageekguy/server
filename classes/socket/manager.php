@@ -11,23 +11,8 @@ class manager implements manager\definition
 {
 	const resourceType = 'Socket';
 
-	protected $lastErrorCode = null;
-	protected $lastErrorMessage = null;
-
-	public function getLastSocketErrorCode()
-	{
-		return $this->lastErrorCode;
-	}
-
-	public function getLastSocketErrorMessage()
-	{
-		return $this->lastErrorMessage;
-	}
-
 	public function getSocketPeer($socket)
 	{
-		$this->resetLastError();
-
 		if (@socket_getpeername($socket, $address, $port) === false)
 		{
 			throw $this->getException($socket);
@@ -38,8 +23,6 @@ class manager implements manager\definition
 
 	public function getSocketName($socket)
 	{
-		$this->resetLastError();
-
 		if (@socket_getsockname($socket, $address, $port) === false)
 		{
 			throw $this->getException($socket);
@@ -50,8 +33,6 @@ class manager implements manager\definition
 
 	public function createSocket($domain, $type, $protocol)
 	{
-		$this->resetLastError();
-
 		$socket = socket_create($domain, $type, $protocol);
 
 		if ($socket === false)
@@ -64,7 +45,7 @@ class manager implements manager\definition
 
 	public function bindSocketTo(network\ip $ip, network\port $port)
 	{
-		$socket = $this->resetLastError()->createSocket(AF_INET, SOCK_STREAM, SOL_TCP);
+		$socket = $this->createSocket(AF_INET, SOCK_STREAM, SOL_TCP);
 
 		try
 		{
@@ -89,8 +70,6 @@ class manager implements manager\definition
 
 	public function connectSocketTo($socket, network\ip $ip, network\port $port)
 	{
-		$this->resetLastError();
-
 		if (socket_connect($socket, (string) $ip, (string) $port) === false)
 		{
 			throw $this->getException($socket);
@@ -101,8 +80,6 @@ class manager implements manager\definition
 
 	public function acceptSocket($serverSocket)
 	{
-		$this->resetLastError();
-
 		$socket = socket_accept($serverSocket);
 
 		if ($socket === false)
@@ -115,8 +92,6 @@ class manager implements manager\definition
 
 	public function readSocket($socket, $length, $mode)
 	{
-		$this->resetLastError();
-
 		$data = socket_read($socket, $length, $mode);
 
 		if ($data === false)
@@ -129,8 +104,6 @@ class manager implements manager\definition
 
 	public function writeSocket($socket, $data)
 	{
-		$this->resetLastError();
-
 		$data = (string) $data;
 
 		$bytesWritten = socket_write($socket, $data, strlen($data));
@@ -145,8 +118,6 @@ class manager implements manager\definition
 
 	public function pollSockets(array & $read, array & $write, array & $except, $timeout)
 	{
-		$this->resetLastError();
-
 		if (@socket_select($read, $write, $except, $timeout) === false)
 		{
 			throw $this->getException();
@@ -157,20 +128,11 @@ class manager implements manager\definition
 
 	public function closeSocket($socket)
 	{
-		if (is_resource($socket) === true)
+		if ($this->isSocket($socket) === true)
 		{
-			$this->resetLastError();
-
-			switch (true)
-			{
-				case @socket_set_block($socket) === false:
-				case @socket_set_option($socket, SOL_SOCKET, SO_LINGER, array('l_onoff' => 1, 'l_linger' => 0)) === false:
-					throw $this->getException($socket);
-			}
-
+			@socket_set_block($socket);
+			@socket_set_option($socket, SOL_SOCKET, SO_LINGER, array('l_onoff' => 1, 'l_linger' => 0));
 			@socket_shutdown($socket, 2);
-
-			socket_clear_error();
 
 			if (@socket_close($socket) === false)
 			{
@@ -183,31 +145,16 @@ class manager implements manager\definition
 
 	public function isSocket($var)
 	{
-		return (is_resource($var) === true && get_resource_type($var) == self::resourceType);
+		return (is_resource($var) === true && @get_resource_type($var) === self::resourceType);
 	}
 
 	private function getException($socket = null)
 	{
-		if ($socket === null)
-		{
-			$this->lastErrorCode = socket_last_error();
-		}
-		else
-		{
-			$this->lastErrorCode = socket_last_error($socket);
-		}
-
-		$this->lastErrorMessage = socket_strerror($this->lastErrorCode);
+		$lastErrorCode = ($socket === null ? socket_last_error() : socket_last_error($socket));
+		$lastErrorMessage = socket_strerror($lastErrorCode);
 
 		socket_clear_error();
 
-		return new manager\exception($this->lastErrorMessage, $this->lastErrorCode);
-	}
-
-	protected function resetLastError()
-	{
-		$this->lastErrorCode = $this->lastErrorMessage = null;
-
-		return $this;
+		return new manager\exception($lastErrorMessage, $lastErrorCode);
 	}
 }

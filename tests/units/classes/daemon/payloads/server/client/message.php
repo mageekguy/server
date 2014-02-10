@@ -39,10 +39,10 @@ class message extends atoum
 		$this
 			->if($message = $this->newTestedInstance())
 			->then
-				->object($message('' . "\r\n"))->isIdenticalTo($message)
-				->castToString($message)->isEmpty()
+				->object($message($data = '' . "\r\n"))->isIdenticalTo($message)
+				->string($message->data)->isEqualTo($data)
 				->object($message($data = uniqid() . "\r\n"))->isIdenticalTo($message)
-				->castToString($message)->isEqualTo($data)
+				->string($message->data)->isEqualTo($data)
 				->exception(function() use ($message, & $dataWithoutEol) { $message($dataWithoutEol = uniqid()); })
 					->isInstanceOf('server\daemon\payloads\server\client\message\exception')
 					->hasMessage('Data \'' . $dataWithoutEol . '\' are invalid')
@@ -129,10 +129,13 @@ class message extends atoum
 				->boolean($message->writeSocket($socket))->isTrue()
 				->mock($socket)->call('write')->never()
 
-			->if($message = new testedClass('' . "\r\n"))
+			->if(
+				$message = new testedClass($data = '' . "\r\n"),
+				$this->calling($socket)->write = strlen($data)
+			)
 			->then
 				->boolean($message->writeSocket($socket))->isTrue()
-				->mock($socket)->call('write')->never()
+				->mock($socket)->call('write')->withArguments($data)->once()
 
 			->if(
 				$message = new testedClass($data = 'ABCDEFGH' . "\r\n"),

@@ -38,13 +38,21 @@ class logger
 			$decorator->prepareToDecorateLog();
 		}
 
-		$lines = preg_split("/\r?\n/", $message);
+		$lines = array();
 
-		foreach ($lines as & $line)
+		foreach (preg_split("/\r?\n/", $message) as $line)
 		{
-			foreach ($this->decorators as $decorator)
+			if ($line != '')
 			{
-				$line = $decorator->decorateLog($line);
+				foreach ($this->decorators as $decorator)
+				{
+					$line = $decorator->decorateLog($line);
+				}
+
+				if ($line != '')
+				{
+					$lines[] = $line;
+				}
 			}
 		}
 

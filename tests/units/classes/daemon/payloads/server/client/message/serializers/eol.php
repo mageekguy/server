@@ -15,12 +15,18 @@ class eol extends atoum
 		$this
 			->given($this->newTestedInstance())
 			->then
-				->if($this->testedInstance->data = $data = uniqid())
-				->then
-					->string($this->testedInstance->data)->isEqualTo($data)
+
+				->exception(function() use (& $data) { $this->testedInstance->data = $data = uniqid(); })
+					->isInstanceOf('server\daemon\payloads\server\client\message\serializer\exception')
+					->hasMessage('Unable to set data with \'' . $data . '\'')
+
 				->exception(function() use (& $unknownProperty) { $this->testedInstance->{$unknownProperty = uniqid()} = uniqid(); })
 					->isInstanceOf('server\daemon\payloads\server\client\message\serializer\exception')
 					->hasMessage('Unable to set value of property \'' . $unknownProperty . '\' because it does not exist')
+
+				->if($this->testedInstance->data = $data = uniqid() . "\r\n")
+				->then
+					->string($this->testedInstance->data)->isEqualTo($data)
 		;
 	}
 
@@ -44,9 +50,9 @@ class eol extends atoum
 			->then
 				->string($this->testedInstance->serializeMessage())->isEmpty()
 
-			->if($this->testedInstance->data = $data = uniqid())
+			->if($this->testedInstance->data = $data = uniqid() . "\r\n")
 			->then
-				->string($this->testedInstance->serializeMessage())->isEqualTo($data . "\r\n")
+				->string($this->testedInstance->serializeMessage())->isEqualTo($data)
 		;
 	}
 
@@ -55,10 +61,10 @@ class eol extends atoum
 		$this
 			->given($this->newTestedInstance())
 			->then
-				->boolean($this->testedInstance->unserializeMessage($data = uniqid()))->isFalse
+				->integer($this->testedInstance->unserializeMessage($data = uniqid()))->isZero()
 				->string($this->testedInstance->data)->isEmpty()
-				->boolean($this->testedInstance->unserializeMessage($data . "\r\n"))->isTrue
-				->string($this->testedInstance->data)->isEqualTo($data)
+				->integer($this->testedInstance->unserializeMessage(($message = $data . "\r\n") . uniqid()))->isEqualTo(strlen($message))
+				->string($this->testedInstance->data)->isEqualTo($message)
 		;
 	}
 }

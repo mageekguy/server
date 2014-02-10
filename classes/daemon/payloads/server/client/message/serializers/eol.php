@@ -18,7 +18,10 @@ class eol implements serializer
 		switch (strtolower($property))
 		{
 			case 'data':
-				$this->data = (string) $value;
+				if ($this->unserializeMessage($value) === 0)
+				{
+					throw new serializer\exception('Unable to set data with \'' . $value . '\'');
+				}
 				break;
 
 			default:
@@ -40,18 +43,20 @@ class eol implements serializer
 
 	public function serializeMessage()
 	{
-		return ($this->data === '' ? '' : $this->data . "\r\n");
+		return ($this->data === '' ? '' : rtrim($this->data) . "\r\n");
 	}
 
 	public function unserializeMessage($data)
 	{
-		$unserializeOk = (preg_match('/^(.*)' . self::eol . '/', $data, $matches) === 1);
+		$this->data = '';
 
-		if ($unserializeOk === true)
+		$eolFound = (preg_match('/^.*' . self::eol . '/', (string) $data, $matches) === 1);
+
+		if ($eolFound === true)
 		{
-			$this->data = $matches[1];
+			$this->data = $matches[0];
 		}
 
-		return $unserializeOk;
+		return strlen($this->data);
 	}
 }

@@ -26,16 +26,6 @@ class manager extends atoum
 		$this->testedClass->implements('server\socket\manager\definition');
 	}
 
-	public function test__construct()
-	{
-		$this
-			->given($manager = new testedClass())
-			->then
-				->variable($manager->getLastSocketErrorCode())->isNull()
-				->variable($manager->getLastSocketErrorMessage())->isNull()
-		;
-	}
-
 	public function testCreateSocket()
 	{
 		$this
@@ -56,8 +46,6 @@ class manager extends atoum
 				->function('socket_close')->wasCalled()->never()
 				->function('socket_close')->wasCalled()->never()
 				->function('socket_last_error')->wasCalledWithArguments(null)->once()
-				->integer($manager->getLastSocketErrorCode())->isEqualTo($errorCode)
-				->string($manager->getLastSocketErrorMessage())->isEqualTo($errorMessage)
 
 			->if($this->function->socket_create = $resource = uniqid())
 			->then
@@ -84,8 +72,6 @@ class manager extends atoum
 					->hasMessage($errorMessage)
 				->function('socket_close')->wasCalled()->never()
 				->function('socket_last_error')->wasCalledWithArguments(null)->once()
-				->integer($manager->getLastSocketErrorCode())->isEqualTo($errorCode)
-				->string($manager->getLastSocketErrorMessage())->isEqualTo($errorMessage)
 
 			->if(
 				$this->function->socket_create = $socket = uniqid(),
@@ -99,8 +85,6 @@ class manager extends atoum
 					->isInstanceOf('server\socket\manager\exception')
 				->mock($manager)->call('closeSocket')->withArguments($socket)->once()
 				->function('socket_last_error')->wasCalledWithArguments($socket)->once()
-				->integer($manager->getLastSocketErrorCode())->isEqualTo($errorCode)
-				->string($manager->getLastSocketErrorMessage())->isEqualTo($errorMessage)
 
 			->if(
 				$this->function->socket_set_option = true,
@@ -115,8 +99,6 @@ class manager extends atoum
 					->hasMessage($errorMessage)
 				->mock($manager)->call('closeSocket')->withArguments($socket)->once()
 				->function('socket_last_error')->wasCalledWithArguments($socket)->once()
-				->integer($manager->getLastSocketErrorCode())->isEqualTo($errorCode)
-				->string($manager->getLastSocketErrorMessage())->isEqualTo($errorMessage)
 
 			->if(
 				$this->function->socket_bind = true,
@@ -131,15 +113,11 @@ class manager extends atoum
 					->hasMessage($errorMessage)
 				->mock($manager)->call('closeSocket')->withArguments($socket)->once()
 				->function('socket_last_error')->wasCalledWithArguments($socket)->once()
-				->integer($manager->getLastSocketErrorCode())->isEqualTo($errorCode)
-				->string($manager->getLastSocketErrorMessage())->isEqualTo($errorMessage)
 
 			->if($this->function->socket_listen = true)
 			->then
 				->string($manager->bindSocketTo($ip = new network\ip('127.0.0.1'), $port = new network\port(8080)))->isIdenticalTo($socket)
 				->mock($manager)->call('closeSocket')->withArguments($socket)->never()
-				->variable($manager->getLastSocketErrorCode())->isNull()
-				->variable($manager->getLastSocketErrorMessage())->isNull()
 				->function('socket_listen')
 					->wasCalledWithArguments($socket)
 						->after($this->function('socket_bind')
@@ -173,8 +151,6 @@ class manager extends atoum
 					->wasCalledWithArguments($socket)
 						->before($this->function('socket_last_error')->wasCalledWithArguments($socket)->once())
 							->once()
-				->integer($manager->getLastSocketErrorCode())->isEqualTo($errorCode)
-				->string($manager->getLastSocketErrorMessage())->isEqualTo($errorMessage)
 
 			->if(
 				$this->function->socket_accept = $clientSocket = uniqid()
@@ -182,8 +158,6 @@ class manager extends atoum
 			->then
 				->string($manager->acceptSocket($socket))->isEqualTo($clientSocket)
 				->function('socket_accept')->wasCalledWithArguments($socket)->once()
-				->variable($manager->getLastSocketErrorCode())->isNull()
-				->variable($manager->getLastSocketErrorMessage())->isNull()
 		;
 	}
 
@@ -207,8 +181,6 @@ class manager extends atoum
 					->wasCalledWithArguments($socket, $length, $mode)
 						->before($this->function('socket_last_error')->wasCalledWithArguments($socket)->once())
 							->once()
-				->integer($manager->getLastSocketErrorCode())->isEqualTo($errorCode)
-				->string($manager->getLastSocketErrorMessage())->isEqualTo($errorMessage)
 
 			->if(
 				$this->function->socket_read = ''
@@ -216,8 +188,6 @@ class manager extends atoum
 			->then
 				->string($manager->readSocket($socket, $length, $mode))->isEmpty()
 				->function('socket_read')->wasCalledWithArguments($socket, $length, $mode)->once()
-				->variable($manager->getLastSocketErrorCode())->isNull()
-				->variable($manager->getLastSocketErrorMessage())->isNull()
 
 			->if(
 				$this->function->socket_read = $data = uniqid()
@@ -225,8 +195,6 @@ class manager extends atoum
 			->then
 				->string($manager->readSocket($socket, $length, $mode))->isEqualTo($data)
 				->function('socket_read')->wasCalledWithArguments($socket, $length, $mode)->once()
-				->variable($manager->getLastSocketErrorCode())->isNull()
-				->variable($manager->getLastSocketErrorMessage())->isNull()
 		;
 	}
 
@@ -250,8 +218,6 @@ class manager extends atoum
 					->wasCalledWithArguments($socket, $data)
 						->before($this->function('socket_last_error')->wasCalledWithArguments($socket)->once())
 							->once()
-				->integer($manager->getLastSocketErrorCode())->isEqualTo($errorCode)
-				->string($manager->getLastSocketErrorMessage())->isEqualTo($errorMessage)
 
 			->if(
 				$this->function->socket_write = function($socket, $data) { return strlen($data); }
@@ -259,12 +225,8 @@ class manager extends atoum
 			->then
 				->integer($manager->writeSocket($socket, $data))->isEqualTo(strlen($data))
 				->function('socket_write')->wasCalledWithArguments($socket, $data, strlen($data))->once()
-				->variable($manager->getLastSocketErrorCode())->isNull()
-				->variable($manager->getLastSocketErrorMessage())->isNull()
 				->integer($manager->writeSocket($socket, ''))->isEqualTo(0)
 				->function('socket_write')->wasCalledWithArguments($socket, '', 0)->once()
-				->variable($manager->getLastSocketErrorCode())->isNull()
-				->variable($manager->getLastSocketErrorMessage())->isNull()
 		;
 	}
 
@@ -288,22 +250,16 @@ class manager extends atoum
 					->wasCalledWithArguments($socket)
 						->after($this->function('socket_getpeername')->wasCalledWithArguments($socket)->once())
 							->once()
-				->integer($manager->getLastSocketErrorCode())->isEqualTo($errorCode)
-				->string($manager->getLastSocketErrorMessage())->isEqualTo($errorMessage)
 
 			->if($this->function->socket_getpeername = function($socket, & $ip, & $port) use (& $socketIp, & $socketPort) { $ip = $socketIp = '127.0.0.1'; $port = $socketPort = 8080; return true; })
 			->then
 				->object($manager->getSocketPeer($socket))->isEqualTo(new network\peer(new network\ip($socketIp), new network\port($socketPort)))
 				->function('socket_getpeername')->wasCalledWithArguments($socket)->once()
-				->variable($manager->getLastSocketErrorCode())->isNull()
-				->variable($manager->getLastSocketErrorMessage())->isNull()
 
 			->if($this->function->socket_getpeername = function($socket, & $path, & $port) use (& $socketPath) { $path = $socketPath = uniqid(); $port = null; return true; })
 			->then
 				->object($manager->getSocketPeer($socket))->isEqualTo(new fs\path($socketPath))
 				->function('socket_getpeername')->wasCalledWithArguments($socket)->once()
-				->variable($manager->getLastSocketErrorCode())->isNull()
-				->variable($manager->getLastSocketErrorMessage())->isNull()
 		;
 	}
 
@@ -327,22 +283,16 @@ class manager extends atoum
 					->wasCalledWithArguments($socket)
 						->after($this->function('socket_getsockname')->wasCalledWithArguments($socket)->once())
 							->once()
-				->integer($manager->getLastSocketErrorCode())->isEqualTo($errorCode)
-				->string($manager->getLastSocketErrorMessage())->isEqualTo($errorMessage)
 
 			->if($this->function->socket_getsockname = function($socket, & $ip, & $port) use (& $socketIp, & $socketPort) { $ip = $socketIp = '127.0.0.1'; $port = $socketPort = 8080; return true; })
 			->then
 				->object($manager->getSocketName($socket))->isEqualTo(new network\peer(new network\ip($socketIp), new network\port($socketPort)))
 				->function('socket_getsockname')->wasCalledWithArguments($socket)->once()
-				->variable($manager->getLastSocketErrorCode())->isNull()
-				->variable($manager->getLastSocketErrorMessage())->isNull()
 
 			->if($this->function->socket_getsockname = function($socket, & $path, & $port) use (& $socketPath) { $path = $socketPath = uniqid(); $port = null; return true; })
 			->then
 				->object($manager->getSocketName($socket))->isEqualTo(new fs\path($socketPath))
 				->function('socket_getsockname')->wasCalledWithArguments($socket)->once()
-				->variable($manager->getLastSocketErrorCode())->isNull()
-				->variable($manager->getLastSocketErrorMessage())->isNull()
 		;
 	}
 
@@ -362,8 +312,6 @@ class manager extends atoum
 			->then
 				->object($manager->pollSockets($read, $write, $except, $timeout = rand(1, PHP_INT_MAX)))->isIdenticalTo($manager)
 				->function('socket_select')->wasCalledWithArguments($read, $write, $except, $timeout)->once()
-				->variable($manager->getLastSocketErrorCode())->isNull()
-				->variable($manager->getLastSocketErrorMessage())->isNull()
 
 			->if(
 				$this->function->socket_select = false,
@@ -376,8 +324,6 @@ class manager extends atoum
 					->isInstanceOf('server\socket\manager\exception')
 					->hasCode($errorCode)
 					->hasMessage($errorMessage)
-				->integer($manager->getLastSocketErrorCode())->isEqualTo($errorCode)
-				->string($manager->getLastSocketErrorMessage())->isEqualTo($errorMessage)
 				->function('socket_last_error')
 					->wasCalledWithArguments(null)
 						->after($this->function('socket_select')->wasCalledWithArguments($read, $write, $except, $timeout)->once())
@@ -387,8 +333,6 @@ class manager extends atoum
 			->then
 				->object($manager->pollSockets($read, $write, $except, $timeout = rand(1, PHP_INT_MAX)))->isIdenticalTo($manager)
 				->function('socket_select')->wasCalledWithArguments($read, $write, $except, $timeout)->once()
-				->variable($manager->getLastSocketErrorCode())->isNull()
-				->variable($manager->getLastSocketErrorMessage())->isNull()
 		;
 	}
 
@@ -399,51 +343,30 @@ class manager extends atoum
 
 			->if(
 				$this->function->is_resource = true,
-				$this->function->socket_set_block = false,
-				$this->function->socket_last_error = $errorCode = rand(1,PHP_INT_MAX),
-				$this->function->socket_strerror = $errorMessage = uniqid(),
+				$this->function->get_resource_type = testedClass::resourceType,
+				$this->function->socket_set_block->doesNothing(),
+				$this->function->socket_last_error->doesNothing(),
+				$this->function->socket_set_option->doesNothing(),
+				$this->function->socket_shutdown->doesNothing(),
+				$this->function->socket_close->doesNothing(),
+				$this->function->socket_strerror->doesNothing(),
 				$this->function->socket_clear_error->doesNothing()
 			)
 			->then
-				->exception(function() use ($manager, & $socket) { $manager->closeSocket($socket = uniqid()); })
-					->isInstanceOf('server\socket\manager\exception')
-					->hasCode($errorCode)
-					->hasMessage($errorMessage)
-				->integer($manager->getLastSocketErrorCode())->isEqualTo($errorCode)
-				->string($manager->getLastSocketErrorMessage())->isEqualTo($errorMessage)
-				->function('socket_close')->wasCalled($socket)->never()
-				->function('socket_last_error')->wasCalledWithArguments($socket)->once()
-
-			->if(
-				$this->function->socket_set_block = true,
-				$this->function->socket_set_option = false,
-				$this->function->socket_last_error = $errorCode = rand(1,PHP_INT_MAX),
-				$this->function->socket_strerror = $errorMessage = uniqid()
-			)
-			->then
-				->exception(function() use ($manager, & $socket) { $manager->closeSocket($socket = uniqid()); })
-					->isInstanceOf('server\socket\manager\exception')
-					->hasCode($errorCode)
-					->hasMessage($errorMessage)
-				->integer($manager->getLastSocketErrorCode())->isEqualTo($errorCode)
-				->string($manager->getLastSocketErrorMessage())->isEqualTo($errorMessage)
-				->function('socket_close')->wasCalled()->never()
-				->function('socket_set_block')->wasCalledWithArguments($socket)
-					->before($this->function('socket_set_option')->wasCalledWithArguments($socket, SOL_SOCKET, SO_LINGER, array('l_onoff' => 1, 'l_linger' => 0))->once())
-						->once()
-
-			->if(
-				$this->function->socket_set_option = true,
-				$this->function->socket_shutdown = false,
-				$this->function->socket_close = true
-			)
-			->then
 				->object($manager->closeSocket($socket = uniqid()))->isIdenticalTo($manager)
-				->variable($manager->getLastSocketErrorCode())->isNull()
-				->variable($manager->getLastSocketErrorMessage())->isNull()
+				->function('socket_set_block')
+					->wasCalledWithArguments($socket)
+					->before($this->function('socket_set_option')
+						->wasCalledWithArguments($socket, SOL_SOCKET, SO_LINGER, array('l_onoff' => 1, 'l_linger' => 0))
+						->before($this->function('socket_shutdown')
+							->wasCalledWithArguments($socket, 2)
+							->once()
+						)
+						->once()
+					)
+					->once()
 
 			->if(
-				$this->function->socket_shutdown = true,
 				$this->function->socket_close = false,
 				$this->function->socket_last_error = $errorCode = rand(1,PHP_INT_MAX),
 				$this->function->socket_strerror = $errorMessage = uniqid()
@@ -453,17 +376,6 @@ class manager extends atoum
 					->isInstanceOf('server\socket\manager\exception')
 					->hasCode($errorCode)
 					->hasMessage($errorMessage)
-				->integer($manager->getLastSocketErrorCode())->isEqualTo($errorCode)
-				->string($manager->getLastSocketErrorMessage())->isEqualTo($errorMessage)
-				->function('socket_shutdown')->wasCalledWithArguments($socket)
-					->before($this->function('socket_close')->wasCalledWithArguments($socket)->once())
-						->once()
-
-			->if($this->function->socket_close = true)
-			->then
-				->object($manager->closeSocket($socket = uniqid()))->isIdenticalTo($manager)
-				->variable($manager->getLastSocketErrorCode())->isNull()
-				->variable($manager->getLastSocketErrorMessage())->isNull()
 		;
 	}
 
@@ -518,8 +430,6 @@ class manager extends atoum
 					->hasMessage($errorMessage)
 				->function('socket_connect')->wasCalledWithArguments($resource, (string) $ip, (string) $port)->once()
 				->function('socket_last_error')->wasCalledWithArguments($resource)->once()
-				->integer($manager->getLastSocketErrorCode())->isEqualTo($errorCode)
-				->string($manager->getLastSocketErrorMessage())->isEqualTo($errorMessage)
 
 			->if($this->function->socket_connect = true)
 			->then

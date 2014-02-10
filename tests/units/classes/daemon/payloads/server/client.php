@@ -94,11 +94,17 @@ class client extends atoum
 	{
 		$this
 			->given($this->newTestedInstance($socket = $this->getMockedSocket(), $server = new server()))
+
+			->if($this->calling($socket)->read = '')
 			->then
 				->object($this->testedInstance->readSocket())->isTestedInstance
-				->mock($socket)->call('read')->withArguments(2048, PHP_NORMAL_READ)->once()
+				->mock($socket)
+					->call('read')->withArguments(2048, PHP_BINARY_READ)
+						->before($this->mock($socket)->call('close')->once())
+							->once()
 
 			->if(
+				$this->calling($socket)->read = uniqid(),
 				$this->testedInstance->readMessage($message1 = new \mock\server\daemon\payloads\server\client\message()),
 				$this->testedInstance->readMessage($message2 = new \mock\server\daemon\payloads\server\client\message()),
 				$this->testedInstance->readMessage($message3 = new \mock\server\daemon\payloads\server\client\message()),
@@ -159,14 +165,6 @@ class client extends atoum
 					->onPush($message3)
 					->readMessage($message2 = new \mock\server\daemon\payloads\server\client\message())
 			)
-			->then
-				->object($this->testedInstance->readSocket())->isTestedInstance
-				->mock($message1)->call('readSocket')->withArguments($socket)->once()
-				->mock($message2)->call('readSocket')->withArguments($socket)->once()
-				->mock($message3)->call('readSocket')->withArguments($socket)->once()
-				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($this->testedInstance, 'readSocket'))->once()
-
-			->if($this->calling($socket)->read = '')
 			->then
 				->object($this->testedInstance->readSocket())->isTestedInstance
 				->mock($message1)->call('readSocket')->withArguments($socket)->once()

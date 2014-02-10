@@ -141,7 +141,7 @@ class socket
 
 	public function truncateData($bytes)
 	{
-		$this->data = substr($this->data, $bytes);
+		$this->data = (string) substr($this->data, $bytes + 1);
 
 		return $this;
 	}

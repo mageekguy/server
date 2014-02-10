@@ -170,34 +170,6 @@ class server extends atoum
 		;
 	}
 
-	public function testGetLastSocketErrorCode()
-	{
-		$this
-			->given(
-				$server = new testedClass(uniqid()),
-				$server->setSocketManager($socketManager = new \mock\server\socket\manager())
-			)
-
-			->if($this->calling($socketManager)->getLastSocketErrorCode = $errorCode = rand(1, PHP_INT_MAX))
-			->then
-				->integer($server->getLastSocketErrorCode())->isEqualTo($errorCode)
-		;
-	}
-
-	public function testGetLastSocketErrorMessage()
-	{
-		$this
-			->given(
-				$server = new testedClass(uniqid()),
-				$server->setSocketManager($socketManager = new \mock\server\socket\manager())
-			)
-
-			->if($this->calling($socketManager)->getLastSocketErrorMessage = $errorMessage = uniqid())
-			->then
-				->string($server->getLastSocketErrorMessage())->isEqualTo($errorMessage)
-		;
-	}
-
 	public function testAcceptSocket()
 	{
 		$this
