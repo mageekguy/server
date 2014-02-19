@@ -10,7 +10,7 @@ class message
 {
 	private $serializer = null;
 
-	private $buffer = '';
+	private $data = '';
 
 	private $onRead = null;
 	private $onWrite = null;
@@ -77,7 +77,7 @@ class message
 		return $this;
 	}
 
-	public function readSocket(server\socket $socket)
+	public function readData(server\socket $socket)
 	{
 		try
 		{
@@ -121,24 +121,24 @@ class message
 		return $this;
 	}
 
-	public function writeSocket(server\socket $socket)
+	public function writeData(server\socket $socket)
 	{
-		if ($this->buffer === '')
+		if ($this->data === '')
 		{
-			$this->buffer = $this->serializer->serializeMessage();
+			$this->data = $this->serializer->serializeMessage();
 		}
 
-		if ($this->buffer !== '')
+		if ($this->data !== '')
 		{
-			$bytesWritten = $socket->write($this->buffer);
+			$bytesWritten = $socket->write($this->data);
 
 			if ($bytesWritten > 0)
 			{
-				$this->buffer = (string) substr($this->buffer, $bytesWritten);
+				$this->data = (string) substr($this->data, $bytesWritten);
 			}
 		}
 
-		if ($this->buffer !== '')
+		if ($this->data !== '')
 		{
 			return false;
 		}

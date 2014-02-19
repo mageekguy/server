@@ -9,6 +9,8 @@ use
 
 class client
 {
+	const readLength = 2048;
+
 	protected $server = null;
 	protected $socket = null;
 	protected $onError = null;
@@ -24,7 +26,6 @@ class client
 		$this->server = $server;
 		$this->readMessages = new client\queue();
 		$this->writeMessages = new client\queue();
-
 		$this->socket->bind($this);
 	}
 
@@ -54,7 +55,7 @@ class client
 	{
 		try
 		{
-			$data = @$this->socket->read(2048, PHP_BINARY_READ);
+			$data = @$this->socket->read(static::readLength, PHP_BINARY_READ);
 
 			if ($data == '')
 			{
@@ -64,7 +65,7 @@ class client
 			{
 				foreach ($this->onPush as $pushMessage)
 				{
-					$pushMessage->readSocket($this->socket);
+					$pushMessage->readData($this->socket);
 				}
 
 				if ($this->currentReadMessage === null)
@@ -72,9 +73,9 @@ class client
 					$this->currentReadMessage = $this->readMessages->shiftMessage();
 				}
 
-				if ($this->currentReadMessage !== null && $this->currentReadMessage->readSocket($this->socket) === true)
+				while ($this->currentReadMessage !== null && $this->currentReadMessage->readData($this->socket) === true)
 				{
-					$this->currentReadMessage = null;
+					$this->currentReadMessage = $this->readMessages->shiftMessage();
 				}
 
 				if (sizeof($this->onPush) > 0 || $this->currentReadMessage !== null || sizeof($this->readMessages) > 0)
@@ -123,7 +124,7 @@ class client
 		{
 			try
 			{
-				if ($this->currentWriteMessage->writeSocket($this->socket) === false)
+				if ($this->currentWriteMessage->writeData($this->socket) === false)
 				{
 					$this->socket->onWriteNotBlock($this->server, array($this, __FUNCTION__));
 				}

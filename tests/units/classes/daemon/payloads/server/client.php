@@ -108,55 +108,57 @@ class client extends atoum
 				$this->testedInstance->readMessage($message1 = new \mock\server\daemon\payloads\server\client\message()),
 				$this->testedInstance->readMessage($message2 = new \mock\server\daemon\payloads\server\client\message()),
 				$this->testedInstance->readMessage($message3 = new \mock\server\daemon\payloads\server\client\message()),
-				$this->calling($message1)->readSocket = false
+				$this->calling($message1)->readData = false
 			)
 			->then
 				->object($this->testedInstance->readSocket())->isTestedInstance
-				->mock($message1)->call('readSocket')->withArguments($socket)->once()
+				->mock($message1)->call('readData')->withArguments($socket)->once()
 				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($this->testedInstance, 'readSocket'))->once()
 				->object($this->testedInstance->readSocket())->isTestedInstance
-				->mock($message1)->call('readSocket')->withArguments($socket)->twice()
+				->mock($message1)->call('readData')->withArguments($socket)->twice()
 				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($this->testedInstance, 'readSocket'))->twice()
 
 			->if(
-				$this->calling($message1)->readSocket = true,
-				$this->calling($message2)->readSocket = true,
-				$this->calling($message3)->readSocket = false
+				$this->calling($message1)->readData = true,
+				$this->calling($message2)->readData = true,
+				$this->calling($message3)->readData = false
 			)
 			->then
 				->object($this->testedInstance->readSocket())->isTestedInstance
-				->mock($message1)->call('readSocket')->withArguments($socket)->once()
-				->mock($message2)->call('readSocket')->withArguments($socket)->never()
+				->mock($message1)->call('readData')->withArguments($socket)->once()
+				->mock($message2)->call('readData')->withArguments($socket)->once()
+				->mock($message3)->call('readData')->withArguments($socket)->once()
 				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($this->testedInstance, 'readSocket'))->once()
 				->object($this->testedInstance->readSocket())->isTestedInstance
-				->mock($message1)->call('readSocket')->withArguments($socket)->once()
-				->mock($message2)->call('readSocket')->withArguments($socket)->once()
+				->mock($message1)->call('readData')->withArguments($socket)->once()
+				->mock($message2)->call('readData')->withArguments($socket)->once()
+				->mock($message3)->call('readData')->withArguments($socket)->twice()
 				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($this->testedInstance, 'readSocket'))->twice()
 				->object($this->testedInstance->readSocket())->isTestedInstance
-				->mock($message1)->call('readSocket')->withArguments($socket)->once()
-				->mock($message2)->call('readSocket')->withArguments($socket)->once()
-				->mock($message3)->call('readSocket')->withArguments($socket)->once()
+				->mock($message1)->call('readData')->withArguments($socket)->once()
+				->mock($message2)->call('readData')->withArguments($socket)->once()
+				->mock($message3)->call('readData')->withArguments($socket)->thrice()
 				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($this->testedInstance, 'readSocket'))->thrice()
 				->object($this->testedInstance->readSocket())->isTestedInstance
-				->mock($message1)->call('readSocket')->withArguments($socket)->once()
-				->mock($message2)->call('readSocket')->withArguments($socket)->once()
-				->mock($message3)->call('readSocket')->withArguments($socket)->twice()
+				->mock($message1)->call('readData')->withArguments($socket)->once()
+				->mock($message2)->call('readData')->withArguments($socket)->once()
+				->mock($message3)->call('readData')->withArguments($socket)->exactly(4)
 				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($this->testedInstance, 'readSocket'))->exactly(4)
 				->object($this->testedInstance->readSocket())->isTestedInstance
-				->mock($message1)->call('readSocket')->withArguments($socket)->once()
-				->mock($message2)->call('readSocket')->withArguments($socket)->once()
-				->mock($message3)->call('readSocket')->withArguments($socket)->thrice()
+				->mock($message1)->call('readData')->withArguments($socket)->once()
+				->mock($message2)->call('readData')->withArguments($socket)->once()
+				->mock($message3)->call('readData')->withArguments($socket)->exactly(5)
 				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($this->testedInstance, 'readSocket'))->exactly(5)
 
 			->if(
-				$this->calling($message3)->readSocket = true
+				$this->calling($message3)->readData = true
 			)
 			->then
 				->object($this->testedInstance->readSocket())->isTestedInstance
-				->mock($message3)->call('readSocket')->withArguments($socket)->once()
+				->mock($message3)->call('readData')->withArguments($socket)->once()
 				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($this->testedInstance, 'readSocket'))->never()
 				->object($this->testedInstance->readSocket())->isTestedInstance
-				->mock($message3)->call('readSocket')->withArguments($socket)->once()
+				->mock($message3)->call('readData')->withArguments($socket)->once()
 				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($this->testedInstance, 'readSocket'))->never()
 
 			->if(
@@ -167,9 +169,9 @@ class client extends atoum
 			)
 			->then
 				->object($this->testedInstance->readSocket())->isTestedInstance
-				->mock($message1)->call('readSocket')->withArguments($socket)->once()
-				->mock($message2)->call('readSocket')->withArguments($socket)->once()
-				->mock($message3)->call('readSocket')->withArguments($socket)->once()
+				->mock($message1)->call('readData')->withArguments($socket)->once()
+				->mock($message2)->call('readData')->withArguments($socket)->once()
+				->mock($message3)->call('readData')->withArguments($socket)->once()
 				->mock($socket)->call('onReadNotBlock')->withArguments($server, array($this->testedInstance, 'readSocket'))->once()
 
 			->if($this->calling($socket)->read->throw = $exception = new \exception(uniqid(), rand(1, PHP_INT_MAX)))
@@ -210,46 +212,46 @@ class client extends atoum
 				$this->testedInstance->writeMessage($message1 = new \mock\server\daemon\payloads\server\client\message()),
 				$this->testedInstance->writeMessage($message2 = new \mock\server\daemon\payloads\server\client\message()),
 				$this->testedInstance->writeMessage($message3 = new \mock\server\daemon\payloads\server\client\message()),
-				$this->calling($message1)->writeSocket = false
+				$this->calling($message1)->writeData = false
 			)
 			->then
 				->object($this->testedInstance->writeSocket())->isTestedInstance
-				->mock($message1)->call('writeSocket')->withArguments($socket)->once()
+				->mock($message1)->call('writeData')->withArguments($socket)->once()
 				->object($this->testedInstance->writeSocket())->isTestedInstance
-				->mock($message1)->call('writeSocket')->withArguments($socket)->twice()
+				->mock($message1)->call('writeData')->withArguments($socket)->twice()
 
 			->if(
-				$this->calling($message1)->writeSocket = true,
-				$this->calling($message2)->writeSocket = true,
-				$this->calling($message3)->writeSocket = false
+				$this->calling($message1)->writeData = true,
+				$this->calling($message2)->writeData = true,
+				$this->calling($message3)->writeData = false
 			)
 			->then
 				->object($this->testedInstance->writeSocket())->isTestedInstance
-				->mock($message1)->call('writeSocket')->withArguments($socket)->once()
-				->mock($message2)->call('writeSocket')->withArguments($socket)->never()
+				->mock($message1)->call('writeData')->withArguments($socket)->once()
+				->mock($message2)->call('writeData')->withArguments($socket)->never()
 				->object($this->testedInstance->writeSocket())->isTestedInstance
-				->mock($message1)->call('writeSocket')->withArguments($socket)->once()
-				->mock($message2)->call('writeSocket')->withArguments($socket)->once()
-				->mock($message3)->call('writeSocket')->withArguments($socket)->never()
+				->mock($message1)->call('writeData')->withArguments($socket)->once()
+				->mock($message2)->call('writeData')->withArguments($socket)->once()
+				->mock($message3)->call('writeData')->withArguments($socket)->never()
 				->object($this->testedInstance->writeSocket())->isTestedInstance
-				->mock($message1)->call('writeSocket')->withArguments($socket)->once()
-				->mock($message2)->call('writeSocket')->withArguments($socket)->once()
-				->mock($message3)->call('writeSocket')->withArguments($socket)->once()
+				->mock($message1)->call('writeData')->withArguments($socket)->once()
+				->mock($message2)->call('writeData')->withArguments($socket)->once()
+				->mock($message3)->call('writeData')->withArguments($socket)->once()
 				->object($this->testedInstance->writeSocket())->isTestedInstance
-				->mock($message1)->call('writeSocket')->withArguments($socket)->once()
-				->mock($message2)->call('writeSocket')->withArguments($socket)->once()
-				->mock($message3)->call('writeSocket')->withArguments($socket)->twice()
+				->mock($message1)->call('writeData')->withArguments($socket)->once()
+				->mock($message2)->call('writeData')->withArguments($socket)->once()
+				->mock($message3)->call('writeData')->withArguments($socket)->twice()
 
-			->if($this->calling($message3)->writeSocket = true)
+			->if($this->calling($message3)->writeData = true)
 			->then
 				->object($this->testedInstance->writeSocket())->isTestedInstance
-				->mock($message3)->call('writeSocket')->withArguments($socket)->once()
+				->mock($message3)->call('writeData')->withArguments($socket)->once()
 				->object($this->testedInstance->writeSocket())->isTestedInstance
-				->mock($message3)->call('writeSocket')->withArguments($socket)->once()
+				->mock($message3)->call('writeData')->withArguments($socket)->once()
 
 			->if(
 				$this->testedInstance->writeMessage($message1 = new \mock\server\daemon\payloads\server\client\message()),
-				$this->calling($message1)->writeSocket->throw = $exception = new \exception(uniqid(), rand(1, PHP_INT_MAX))
+				$this->calling($message1)->writeData->throw = $exception = new \exception(uniqid(), rand(1, PHP_INT_MAX))
 			)
 			->then
 				->exception(function() { $this->testedInstance->writeSocket(); })

@@ -34,6 +34,18 @@ class message extends atoum
 		;
 	}
 
+	public function test__set()
+	{
+		$this
+			->given($this->newTestedInstance())
+		;
+
+		$this->testedInstance->setSerializer($serializer = new \mock\server\daemon\payloads\server\client\message\serializer());
+		$this->testedInstance->{$property = uniqid()} = $value = uniqid();
+
+		$this->mock($serializer)->call('__set')->withArguments($property, $value)->once;
+	}
+
 	public function test__invoke()
 	{
 		$this
@@ -72,7 +84,7 @@ class message extends atoum
 		;
 	}
 
-	public function testReadSocket()
+	public function testReadData()
 	{
 		$this
 			->given(
@@ -82,14 +94,14 @@ class message extends atoum
 
 			->if($this->calling($socket)->getData = '')
 			->then
-				->boolean($message->readSocket($socket))->isFalse()
+				->boolean($message->readData($socket))->isFalse()
 				->mock($socket)
 					->call('getData')->once()
 				->castToString($message)->isEmpty()
 
 			->if($this->calling($socket)->getData = $data1 = uniqid() . "\r\n")
 			->then
-				->boolean($message->readSocket($socket))->isTrue()
+				->boolean($message->readData($socket))->isTrue()
 				->mock($socket)
 					->call('getData')->once()
 					->before(
@@ -104,7 +116,7 @@ class message extends atoum
 				$this->calling($socket)->getData = uniqid() . "\r\n"
 			)
 			->then
-				->boolean($message->readSocket($socket))->isTrue()
+				->boolean($message->readData($socket))->isTrue()
 				->boolean($messageRead)->isTrue()
 		;
 	}
@@ -126,7 +138,7 @@ class message extends atoum
 				$socket = $this->getMockedSocket()
 			)
 			->then
-				->boolean($message->writeSocket($socket))->isTrue()
+				->boolean($message->writeData($socket))->isTrue()
 				->mock($socket)->call('write')->never()
 
 			->if(
@@ -134,7 +146,7 @@ class message extends atoum
 				$this->calling($socket)->write = strlen($data)
 			)
 			->then
-				->boolean($message->writeSocket($socket))->isTrue()
+				->boolean($message->writeData($socket))->isTrue()
 				->mock($socket)->call('write')->withArguments($data)->once()
 
 			->if(
@@ -142,25 +154,25 @@ class message extends atoum
 				$this->calling($socket)->write = 1
 			)
 			->then
-				->boolean($message->writeSocket($socket))->isFalse()
+				->boolean($message->writeData($socket))->isFalse()
 				->mock($socket)->call('write')->withArguments($data)->once()
-				->boolean($message->writeSocket($socket))->isFalse()
+				->boolean($message->writeData($socket))->isFalse()
 				->mock($socket)->call('write')->withArguments('BCDEFGH' . "\r\n")->once()
 
 			->if(
 				$this->calling($socket)->write = 5
 			)
 			->then
-				->boolean($message->writeSocket($socket))->isFalse()
+				->boolean($message->writeData($socket))->isFalse()
 				->mock($socket)->call('write')->withArguments('CDEFGH' . "\r\n")->once()
 
 			->if(
 				$this->calling($socket)->write = 3
 			)
 			->then
-				->boolean($message->writeSocket($socket))->isTrue()
+				->boolean($message->writeData($socket))->isTrue()
 				->mock($socket)->call('write')->withArguments('H' . "\r\n")->once()
-				->boolean($message->writeSocket($socket))->isFalse()
+				->boolean($message->writeData($socket))->isFalse()
 				->mock($socket)->call('write')->withArguments($data)->once()
 				->mock($socket)->call('write')->withArguments('ABCDEFGH' . "\r\n")->once()
 
@@ -170,7 +182,7 @@ class message extends atoum
 				$this->calling($socket)->write = function($data) { return strlen($data); }
 			)
 			->then
-				->boolean($message->writeSocket($socket))->isTrue()
+				->boolean($message->writeData($socket))->isTrue()
 				->boolean($messageWrited)->isTrue()
 		;
 	}
