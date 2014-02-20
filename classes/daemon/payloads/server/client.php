@@ -13,7 +13,7 @@ class client
 
 	protected $server = null;
 	protected $socket = null;
-	protected $onError = null;
+	protected $onError = array();
 	protected $onPush = array();
 	protected $readMessages = null;
 	protected $currentReadMessage = null;
@@ -88,16 +88,7 @@ class client
 		}
 		catch (\exception $exception)
 		{
-			if ($this->onError === null)
-			{
-				throw new client\exception($exception->getMessage(), $exception->getCode());
-			}
-			else
-			{
-				call_user_func_array($this->onError, array($exception));
-
-				return $this;
-			}
+			return $this->manageException($exception);
 		}
 	}
 
@@ -140,16 +131,7 @@ class client
 			}
 			catch (\exception $exception)
 			{
-				if ($this->onError === null)
-				{
-					throw new client\exception($exception->getMessage(), $exception->getCode());
-				}
-				else
-				{
-					call_user_func_array($this->onError, array($this, $exception));
-
-					return $this;
-				}
+				return $this->manageException($exception);
 			}
 		}
 
@@ -184,7 +166,29 @@ class client
 
 	public function onError(callable $handler)
 	{
-		$this->onError = $handler;
+		$this->onError[] = $handler;
+
+		return $this;
+	}
+
+	protected function manageException(\exception $exception)
+	{
+		if (sizeof($this->onError) <= 0)
+		{
+			throw new client\exception($exception->getMessage(), $exception->getCode());
+		}
+
+		try
+		{
+			foreach ($this->onError as $onErrorHandler)
+			{
+				call_user_func_array($onErrorHandler, array($exception));
+			}
+		}
+		catch (\exception $exception)
+		{
+			throw new client\exception($exception->getMessage(), $exception->getCode());
+		}
 
 		return $this;
 	}

@@ -185,6 +185,12 @@ class client extends atoum
 			->then
 				->object($this->testedInstance->readSocket())->isTestedInstance
 				->boolean($onError)->isTrue()
+
+			->if($this->testedInstance->onError(function() use (& $exception) { throw ($exception = new \exception(uniqid(), rand(1, PHP_INT_MAX))); }))
+				->exception(function() { $this->testedInstance->readSocket(); })
+					->isInstanceOf('server\daemon\payloads\server\client\exception')
+					->hasMessage($exception->getMessage())
+					->hasCode($exception->getCode())
 		;
 	}
 
@@ -263,6 +269,12 @@ class client extends atoum
 			->then
 				->object($this->testedInstance->writeSocket())->isTestedInstance
 				->boolean($onError)->isTrue()
+
+			->if($this->testedInstance->onError(function() use (& $exception) { throw ($exception = new \exception(uniqid(), rand(1, PHP_INT_MAX))); }))
+				->exception(function() { $this->testedInstance->writeSocket(); })
+					->isInstanceOf('server\daemon\payloads\server\client\exception')
+					->hasMessage($exception->getMessage())
+					->hasCode($exception->getCode())
 		;
 	}
 
