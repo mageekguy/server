@@ -9,9 +9,7 @@ use
 class message
 {
 	private $serializer = null;
-
 	private $data = '';
-
 	private $onRead = null;
 	private $onWrite = null;
 	private $onError = null;
