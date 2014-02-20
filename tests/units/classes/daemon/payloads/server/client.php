@@ -69,6 +69,15 @@ class client extends atoum
 		;
 	}
 
+	public function testRemoveOnError()
+	{
+		$this
+			->given($this->newTestedInstance($socket = $this->getMockedSocket(), $server = new server()))
+			->then
+				->object($this->testedInstance->removeOnError(function() {}))->isTestedInstance
+		;
+	}
+
 	public function testOnPush()
 	{
 		$this
@@ -186,11 +195,19 @@ class client extends atoum
 				->object($this->testedInstance->readSocket())->isTestedInstance
 				->boolean($onError)->isTrue()
 
-			->if($this->testedInstance->onError(function() use (& $exception) { throw ($exception = new \exception(uniqid(), rand(1, PHP_INT_MAX))); }))
+			->if($this->testedInstance->onError($throwException = function() use (& $exception) { throw ($exception = new \exception(uniqid(), rand(1, PHP_INT_MAX))); }))
 				->exception(function() { $this->testedInstance->readSocket(); })
 					->isInstanceOf('server\daemon\payloads\server\client\exception')
 					->hasMessage($exception->getMessage())
 					->hasCode($exception->getCode())
+
+			->if(
+				$this->testedInstance->removeOnError($throwException),
+				$onError = false
+			)
+			->then
+				->object($this->testedInstance->readSocket())->isTestedInstance
+				->boolean($onError)->isTrue()
 		;
 	}
 

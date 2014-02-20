@@ -171,6 +171,22 @@ class client
 		return $this;
 	}
 
+	public function removeOnError(callable $handler)
+	{
+		$onError = $this->onError;
+		$this->onError = array();
+
+		foreach ($onError as $onErrorHandler)
+		{
+			if ($onErrorHandler !== $handler)
+			{
+				$this->onError($onErrorHandler);
+			}
+		}
+
+		return $this;
+	}
+
 	protected function manageException(\exception $exception)
 	{
 		if (sizeof($this->onError) <= 0)
