@@ -148,7 +148,7 @@ class server extends atoum
 				$server->setSocketManager($socketManager = new \mock\server\socket\manager())
 			)
 
-			->if($this->calling($socketManager)->closeSocket->returnThis())
+			->if($this->calling($socketManager)->closeSocket->isFluent())
 			->then
 				->object($server->closeSocket($socket = uniqid()))->isEqualTo($server)
 				->mock($socketManager)->call('closeSocket')->withArguments($socket)->once()

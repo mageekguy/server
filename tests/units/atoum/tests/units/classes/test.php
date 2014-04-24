@@ -93,6 +93,7 @@ namespace mageekguy\atoum\tests\units
 					->object($test->getLocale())->isEqualTo(new atoum\locale())
 					->object($test->getAdapter())->isEqualTo(new atoum\adapter())
 					->object($test->getPhpMocker())->isInstanceOf('mageekguy\atoum\php\mocker')
+					->object($test->getFactoryBuilder())->isInstanceOf('mageekguy\atoum\factory\builder\closure')
 					->boolean($test->isIgnored())->isTrue()
 					->boolean($test->debugModeIsEnabled())->isFalse()
 					->array($test->getAllTags())->isEqualTo($tags = array('empty', 'fake', 'dummy'))
@@ -122,7 +123,7 @@ namespace mageekguy\atoum\tests\units
 				->if($test = new emptyTest())
 				->then
 					->object($test->assert)->isInstanceOf('mageekguy\atoum\test')
-					->object($test->define)->isInstanceOf('mageekguy\atoum\test\asserter\generator')
+					->object($test->define)->isInstanceOf('mageekguy\atoum\test\assertion\aliaser')
 					->object($test->mockGenerator)->isInstanceOf('mageekguy\atoum\mock\generator')
 				->if($test->setMockGenerator($mockGenerator = new atoum\test\mock\generator($this)))
 				->then
@@ -272,6 +273,34 @@ namespace mageekguy\atoum\tests\units
 					->object($test->getAsserterGenerator())->isIdenticalTo($asserterGenerator)
 					->object($asserterGenerator->getTest())->isIdenticalTo($test)
 					->object($asserterGenerator->getLocale())->isIdenticalTo($test->getLocale())
+			;
+		}
+
+		public function testGetFactoryBuilder()
+		{
+			$this
+				->if($test = new emptyTest())
+				->then
+					->object($test->getFactoryBuilder())->isInstanceOf('mageekguy\atoum\factory\builder\closure')
+
+				->if($test->setFactoryBuilder($factoryBuilder = new \mock\atoum\factory\builder()))
+				->then
+					->object($test->getFactoryBuilder())->isIdenticalTo($factoryBuilder)
+			;
+		}
+
+		public function testSetFactoryBuilder()
+		{
+			$this
+				->if($test = new emptyTest())
+				->then
+					->object($test->setFactoryBuilder($factoryBuilder = new \mock\atoum\factory\builder()))->isIdenticalTo($test)
+					->object($test->getFactoryBuilder())->isIdenticalTo($factoryBuilder)
+
+					->object($test->setFactoryBuilder())->isIdenticalTo($test)
+					->object($test->getFactoryBuilder())
+						->isEqualTo(new atoum\Factory\builder\closure())
+						->isNotIdenticalTo($factoryBuilder)
 			;
 		}
 

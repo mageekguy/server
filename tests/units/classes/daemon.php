@@ -294,7 +294,7 @@ class daemon extends atoum
 				->mock($unixUser)->call('setLogin')->withArguments($uidName)->once()
 
 			->if(
-				$this->calling($unixUser)->setLogin->returnThis(),
+				$this->calling($unixUser)->setLogin->isFluent(),
 				$this->calling($unixUser)->getUid = $uid = rand(1, PHP_INT_MAX),
 				$this->calling($unixUser)->getHomePath = $home = uniqid()
 			)
@@ -312,8 +312,8 @@ class daemon extends atoum
 			->if(
 				$daemon = new testedClass(uniqid()),
 				$payload = new \mock\server\daemon\payload(),
-				$this->calling($payload)->setInfoLogger->returnThis(),
-				$this->calling($payload)->setErrorLogger->returnThis()
+				$this->calling($payload)->setInfoLogger->isFluent(),
+				$this->calling($payload)->setErrorLogger->isFluent()
 			)
 			->then
 				->object($daemon->setPayload($payload))->isIdenticalTo($daemon)
@@ -327,7 +327,7 @@ class daemon extends atoum
 			->if(
 				$daemon = new testedClass(uniqid()),
 				$daemon->setErrorLogger($errorLogger = new \mock\server\logger()),
-				$this->calling($errorLogger)->log->returnThis(),
+				$this->calling($errorLogger)->log->isFluent(),
 				$this->function->debug_backtrace = array(
 					array('file' => $file1 = uniqid(), 'line' => $line1 = rand(1, PHP_INT_MAX)),
 					array('file' => $file2 = uniqid(), 'line' => $line2 = rand(1, PHP_INT_MAX)),
@@ -354,7 +354,7 @@ class daemon extends atoum
 			->if(
 				$daemon = new testedClass(uniqid()),
 				$daemon->setErrorLogger($errorLogger = new \mock\server\logger()),
-				$this->calling($errorLogger)->log->returnThis()
+				$this->calling($errorLogger)->log->isFluent()
 			)
 			->then
 				->boolean($daemon->exceptionHandler($exception = new \exception(uniqid())))->isTrue()
@@ -370,9 +370,9 @@ class daemon extends atoum
 			->given(
 				$daemon = new testedClass(uniqid()),
 				$daemon->setOutputWriter($writer = new \mock\atoum\writer()),
-				$this->calling($writer)->write->returnThis(),
+				$this->calling($writer)->write->isFluent(),
 				$daemon->setOutputLogger($logger = new \mock\server\logger()),
-				$this->calling($logger)->log->returnThis()
+				$this->calling($logger)->log->isFluent()
 			)
 
 			->if($this->calling($daemon)->isDaemon = false)
@@ -395,9 +395,9 @@ class daemon extends atoum
 			->given(
 				$daemon = new testedClass(uniqid()),
 				$daemon->setInfoWriter($writer = new \mock\atoum\writer()),
-				$this->calling($writer)->write->returnThis(),
+				$this->calling($writer)->write->isFluent(),
 				$daemon->setInfoLogger($logger = new \mock\server\logger()),
-				$this->calling($logger)->log->returnThis()
+				$this->calling($logger)->log->isFluent()
 			)
 
 			->if($this->calling($daemon)->isForeground = true)
@@ -420,9 +420,9 @@ class daemon extends atoum
 			->given(
 				$daemon = new testedClass(uniqid()),
 				$daemon->setHelpWriter($writer = new \mock\atoum\writer()),
-				$this->calling($writer)->write->returnThis(),
+				$this->calling($writer)->write->isFluent(),
 				$daemon->setOutputLogger($logger = new \mock\server\logger()),
-				$this->calling($logger)->log->returnThis()
+				$this->calling($logger)->log->isFluent()
 			)
 
 			->if($this->calling($daemon)->isForeground = true)
@@ -445,9 +445,9 @@ class daemon extends atoum
 			->given(
 				$daemon = new testedClass(uniqid()),
 				$daemon->setWarningWriter($writer = new \mock\atoum\writer()),
-				$this->calling($writer)->write->returnThis(),
+				$this->calling($writer)->write->isFluent(),
 				$daemon->setErrorLogger($logger = new \mock\server\logger()),
-				$this->calling($logger)->log->returnThis()
+				$this->calling($logger)->log->isFluent()
 			)
 
 			->if($this->calling($daemon)->isForeground = true)
@@ -470,9 +470,9 @@ class daemon extends atoum
 			->given(
 				$daemon = new testedClass(uniqid()),
 				$daemon->setErrorWriter($writer = new \mock\atoum\writer()),
-				$this->calling($writer)->write->returnThis(),
+				$this->calling($writer)->write->isFluent(),
 				$daemon->setErrorLogger($logger = new \mock\server\logger()),
-				$this->calling($logger)->log->returnThis()
+				$this->calling($logger)->log->isFluent()
 			)
 
 			->if($this->calling($daemon)->isForeground = true)
@@ -497,11 +497,11 @@ class daemon extends atoum
 				$daemon->setUnixUser($unixUser = new \mock\server\unix\user()),
 				$daemon->setController($controller = new \mock\server\daemon\controller()),
 				$daemon->setStdinFileReader($stdinFileReader = new \mock\server\readers\file(uniqid())),
-				$this->calling($stdinFileReader)->openFile->returnThis(),
+				$this->calling($stdinFileReader)->openFile->isFluent(),
 				$daemon->setStdoutFileWriter($stdoutFileWriter = new \mock\server\writers\file(uniqid())),
-				$this->calling($stdoutFileWriter)->openFile->returnThis(),
+				$this->calling($stdoutFileWriter)->openFile->isFluent(),
 				$daemon->setStderrFileWriter($stderrFileWriter = new \mock\server\writers\file(uniqid())),
-				$this->calling($stderrFileWriter)->openFile->returnThis()
+				$this->calling($stderrFileWriter)->openFile->isFluent()
 			)
 
 			->exception(function() use ($daemon) { $daemon->run(); })
@@ -620,9 +620,9 @@ class daemon extends atoum
 				->integer($daemon->getPid())->isEqualTo($pid)
 
 			->if(
-				$this->calling($unixUser)->goToHome->returnThis(),
+				$this->calling($unixUser)->goToHome->isFluent(),
 				$this->function->umask->doesNothing(),
-				$this->calling($controller)->dispatchSignals->returnThis(),
+				$this->calling($controller)->dispatchSignals->isFluent(),
 				$this->calling($controller)->daemonShouldRun[1] = true,
 				$this->calling($controller)->daemonShouldRun[2] = false
 			)
@@ -687,11 +687,11 @@ class daemon extends atoum
 				$daemon->setUnixUser($unixUser = new \mock\server\unix\user()),
 				$daemon->setController($controller = new \mock\server\daemon\controller()),
 				$daemon->setStdinFileReader($stdinFileReader = new \mock\server\readers\file(uniqid())),
-				$this->calling($stdinFileReader)->openFile->returnThis(),
+				$this->calling($stdinFileReader)->openFile->isFluent(),
 				$daemon->setStdoutFileWriter($stdoutFileWriter = new \mock\server\writers\file(uniqid())),
-				$this->calling($stdoutFileWriter)->openFile->returnThis(),
+				$this->calling($stdoutFileWriter)->openFile->isFluent(),
 				$daemon->setStderrFileWriter($stderrFileWriter = new \mock\server\writers\file(uniqid())),
-				$this->calling($stderrFileWriter)->openFile->returnThis(),
+				$this->calling($stderrFileWriter)->openFile->isFluent(),
 				$daemon->runInForeground()
 			)
 
@@ -724,7 +724,7 @@ class daemon extends atoum
 				$this->function->posix_setgid = true,
 				$this->function->posix_setuid = true,
 				$this->function->umask->doesNothing(),
-				$this->calling($controller)->dispatchSignals->returnThis(),
+				$this->calling($controller)->dispatchSignals->isFluent(),
 				$this->calling($controller)->daemonShouldRun[1] = true,
 				$this->calling($controller)->daemonShouldRun[2] = false
 			)

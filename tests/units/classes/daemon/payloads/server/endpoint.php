@@ -91,7 +91,7 @@ class endpoint extends atoum
 					->call('bindSocketTo')
 						->withArguments($endpoint->getIp(), $endpoint->getPort())
 								->once()
-					->call('wait')->withArguments($socket)->never()
+					->call('pollSocket')->withArguments($socket)->never()
 
 			->if(
 				$endpoint->onConnect($handler = function() {}),

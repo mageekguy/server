@@ -78,7 +78,7 @@ class manager extends atoum
 				$this->function->socket_set_option = false,
 				$this->function->socket_last_error = $errorCode = rand(1,PHP_INT_MAX),
 				$this->function->socket_strerror = $errorMessage = uniqid(),
-				$this->calling($manager)->closeSocket->returnThis()
+				$this->calling($manager)->closeSocket->isFluent()
 			)
 			->then
 				->exception(function() use ($manager) { $manager->bindSocketTo(new network\ip('127.0.0.1'), new network\port(8080)); })

@@ -111,7 +111,7 @@ class user extends atoum
 				$user->setHome($home = new \mock\server\unix\user\home())
 			)
 
-			->if($this->calling($home)->go->returnThis())
+			->if($this->calling($home)->go->isFluent())
 			->then
 				->object($user->goToHome())->isEqualTo($user)
 				->mock($home)->call('go')->once()

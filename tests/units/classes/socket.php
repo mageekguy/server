@@ -339,7 +339,7 @@ class socket extends atoum
 				$socketManager = $socket->getSocketManager()
 			)
 
-			->if($this->calling($socketManager)->closeSocket->returnThis())
+			->if($this->calling($socketManager)->closeSocket->isFluent())
 			->then
 				->object($socket->close())->isIdenticalTo($socket)
 				->mock($socketManager)->call('closeSocket')->withArguments($resource)->once()
@@ -388,7 +388,7 @@ class socket extends atoum
 				$socket->setSocketManager($socketManager = new \mock\server\socket\manager())
 			)
 
-			->if($this->calling($socketManager)->connectSocketTo->returnThis())
+			->if($this->calling($socketManager)->connectSocketTo->isFluent())
 			->then
 				->object($socket->connectTo($ip = new network\ip('127.0.0.1'), $port = new network\port(8080)))->isIdenticalTo($socket)
 				->mock($socketManager)->call('connectSocketTo')->withArguments($resource, $ip, $port)->once()

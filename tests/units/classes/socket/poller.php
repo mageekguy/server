@@ -115,8 +115,8 @@ class poller extends atoum
 
 			->if(
 				$this->calling($socketManager)->pollSockets = function(& $read) use ($socket1) { $read = array(1 => $socket1); $write = array(1 => $socket1); },
-				$this->calling($socketEvents)->triggerOnReadNotBlock->returnThis(),
-				$this->calling($socketEvents)->triggerOnWriteNotBlock->returnThis()
+				$this->calling($socketEvents)->triggerOnReadNotBlock->isFluent(),
+				$this->calling($socketEvents)->triggerOnWriteNotBlock->isFluent()
 			)
 			->then
 				->object($poller->waitSockets($timeout))->isIdenticalTo($poller)
